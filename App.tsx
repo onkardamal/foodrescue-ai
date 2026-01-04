@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, List, ChefHat, Heart, User, LogOut } from 'lucide-react';
+import { Home, Package, ChefHat, Heart, MapPin } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState } from './types';
 import { AuthService } from './services/auth';
 import Dashboard from './components/Dashboard';
@@ -10,49 +10,179 @@ import Recipes from './components/Recipes';
 import Donation from './components/Donation';
 import { Login, Signup } from './components/Auth';
 
-// Initial Mock Data (Fallback)
+// Initial Mock Data (Matches Spec Payload)
 const INITIAL_INVENTORY: FoodItem[] = [
-  { id: '1', name: 'Milk', category: FoodCategory.DAIRY, quantity: 1, unit: 'liter', expiryDate: new Date(Date.now() + 2 * 86400000).toISOString(), status: 'active' },
-  { id: '2', name: 'Spinach', category: FoodCategory.PRODUCE, quantity: 200, unit: 'g', expiryDate: new Date(Date.now() + 1 * 86400000).toISOString(), status: 'active' },
-  { id: '3', name: 'Yogurt', category: FoodCategory.DAIRY, quantity: 2, unit: 'cups', expiryDate: new Date(Date.now() + 5 * 86400000).toISOString(), status: 'active' },
-  { id: '4', name: 'Apples', category: FoodCategory.PRODUCE, quantity: 4, unit: 'pc', expiryDate: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'active' }, 
+  { 
+    id: "1", 
+    name: "Ground Beef Patty", 
+    category: FoodCategory.MEAT, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() - 2 * 86400000).toISOString(), // Expired
+    status: 'active',
+    condition: 'Expired'
+  },
+  { 
+    id: "2", 
+    name: "Tomato Slice", 
+    category: FoodCategory.PRODUCE, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() + 4 * 86400000).toISOString(), // Expires in 4 days
+    status: 'active',
+    condition: 'Expiring Soon'
+  },
+  { 
+    id: "3", 
+    name: "Sesame Seed Bun", 
+    category: FoodCategory.BAKERY, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "4", 
+    name: "Cheddar Cheese Slice", 
+    category: FoodCategory.DAIRY, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "5", 
+    name: "Lettuce", 
+    category: FoodCategory.PRODUCE, 
+    quantity: 20, 
+    unit: "grams", 
+    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "6", 
+    name: "Mayonnaise", 
+    category: FoodCategory.OTHER, 
+    quantity: 10, 
+    unit: "grams", 
+    expiryDate: "2026-02-03T00:00:00.000Z", 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "7", 
+    name: "Ketchup", 
+    category: FoodCategory.OTHER, 
+    quantity: 10, 
+    unit: "grams", 
+    expiryDate: "2026-02-03T00:00:00.000Z", 
+    status: 'active',
+    condition: 'Good'
+  }
 ];
 
 const INITIAL_STATS: UserStats = {
-  mealsSaved: 24,
-  co2Saved: 15.5,
-  moneySaved: 120,
-  streakDays: 5,
-  level: 3,
-  xp: 450
+  mealsSaved: 124,
+  co2Saved: 58,
+  moneySaved: 340,
+  streakDays: 12,
+  level: 5,
+  xp: 850
 };
 
 // Bottom Navigation Component
 const BottomNav = () => {
   const location = useLocation();
   const navItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/inventory', icon: List, label: 'Pantry' },
+    { path: '/', icon: Home, label: 'Dashboard' },
+    { path: '/inventory', icon: Package, label: 'Inventory' },
     { path: '/recipes', icon: ChefHat, label: 'Recipes' },
     { path: '/donate', icon: Heart, label: 'Donate' },
+    { path: '/ngos', icon: MapPin, label: 'NGOs' },
   ];
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-white/20 pb-safe rounded-2xl z-40 flex justify-between items-center shadow-2xl shadow-slate-200/50 p-2">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-[420px] mx-auto h-[80px] bg-white border-t border-[rgba(33,33,33,0.04)] z-[100] flex justify-around items-start pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
           <NavLink
             key={item.path}
             to={item.path}
-            className={`flex flex-col items-center justify-center w-full h-14 rounded-xl transition-all duration-300 ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
+            className="flex flex-col items-center justify-center w-[60px] relative group"
           >
-            <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-            {isActive && <span className="text-[10px] font-bold mt-1 leading-none">{item.label}</span>}
+            {isActive && (
+              <div className="absolute -top-3 w-[32px] h-[3px] bg-[#1CAE9E] rounded-b-[2px] shadow-[0_2px_8px_#1CAE9E80]"></div>
+            )}
+            <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+               <item.icon 
+                size={24} 
+                strokeWidth={isActive ? 2.5 : 2}
+                color={isActive ? '#1CAE9E' : '#757575'} 
+                />
+            </div>
+            <span 
+              className={`text-[10px] font-medium mt-[4px] leading-none transition-colors ${isActive ? 'text-[#1CAE9E]' : 'text-[#757575]'}`}
+            >
+              {item.label}
+            </span>
           </NavLink>
         );
       })}
     </nav>
+  );
+};
+
+const AppContent = ({ auth, stats, inventory, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleDonateComplete }: any) => {
+  return (
+    <div className="min-h-screen bg-[#F5F5F5] font-sans text-[#212121] flex justify-center">
+      <div className="w-full max-w-[420px] bg-[#F5F5F5] min-h-screen relative shadow-2xl overflow-hidden flex flex-col">
+        
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto pb-[90px] scroll-smooth">
+          <Routes>
+            <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
+            <Route path="/inventory" element={
+               <Inventory 
+                  items={inventory} 
+                  onAddItem={handleAddItem} 
+                  onUpdateStatus={handleUpdateStatus}
+                  onDeleteItem={handleDeleteItem}
+                />
+            } />
+            <Route path="/recipes" element={
+              <div className="p-[20px]">
+                <Recipes 
+                  inventory={inventory} 
+                  onCookRecipe={handleCookRecipe} 
+                />
+              </div>
+            } />
+            <Route path="/donate" element={
+               <div className="p-[20px]">
+                <Donation 
+                    inventory={inventory} 
+                    onDonateComplete={handleDonateComplete} 
+                />
+               </div>
+            } />
+             <Route path="/ngos" element={
+               <div className="p-[20px] flex flex-col items-center justify-center h-[70vh] text-[#757575]">
+                  <MapPin size={48} className="text-[#1CAE9E] mb-4 opacity-50" />
+                  <h3 className="font-bold text-lg">NGO Map</h3>
+                  <p className="text-sm">Coming in v2.0</p>
+               </div>
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+
+        <BottomNav />
+      </div>
+    </div>
   );
 };
 
@@ -85,10 +215,17 @@ export default function App() {
 
   // Handlers
   const handleAddItem = (item: FoodItem) => {
-    setInventory(prev => [...prev, item]);
+    setInventory(prev => [item, ...prev]);
   };
 
-  const handleUpdateStatus = (id: string, status: 'donated' | 'wasted') => {
+  const handleDeleteItem = (id: string) => {
+      setInventory(prev => prev.filter(i => i.id !== id));
+  };
+
+  const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
+    // If it's wasted, maybe remove it or mark it? Spec implies status update.
+    // For this demo, if 'consumed' or 'wasted' via menu, we might just remove or update status.
+    // Let's keep it in the list but change status, or filter out in views.
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     
     // Update Stats
@@ -104,6 +241,7 @@ export default function App() {
   };
 
   const handleCookRecipe = (recipe: Recipe) => {
+    // Mark items as consumed
     setInventory(prev => prev.map(item => {
       const isUsed = recipe.ingredients.some(ing => ing.toLowerCase().includes(item.name.toLowerCase()));
       return isUsed && item.status === 'active' ? { ...item, status: 'consumed' } : item;
@@ -131,82 +269,35 @@ export default function App() {
 
   if (!auth.isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100">
-        <header className="px-6 py-6 flex justify-center">
-             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-200">E</div>
-                <h1 className="font-bold text-xl tracking-tight text-slate-800">EcoTable</h1>
+      <div className="min-h-screen bg-[#F5F5F5] font-sans text-[#212121] flex justify-center">
+        <div className="w-full max-w-[420px] bg-white min-h-screen relative shadow-2xl p-6 flex flex-col items-center justify-center">
+             <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-[#1CAE9E] rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">F</div>
+                <h1 className="font-bold text-2xl tracking-tight text-[#212121]">FoodSaver</h1>
             </div>
-        </header>
-        {isLoginView ? (
-          <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
-        ) : (
-          <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
-        )}
+          {isLoginView ? (
+            <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
+          ) : (
+            <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <HashRouter>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100">
-        {/* Top Header */}
-        <header className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-200">E</div>
-            <h1 className="font-bold text-xl tracking-tight text-slate-800">EcoTable</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-white border border-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-              {stats.xp} XP
-            </div>
-            <div className="relative group">
-                <button className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden hover:ring-2 ring-indigo-100 transition-all">
-                    {auth.user?.avatar ? <img src={auth.user.avatar} alt="User" /> : <User className="w-full h-full p-2 text-slate-400" />}
-                </button>
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 hidden group-hover:block animate-in fade-in slide-in-from-top-2">
-                    <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                        <p className="font-bold text-sm text-slate-800">{auth.user?.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{auth.user?.email}</p>
-                    </div>
-                    <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                        <LogOut size={16} /> Sign Out
-                    </button>
-                </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content Area */}
-        <main className="max-w-2xl mx-auto p-4 md:p-6 min-h-[calc(100vh-140px)]">
-          <Routes>
-            <Route path="/" element={<Dashboard stats={stats} inventory={inventory} />} />
-            <Route path="/inventory" element={
-              <Inventory 
-                items={inventory} 
-                onAddItem={handleAddItem} 
-                onUpdateStatus={handleUpdateStatus} 
-              />
-            } />
-            <Route path="/recipes" element={
-              <Recipes 
-                inventory={inventory} 
-                onCookRecipe={handleCookRecipe} 
-              />
-            } />
-            <Route path="/donate" element={
-                <Donation 
-                    inventory={inventory} 
-                    onDonateComplete={handleDonateComplete} 
-                />
-            } />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-
-        <BottomNav />
-      </div>
+      <AppContent 
+        auth={auth}
+        stats={stats}
+        inventory={inventory}
+        handleLogout={handleLogout}
+        handleAddItem={handleAddItem}
+        handleDeleteItem={handleDeleteItem}
+        handleUpdateStatus={handleUpdateStatus}
+        handleCookRecipe={handleCookRecipe}
+        handleDonateComplete={handleDonateComplete}
+      />
     </HashRouter>
   );
 }

@@ -75,33 +75,33 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-in fade-in zoom-in duration-500">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-in fade-in zoom-in duration-500 pt-10">
         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
           <CheckCircle className="text-green-600 w-12 h-12" />
         </div>
-        <h2 className="text-3xl font-bold text-slate-800 mb-2">Donation Confirmed!</h2>
-        <p className="text-slate-500 mb-8 max-w-xs mx-auto">
+        <h2 className="text-3xl font-bold text-[#212121] mb-2">Donation Confirmed!</h2>
+        <p className="text-[#757575] mb-8 max-w-xs mx-auto">
           {deliveryMethod === 'pickup' 
             ? 'A volunteer driver has been notified and will arrive shortly.' 
             : 'Thank you for dropping off the food. The NGO is expecting you.'}
         </p>
-        <div className="bg-slate-50 p-6 rounded-2xl w-full max-w-sm mb-8 border border-slate-100">
-           <div className="flex justify-between mb-2">
-             <span className="text-slate-500">Value Rescued</span>
-             <span className="font-bold text-emerald-600">${foodValue}.00</span>
+        <div className="bg-white p-6 rounded-2xl w-full max-w-sm mb-8 border border-slate-100 shadow-lg">
+           <div className="flex justify-between mb-3 pb-3 border-b border-slate-50">
+             <span className="text-[#757575] text-sm">Value Rescued</span>
+             <span className="font-bold text-[#1CAE9E]">${foodValue}.00</span>
            </div>
-           <div className="flex justify-between mb-2">
-             <span className="text-slate-500">Items</span>
-             <span className="font-bold text-slate-800">{selectedItems.length} items</span>
+           <div className="flex justify-between mb-3 pb-3 border-b border-slate-50">
+             <span className="text-[#757575] text-sm">Items Donated</span>
+             <span className="font-bold text-[#212121]">{selectedItems.length} items</span>
            </div>
            <div className="flex justify-between">
-             <span className="text-slate-500">Recipient</span>
-             <span className="font-bold text-slate-800">{MOCK_NGOS.find(n => n.id === selectedNGO)?.name}</span>
+             <span className="text-[#757575] text-sm">Recipient</span>
+             <span className="font-bold text-[#212121] text-right">{MOCK_NGOS.find(n => n.id === selectedNGO)?.name}</span>
            </div>
         </div>
         <button 
           onClick={() => { setIsSuccess(false); setStep(1); setSelectedItems([]); setSelectedNGO(null); setDeliveryMethod('dropoff'); setPickupNote(''); }}
-          className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors"
+          className="bg-[#1CAE9E] text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-colors"
         >
           Make Another Donation
         </button>
@@ -110,67 +110,68 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   }
 
   return (
-    <div className="pb-24">
-      {/* Progress Steps */}
-      <div className="flex items-center justify-between px-4 mb-8">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex flex-col items-center relative z-10">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 ${step >= s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-200 text-slate-500'}`}>
-              {step > s ? <CheckCircle size={20} /> : s}
+    <div className="pb-24 px-4 pt-4 animate-in fade-in duration-300">
+      
+      {/* Header */}
+      <div className="flex justify-between items-end mb-6">
+            <div>
+                <h2 className="text-[28px] font-[700] text-[#212121] leading-[36px]">Donate Food</h2>
+                <p className="text-[14px] font-[400] text-[#757575] mt-1">Step {step} of 3</p>
             </div>
-            <span className={`text-xs mt-2 font-medium ${step >= s ? 'text-indigo-600' : 'text-slate-400'}`}>
-              {s === 1 ? 'Items' : s === 2 ? 'NGO' : 'Confirm'}
-            </span>
-          </div>
-        ))}
-        {/* Progress Line */}
-        <div className="absolute left-8 right-8 top-9 h-0.5 bg-slate-200 -z-0">
-          <div className="h-full bg-indigo-600 transition-all duration-300" style={{ width: `${((step - 1) / 2) * 100}%` }}></div>
-        </div>
+            <div className="w-[40px] h-[40px] bg-[#F44336]/10 rounded-full flex items-center justify-center text-[#F44336]">
+                <Heart size={20} fill="currentColor" />
+            </div>
+       </div>
+
+      {/* Progress Bar */}
+      <div className="h-1 bg-[#EEE] rounded-full mb-8 overflow-hidden">
+        <div className="h-full bg-[#1CAE9E] transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }}></div>
       </div>
 
       {/* STEP 1: SELECT ITEMS */}
       {step === 1 && (
         <div className="space-y-4 animate-in slide-in-from-right duration-300">
-          <h2 className="text-2xl font-bold text-slate-800 px-1">Select Items to Donate</h2>
-          <p className="text-slate-500 px-1 mb-4">Choose active items from your pantry.</p>
+          <p className="text-[#757575] text-sm font-medium">Select items from your inventory:</p>
           
           <div className="grid gap-3">
             {donatableItems.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
-                <ShoppingBag className="mx-auto text-slate-300 mb-3" size={48} />
-                <p className="text-slate-500">No active items to donate.</p>
+              <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-[#E0E0E0]">
+                <ShoppingBag className="mx-auto text-[#CCC] mb-3" size={48} />
+                <p className="text-[#757575]">No active items to donate.</p>
               </div>
             ) : donatableItems.map(item => (
-              <label key={item.id} className={`flex items-center p-4 bg-white rounded-2xl border transition-all cursor-pointer ${selectedItems.includes(item.id) ? 'border-indigo-600 shadow-md bg-indigo-50/30' : 'border-slate-100 shadow-sm'}`}>
+              <label key={item.id} className={`flex items-center p-4 bg-white rounded-[16px] border transition-all cursor-pointer ${selectedItems.includes(item.id) ? 'border-[#1CAE9E] shadow-md bg-[#1CAE9E]/5' : 'border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)]'}`}>
+                <div className={`w-5 h-5 rounded border flex items-center justify-center mr-4 transition-colors ${selectedItems.includes(item.id) ? 'bg-[#1CAE9E] border-[#1CAE9E]' : 'border-[#CCC] bg-white'}`}>
+                    {selectedItems.includes(item.id) && <CheckCircle size={14} className="text-white" />}
+                </div>
                 <input 
                   type="checkbox" 
                   checked={selectedItems.includes(item.id)}
                   onChange={() => handleItemToggle(item.id)}
-                  className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 mr-4"
+                  className="hidden"
                 />
                 <div className="flex-1">
-                  <div className="font-bold text-slate-800">{item.name}</div>
-                  <div className="text-sm text-slate-500">{item.quantity} {item.unit} • Expires {new Date(item.expiryDate).toLocaleDateString()}</div>
+                  <div className="font-bold text-[#212121]">{item.name}</div>
+                  <div className="text-sm text-[#757575]">{item.quantity} {item.unit}</div>
                 </div>
-                <div className="text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded text-xs">
+                <div className="text-[#1CAE9E] font-bold bg-[#1CAE9E]/10 px-2 py-1 rounded text-[10px] uppercase tracking-wide">
                   {item.category}
                 </div>
               </label>
             ))}
           </div>
 
-          <div className="fixed bottom-24 left-4 right-4 bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-xl flex items-center justify-between">
+          <div className="fixed bottom-24 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-[16px] border border-slate-100 shadow-2xl flex items-center justify-between z-40">
             <div>
-              <p className="text-sm text-slate-500">Selected Value</p>
-              <p className="font-bold text-slate-800 text-lg">~${selectedItems.length * 10}</p>
+              <p className="text-[10px] uppercase font-bold text-[#757575]">Value</p>
+              <p className="font-bold text-[#212121] text-xl">~${selectedItems.length * 10}</p>
             </div>
             <button 
               onClick={() => setStep(2)}
               disabled={selectedItems.length === 0}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="bg-[#1CAE9E] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              Next Step <ArrowRight size={18} />
+              Next <ArrowRight size={18} />
             </button>
           </div>
         </div>
@@ -179,82 +180,73 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       {/* STEP 2: SELECT NGO */}
       {step === 2 && (
         <div className="space-y-4 animate-in slide-in-from-right duration-300">
-          <div className="flex justify-between items-center px-1">
-            <h2 className="text-2xl font-bold text-slate-800">Who should get this?</h2>
+          <div className="flex justify-between items-center">
+            <p className="text-[#757575] text-sm font-medium">Choose a partner nearby:</p>
             {/* View Toggle */}
-            <div className="flex bg-slate-200 p-1 rounded-xl">
+            <div className="flex bg-[#F5F5F5] p-1 rounded-lg">
                 <button 
                     onClick={() => setViewMode('list')} 
-                    className={`p-2 rounded-lg transition-all flex items-center gap-1 ${viewMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-[#1CAE9E]' : 'text-[#757575]'}`}
                 >
-                    <List size={18} />
+                    <List size={16} />
                 </button>
                 <button 
                     onClick={() => setViewMode('map')} 
-                    className={`p-2 rounded-lg transition-all flex items-center gap-1 ${viewMode === 'map' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'map' ? 'bg-white shadow-sm text-[#1CAE9E]' : 'text-[#757575]'}`}
                 >
-                    <MapIcon size={18} />
+                    <MapIcon size={16} />
                 </button>
             </div>
           </div>
           
           {viewMode === 'map' ? (
-            <div className="h-[400px] bg-slate-100 rounded-3xl relative overflow-hidden mb-4 border border-slate-200 shadow-inner">
-                 <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+            <div className="h-[400px] bg-slate-100 rounded-[20px] relative overflow-hidden mb-4 border border-slate-200 shadow-inner">
+                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#1CAE9E 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                  
                  {/* Current Location Pin */}
                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                     <div className="relative flex flex-col items-center">
-                       <div className="w-32 h-32 bg-indigo-500/10 rounded-full animate-ping absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-                       <MapPin className="text-indigo-600 drop-shadow-xl z-10" size={40} fill="currentColor" />
-                       <span className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold shadow-sm mt-1 z-10">You</span>
+                       <div className="w-24 h-24 bg-[#1CAE9E]/20 rounded-full animate-ping absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                       <div className="w-4 h-4 bg-[#1CAE9E] rounded-full border-2 border-white shadow-md z-10"></div>
                     </div>
                  </div>
-
-                 {/* Mock Pins for NGOs */}
-                 <div className="absolute top-1/4 left-1/4 flex flex-col items-center">
-                     <MapPin className="text-red-500 drop-shadow-md" size={32} fill="currentColor" />
-                 </div>
-                 <div className="absolute bottom-1/3 right-1/4 flex flex-col items-center">
-                     <MapPin className="text-orange-500 drop-shadow-md" size={32} fill="currentColor" />
-                 </div>
                  
-                 <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 shadow-sm border border-slate-100">
-                   1.2 km radius
+                 <div className="absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur p-3 rounded-xl text-xs font-medium text-slate-600 shadow-sm text-center">
+                   Map view is simulated for demo
                  </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {MOCK_NGOS.map(ngo => (
                 <div 
                   key={ngo.id} 
                   onClick={() => setSelectedNGO(ngo.id)}
-                  className={`bg-white rounded-2xl p-5 border transition-all cursor-pointer ${selectedNGO === ngo.id ? 'border-indigo-600 ring-1 ring-indigo-600 shadow-md bg-indigo-50/10' : 'border-slate-100 shadow-sm hover:border-indigo-200'}`}
+                  className={`bg-white rounded-[16px] p-5 border transition-all cursor-pointer ${selectedNGO === ngo.id ? 'border-[#1CAE9E] ring-1 ring-[#1CAE9E] shadow-md bg-[#1CAE9E]/5' : 'border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)]'}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="font-bold text-lg text-slate-800">{ngo.name}</h3>
-                            <span className="text-slate-400 text-sm font-medium">{ngo.distance} away</span>
+                            <h3 className="font-bold text-lg text-[#212121]">{ngo.name}</h3>
                         </div>
+                        <span className="text-[#757575] text-sm font-medium">{ngo.distance} away</span>
                     </div>
-                    <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+                    <div className="bg-[#FFC107]/20 text-[#212121] px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
                       ★ {ngo.rating}
                     </div>
                   </div>
                   
                   {ngo.urgency && (
-                      <div className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-orange-100 mb-4">
-                          <AlertCircle size={14} />
+                      <div className="inline-flex items-center gap-1.5 bg-[#F44336]/10 text-[#F44336] px-3 py-1.5 rounded-lg text-xs font-bold border border-[#F44336]/20 mb-4">
+                          <AlertCircle size={12} />
                           {ngo.urgency}
                       </div>
                   )}
                   
                   <div className="flex justify-end">
                       <button 
-                          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-colors ${selectedNGO === ngo.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                          className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors ${selectedNGO === ngo.id ? 'bg-[#1CAE9E] text-white' : 'bg-[#F5F5F5] text-[#757575]'}`}
                       >
-                          {selectedNGO === ngo.id ? 'Selected' : 'Select'}
+                          {selectedNGO === ngo.id ? 'Selected' : 'Select Partner'}
                       </button>
                   </div>
                 </div>
@@ -262,17 +254,17 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             </div>
           )}
 
-          <div className="fixed bottom-24 left-4 right-4 flex gap-3">
+          <div className="fixed bottom-24 left-4 right-4 flex gap-3 z-40">
             <button 
               onClick={() => setStep(1)}
-              className="flex-1 bg-white text-slate-600 py-3 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+              className="flex-1 bg-white text-[#757575] py-3 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
             >
               Back
             </button>
             <button 
               onClick={() => setStep(3)}
               disabled={!selectedNGO}
-              className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 bg-[#1CAE9E] text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               Next <ArrowRight size={18} />
             </button>
@@ -283,79 +275,72 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       {/* STEP 3: LOGISTICS (NO PAYMENT) */}
       {step === 3 && (
         <div className="space-y-6 animate-in slide-in-from-right duration-300">
-          <h2 className="text-2xl font-bold text-slate-800 px-1">Logistics</h2>
+          <p className="text-[#757575] text-sm font-medium">How will the food get there?</p>
 
           {/* Logistics Toggle */}
           <div className="grid grid-cols-2 gap-3">
             <button
                 type="button"
                 onClick={() => setDeliveryMethod('dropoff')}
-                className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'dropoff' ? 'bg-indigo-50 border-indigo-600 text-indigo-700 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                className={`p-4 rounded-[16px] border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'dropoff' ? 'bg-[#1CAE9E]/10 border-[#1CAE9E] text-[#1CAE9E]' : 'bg-white border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)] text-[#757575]'}`}
             >
                 <Package size={24} />
                 <span className="font-bold text-sm">Self Drop-off</span>
-                <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Free</span>
             </button>
             <button
                 type="button"
                 onClick={() => setDeliveryMethod('pickup')}
-                className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'pickup' ? 'bg-indigo-50 border-indigo-600 text-indigo-700 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                className={`p-4 rounded-[16px] border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'pickup' ? 'bg-[#1CAE9E]/10 border-[#1CAE9E] text-[#1CAE9E]' : 'bg-white border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)] text-[#757575]'}`}
             >
                 <Truck size={24} />
                 <span className="font-bold text-sm">Request Pickup</span>
-                <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Sponsored</span>
             </button>
           </div>
 
-          <div className="bg-slate-800 text-white p-6 rounded-3xl shadow-xl">
+          <div className="bg-[#212121] text-white p-6 rounded-[20px] shadow-xl">
             <h2 className="text-xl font-bold mb-1">Total Cost to You</h2>
             <div className="flex items-baseline gap-1">
-               <span className="text-4xl font-bold">$0</span>
-               <span className="text-slate-400">.00</span>
+               <span className="text-4xl font-bold text-[#1CAE9E]">$0</span>
+               <span className="text-[#757575]">.00</span>
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-700/50 flex justify-between text-sm text-slate-300">
+            <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between text-sm text-gray-400">
                <span>Logistics Fee</span>
-               <span className="text-emerald-400 font-bold">Covered by Partner NGO</span>
+               <span className="text-[#1CAE9E] font-bold">Covered by Partner</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {deliveryMethod === 'pickup' && (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-2">
-                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <MessageSquare size={20} className="text-indigo-600" /> Pickup Instructions
+                <div className="bg-white p-6 rounded-[16px] shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-2">
+                <h3 className="font-bold text-[#212121] mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                    Pickup Instructions
                 </h3>
                 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Driver Notes (Optional)</label>
                         <textarea 
                           value={pickupNote}
                           onChange={(e) => setPickupNote(e.target.value)}
-                          placeholder="e.g. Gate code is 1234, please leave crate at front door."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none"
+                          placeholder="Note for driver (e.g. Gate code)"
+                          className="w-full bg-[#F5F5F5] border-transparent rounded-xl px-4 py-3 text-[#212121] focus:ring-2 focus:ring-[#1CAE9E] outline-none h-24 resize-none text-sm placeholder-[#999]"
                         />
                     </div>
-                </div>
-                
-                <div className="mt-4 flex items-center gap-2 text-xs text-slate-400 bg-slate-50 p-2 rounded-lg">
-                    <ShieldCheck size={14} className="text-emerald-500" /> Verified Volunteer Driver
                 </div>
                 </div>
             )}
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-2 fixed bottom-24 left-4 right-4 z-40">
               <button 
                 type="button"
                 onClick={() => setStep(2)}
-                className="flex-1 bg-white text-slate-600 py-4 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+                className="flex-1 bg-white text-[#757575] py-4 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
               >
                 Back
               </button>
               <button 
                 type="submit"
                 disabled={isProcessing}
-                className="flex-[2] bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70"
+                className="flex-[2] bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70"
               >
                 {isProcessing ? 'Processing...' : (
                     deliveryMethod === 'pickup' 

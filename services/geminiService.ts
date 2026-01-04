@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { FoodItem, Recipe, ScanResult, FoodCategory } from '../types';
 
@@ -11,21 +12,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
  */
 export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult> => {
   try {
+    const today = new Date().toISOString().split('T')[0];
     const prompt = `
-      You are an expert food quality inspector. 
-      1. Identify the main food item.
-      2. **Crucially: Analyze its visual condition** for freshness (look for spots, bruising, color vibrancy, wilting, or texture changes).
-      3. Estimate the expiry date based on this specific visual condition (e.g. a spotted banana expires sooner than a green one).
-      
-      Return a JSON object with:
-      - name: Name of the item.
-      - category: One of [Produce, Dairy, Meat, Grains, Bakery, Canned, Other].
-      - condition: A short description of the visual state (e.g., "Fresh & Firm", "Ripe with spots", "Slightly Wilted", "Moldy").
-      - expiryEstimation: Estimated expiry date from today (YYYY-MM-DD) based on the condition.
-      - quantityEstimation: Estimated quantity (number).
-      - unitEstimation: Unit (pc, kg, liter, etc).
-
-      If not food, set name="Unknown Item".
+      Analyze this image. Today is ${today}.
+      1. First, strictly determine if the image contains edible food.
+      2. Identify the item name and category.
+      3. Assess its visual condition (Fresh, Ripe, Bruised, Wilted, etc.).
+      4. Estimate a specific expiry date (YYYY-MM-DD) based on its condition relative to today (${today}).
     `;
 
     const response = await ai.models.generateContent({
@@ -46,14 +39,15 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            isFood: { type: Type.BOOLEAN, description: "True ONLY if image contains food/ingredients. False for people, pets, blurred objects, etc." },
             name: { type: Type.STRING },
             category: { type: Type.STRING, enum: ["Produce", "Dairy", "Meat", "Grains", "Bakery", "Canned", "Other"] },
-            condition: { type: Type.STRING, description: "Visual description of freshness state" },
+            condition: { type: Type.STRING, description: "Visual freshness state e.g. 'Fresh', 'Ripe', 'Wilted'" },
             expiryEstimation: { type: Type.STRING, description: "YYYY-MM-DD" },
             quantityEstimation: { type: Type.NUMBER },
             unitEstimation: { type: Type.STRING }
           },
-          required: ["name", "category", "condition", "expiryEstimation", "quantityEstimation", "unitEstimation"]
+          required: ["isFood", "name", "category", "condition", "expiryEstimation", "quantityEstimation", "unitEstimation"]
         }
       }
     });
@@ -69,36 +63,25 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
     try {
         data = JSON.parse(cleanText);
     } catch (parseError) {
-        console.warn("Failed to parse Gemini response:", text);
-        return {
-          name: "Unknown Item",
-          category: "Other",
-          condition: "Unknown",
-          expiryEstimation: new Date().toISOString().split('T')[0],
-          quantityEstimation: 1,
-          unitEstimation: "pc"
-        };
+        throw new Error("Failed to parse AI response");
+    }
+
+    if (!data.isFood) {
+        throw new Error("NOT_FOOD");
     }
 
     return {
       name: data.name || "Unknown Item",
       category: data.category || "Other",
       condition: data.condition || "Good",
-      expiryEstimation: data.expiryEstimation || new Date().toISOString().split('T')[0],
+      expiryEstimation: data.expiryEstimation || today,
       quantityEstimation: data.quantityEstimation || 1,
       unitEstimation: data.unitEstimation || "unit"
     };
 
   } catch (error) {
     console.error("Gemini Vision Error:", error);
-    return {
-      name: "Unknown Item",
-      category: "Other",
-      condition: "Unknown",
-      expiryEstimation: new Date().toISOString().split('T')[0],
-      quantityEstimation: 1,
-      unitEstimation: "pc"
-    };
+    throw error;
   }
 };
 
