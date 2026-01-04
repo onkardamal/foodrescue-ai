@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { NGO, FoodCategory, FoodItem } from '../types';
 import { MapPin, Heart, CheckCircle, ArrowRight, ShoppingBag, Truck, Package, MessageSquare, ShieldCheck, List, Map as MapIcon, AlertCircle } from 'lucide-react';
@@ -76,32 +75,32 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-in fade-in zoom-in duration-500 pt-10">
-        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle className="text-green-600 w-12 h-12" />
+        <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle className="text-green-600 dark:text-green-400 w-12 h-12" />
         </div>
-        <h2 className="text-3xl font-bold text-[#212121] mb-2">Donation Confirmed!</h2>
-        <p className="text-[#757575] mb-8 max-w-xs mx-auto">
+        <h2 className="text-3xl font-bold text-[#212121] dark:text-white mb-2">Donation Confirmed!</h2>
+        <p className="text-[#757575] dark:text-slate-400 mb-8 max-w-xs mx-auto">
           {deliveryMethod === 'pickup' 
             ? 'A volunteer driver has been notified and will arrive shortly.' 
             : 'Thank you for dropping off the food. The NGO is expecting you.'}
         </p>
-        <div className="bg-white p-6 rounded-2xl w-full max-w-sm mb-8 border border-slate-100 shadow-lg">
-           <div className="flex justify-between mb-3 pb-3 border-b border-slate-50">
-             <span className="text-[#757575] text-sm">Value Rescued</span>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-sm mb-8 border border-slate-100 dark:border-slate-700 shadow-lg">
+           <div className="flex justify-between mb-3 pb-3 border-b border-slate-50 dark:border-slate-700">
+             <span className="text-[#757575] dark:text-slate-400 text-sm">Value Rescued</span>
              <span className="font-bold text-[#1CAE9E]">${foodValue}.00</span>
            </div>
-           <div className="flex justify-between mb-3 pb-3 border-b border-slate-50">
-             <span className="text-[#757575] text-sm">Items Donated</span>
-             <span className="font-bold text-[#212121]">{selectedItems.length} items</span>
+           <div className="flex justify-between mb-3 pb-3 border-b border-slate-50 dark:border-slate-700">
+             <span className="text-[#757575] dark:text-slate-400 text-sm">Items Donated</span>
+             <span className="font-bold text-[#212121] dark:text-white">{selectedItems.length} items</span>
            </div>
            <div className="flex justify-between">
-             <span className="text-[#757575] text-sm">Recipient</span>
-             <span className="font-bold text-[#212121] text-right">{MOCK_NGOS.find(n => n.id === selectedNGO)?.name}</span>
+             <span className="text-[#757575] dark:text-slate-400 text-sm">Recipient</span>
+             <span className="font-bold text-[#212121] dark:text-white text-right">{MOCK_NGOS.find(n => n.id === selectedNGO)?.name}</span>
            </div>
         </div>
         <button 
           onClick={() => { setIsSuccess(false); setStep(1); setSelectedItems([]); setSelectedNGO(null); setDeliveryMethod('dropoff'); setPickupNote(''); }}
-          className="bg-[#1CAE9E] text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-colors"
+          className="bg-[#1CAE9E] text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-colors"
         >
           Make Another Donation
         </button>
@@ -110,13 +109,13 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   }
 
   return (
-    <div className="pb-24 px-4 pt-4 animate-in fade-in duration-300">
+    <div className="pb-24 md:pb-0 px-4 pt-4 animate-in fade-in duration-300 max-w-2xl mx-auto">
       
       {/* Header */}
       <div className="flex justify-between items-end mb-6">
             <div>
-                <h2 className="text-[28px] font-[700] text-[#212121] leading-[36px]">Donate Food</h2>
-                <p className="text-[14px] font-[400] text-[#757575] mt-1">Step {step} of 3</p>
+                <h2 className="text-[28px] md:text-[36px] font-[700] text-[#212121] dark:text-white leading-[36px]">Donate Food</h2>
+                <p className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 mt-1">Step {step} of 3</p>
             </div>
             <div className="w-[40px] h-[40px] bg-[#F44336]/10 rounded-full flex items-center justify-center text-[#F44336]">
                 <Heart size={20} fill="currentColor" />
@@ -124,24 +123,24 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
        </div>
 
       {/* Progress Bar */}
-      <div className="h-1 bg-[#EEE] rounded-full mb-8 overflow-hidden">
+      <div className="h-1 bg-[#EEE] dark:bg-slate-700 rounded-full mb-8 overflow-hidden">
         <div className="h-full bg-[#1CAE9E] transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }}></div>
       </div>
 
       {/* STEP 1: SELECT ITEMS */}
       {step === 1 && (
         <div className="space-y-4 animate-in slide-in-from-right duration-300">
-          <p className="text-[#757575] text-sm font-medium">Select items from your inventory:</p>
+          <p className="text-[#757575] dark:text-slate-400 text-sm font-medium">Select items from your inventory:</p>
           
           <div className="grid gap-3">
             {donatableItems.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-[#E0E0E0]">
-                <ShoppingBag className="mx-auto text-[#CCC] mb-3" size={48} />
-                <p className="text-[#757575]">No active items to donate.</p>
+              <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-[#E0E0E0] dark:border-slate-700">
+                <ShoppingBag className="mx-auto text-[#CCC] dark:text-slate-600 mb-3" size={48} />
+                <p className="text-[#757575] dark:text-slate-400">No active items to donate.</p>
               </div>
             ) : donatableItems.map(item => (
-              <label key={item.id} className={`flex items-center p-4 bg-white rounded-[16px] border transition-all cursor-pointer ${selectedItems.includes(item.id) ? 'border-[#1CAE9E] shadow-md bg-[#1CAE9E]/5' : 'border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)]'}`}>
-                <div className={`w-5 h-5 rounded border flex items-center justify-center mr-4 transition-colors ${selectedItems.includes(item.id) ? 'bg-[#1CAE9E] border-[#1CAE9E]' : 'border-[#CCC] bg-white'}`}>
+              <label key={item.id} className={`flex items-center p-4 bg-white dark:bg-slate-800 rounded-[16px] border transition-all cursor-pointer ${selectedItems.includes(item.id) ? 'border-[#1CAE9E] shadow-md bg-[#1CAE9E]/5 dark:bg-[#1CAE9E]/10' : 'border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)]'}`}>
+                <div className={`w-5 h-5 rounded border flex items-center justify-center mr-4 transition-colors ${selectedItems.includes(item.id) ? 'bg-[#1CAE9E] border-[#1CAE9E]' : 'border-[#CCC] dark:border-slate-600 bg-white dark:bg-slate-700'}`}>
                     {selectedItems.includes(item.id) && <CheckCircle size={14} className="text-white" />}
                 </div>
                 <input 
@@ -151,25 +150,25 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                   className="hidden"
                 />
                 <div className="flex-1">
-                  <div className="font-bold text-[#212121]">{item.name}</div>
-                  <div className="text-sm text-[#757575]">{item.quantity} {item.unit}</div>
+                  <div className="font-bold text-[#212121] dark:text-white">{item.name}</div>
+                  <div className="text-sm text-[#757575] dark:text-slate-400">{item.quantity} {item.unit}</div>
                 </div>
-                <div className="text-[#1CAE9E] font-bold bg-[#1CAE9E]/10 px-2 py-1 rounded text-[10px] uppercase tracking-wide">
+                <div className="text-[#1CAE9E] font-bold bg-[#1CAE9E]/10 dark:bg-[#1CAE9E]/20 px-2 py-1 rounded text-[10px] uppercase tracking-wide">
                   {item.category}
                 </div>
               </label>
             ))}
           </div>
 
-          <div className="fixed bottom-24 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-[16px] border border-slate-100 shadow-2xl flex items-center justify-between z-40">
+          <div className="fixed bottom-24 md:bottom-10 left-4 right-4 md:left-auto md:right-auto md:w-[600px] md:relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 rounded-[16px] border border-slate-100 dark:border-slate-800 shadow-2xl md:shadow-none md:border-none flex items-center justify-between z-40">
             <div>
-              <p className="text-[10px] uppercase font-bold text-[#757575]">Value</p>
-              <p className="font-bold text-[#212121] text-xl">~${selectedItems.length * 10}</p>
+              <p className="text-[10px] uppercase font-bold text-[#757575] dark:text-slate-400">Value</p>
+              <p className="font-bold text-[#212121] dark:text-white text-xl">~${selectedItems.length * 10}</p>
             </div>
             <button 
               onClick={() => setStep(2)}
               disabled={selectedItems.length === 0}
-              className="bg-[#1CAE9E] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="bg-[#1CAE9E] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               Next <ArrowRight size={18} />
             </button>
@@ -181,18 +180,18 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       {step === 2 && (
         <div className="space-y-4 animate-in slide-in-from-right duration-300">
           <div className="flex justify-between items-center">
-            <p className="text-[#757575] text-sm font-medium">Choose a partner nearby:</p>
+            <p className="text-[#757575] dark:text-slate-400 text-sm font-medium">Choose a partner nearby:</p>
             {/* View Toggle */}
-            <div className="flex bg-[#F5F5F5] p-1 rounded-lg">
+            <div className="flex bg-[#F5F5F5] dark:bg-slate-800 p-1 rounded-lg">
                 <button 
                     onClick={() => setViewMode('list')} 
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-[#1CAE9E]' : 'text-[#757575]'}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}
                 >
                     <List size={16} />
                 </button>
                 <button 
                     onClick={() => setViewMode('map')} 
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'map' ? 'bg-white shadow-sm text-[#1CAE9E]' : 'text-[#757575]'}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}
                 >
                     <MapIcon size={16} />
                 </button>
@@ -200,7 +199,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
           </div>
           
           {viewMode === 'map' ? (
-            <div className="h-[400px] bg-slate-100 rounded-[20px] relative overflow-hidden mb-4 border border-slate-200 shadow-inner">
+            <div className="h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[20px] relative overflow-hidden mb-4 border border-slate-200 dark:border-slate-700 shadow-inner">
                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#1CAE9E 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                  
                  {/* Current Location Pin */}
@@ -211,7 +210,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                     </div>
                  </div>
                  
-                 <div className="absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur p-3 rounded-xl text-xs font-medium text-slate-600 shadow-sm text-center">
+                 <div className="absolute bottom-3 left-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur p-3 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm text-center">
                    Map view is simulated for demo
                  </div>
             </div>
@@ -221,16 +220,16 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                 <div 
                   key={ngo.id} 
                   onClick={() => setSelectedNGO(ngo.id)}
-                  className={`bg-white rounded-[16px] p-5 border transition-all cursor-pointer ${selectedNGO === ngo.id ? 'border-[#1CAE9E] ring-1 ring-[#1CAE9E] shadow-md bg-[#1CAE9E]/5' : 'border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)]'}`}
+                  className={`bg-white dark:bg-slate-800 rounded-[16px] p-5 border transition-all cursor-pointer ${selectedNGO === ngo.id ? 'border-[#1CAE9E] ring-1 ring-[#1CAE9E] shadow-md bg-[#1CAE9E]/5 dark:bg-[#1CAE9E]/10' : 'border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)]'}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="font-bold text-lg text-[#212121]">{ngo.name}</h3>
+                            <h3 className="font-bold text-lg text-[#212121] dark:text-white">{ngo.name}</h3>
                         </div>
-                        <span className="text-[#757575] text-sm font-medium">{ngo.distance} away</span>
+                        <span className="text-[#757575] dark:text-slate-400 text-sm font-medium">{ngo.distance} away</span>
                     </div>
-                    <div className="bg-[#FFC107]/20 text-[#212121] px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+                    <div className="bg-[#FFC107]/20 text-[#212121] dark:text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
                       ★ {ngo.rating}
                     </div>
                   </div>
@@ -244,7 +243,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                   
                   <div className="flex justify-end">
                       <button 
-                          className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors ${selectedNGO === ngo.id ? 'bg-[#1CAE9E] text-white' : 'bg-[#F5F5F5] text-[#757575]'}`}
+                          className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors ${selectedNGO === ngo.id ? 'bg-[#1CAE9E] text-white' : 'bg-[#F5F5F5] dark:bg-slate-700 text-[#757575] dark:text-slate-300'}`}
                       >
                           {selectedNGO === ngo.id ? 'Selected' : 'Select Partner'}
                       </button>
@@ -254,17 +253,17 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             </div>
           )}
 
-          <div className="fixed bottom-24 left-4 right-4 flex gap-3 z-40">
+          <div className="fixed bottom-24 md:bottom-10 left-4 right-4 md:left-auto md:right-auto md:w-[600px] md:relative flex gap-3 z-40">
             <button 
               onClick={() => setStep(1)}
-              className="flex-1 bg-white text-[#757575] py-3 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+              className="flex-1 bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 py-3 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
               Back
             </button>
             <button 
               onClick={() => setStep(3)}
               disabled={!selectedNGO}
-              className="flex-1 bg-[#1CAE9E] text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 bg-[#1CAE9E] text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               Next <ArrowRight size={18} />
             </button>
@@ -275,14 +274,14 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       {/* STEP 3: LOGISTICS (NO PAYMENT) */}
       {step === 3 && (
         <div className="space-y-6 animate-in slide-in-from-right duration-300">
-          <p className="text-[#757575] text-sm font-medium">How will the food get there?</p>
+          <p className="text-[#757575] dark:text-slate-400 text-sm font-medium">How will the food get there?</p>
 
           {/* Logistics Toggle */}
           <div className="grid grid-cols-2 gap-3">
             <button
                 type="button"
                 onClick={() => setDeliveryMethod('dropoff')}
-                className={`p-4 rounded-[16px] border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'dropoff' ? 'bg-[#1CAE9E]/10 border-[#1CAE9E] text-[#1CAE9E]' : 'bg-white border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)] text-[#757575]'}`}
+                className={`p-4 rounded-[16px] border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'dropoff' ? 'bg-[#1CAE9E]/10 border-[#1CAE9E] text-[#1CAE9E]' : 'bg-white dark:bg-slate-800 border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)] text-[#757575] dark:text-slate-400'}`}
             >
                 <Package size={24} />
                 <span className="font-bold text-sm">Self Drop-off</span>
@@ -290,18 +289,18 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             <button
                 type="button"
                 onClick={() => setDeliveryMethod('pickup')}
-                className={`p-4 rounded-[16px] border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'pickup' ? 'bg-[#1CAE9E]/10 border-[#1CAE9E] text-[#1CAE9E]' : 'bg-white border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)] text-[#757575]'}`}
+                className={`p-4 rounded-[16px] border flex flex-col items-center gap-2 transition-all ${deliveryMethod === 'pickup' ? 'bg-[#1CAE9E]/10 border-[#1CAE9E] text-[#1CAE9E]' : 'bg-white dark:bg-slate-800 border-transparent shadow-[0_2px_4px_rgba(0,0,0,0.05)] text-[#757575] dark:text-slate-400'}`}
             >
                 <Truck size={24} />
                 <span className="font-bold text-sm">Request Pickup</span>
             </button>
           </div>
 
-          <div className="bg-[#212121] text-white p-6 rounded-[20px] shadow-xl">
+          <div className="bg-[#212121] dark:bg-slate-900 text-white p-6 rounded-[20px] shadow-xl">
             <h2 className="text-xl font-bold mb-1">Total Cost to You</h2>
             <div className="flex items-baseline gap-1">
                <span className="text-4xl font-bold text-[#1CAE9E]">$0</span>
-               <span className="text-[#757575]">.00</span>
+               <span className="text-[#757575] dark:text-slate-500">.00</span>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between text-sm text-gray-400">
                <span>Logistics Fee</span>
@@ -309,10 +308,10 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 pb-20 md:pb-0">
             {deliveryMethod === 'pickup' && (
-                <div className="bg-white p-6 rounded-[16px] shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-2">
-                <h3 className="font-bold text-[#212121] mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-[16px] shadow-sm border border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-bottom-2">
+                <h3 className="font-bold text-[#212121] dark:text-white mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
                     Pickup Instructions
                 </h3>
                 
@@ -322,25 +321,25 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                           value={pickupNote}
                           onChange={(e) => setPickupNote(e.target.value)}
                           placeholder="Note for driver (e.g. Gate code)"
-                          className="w-full bg-[#F5F5F5] border-transparent rounded-xl px-4 py-3 text-[#212121] focus:ring-2 focus:ring-[#1CAE9E] outline-none h-24 resize-none text-sm placeholder-[#999]"
+                          className="w-full bg-[#F5F5F5] dark:bg-slate-700 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none h-24 resize-none text-sm placeholder-[#999] dark:placeholder-slate-400"
                         />
                     </div>
                 </div>
                 </div>
             )}
 
-            <div className="flex gap-3 pt-2 fixed bottom-24 left-4 right-4 z-40">
+            <div className="flex gap-3 pt-2 fixed bottom-24 md:bottom-10 left-4 right-4 md:left-auto md:right-auto md:w-[600px] md:relative z-40">
               <button 
                 type="button"
                 onClick={() => setStep(2)}
-                className="flex-1 bg-white text-[#757575] py-4 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+                className="flex-1 bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 py-4 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
                 Back
               </button>
               <button 
                 type="submit"
                 disabled={isProcessing}
-                className="flex-[2] bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 hover:bg-[#179c8d] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70"
+                className="flex-[2] bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70"
               >
                 {isProcessing ? 'Processing...' : (
                     deliveryMethod === 'pickup' 

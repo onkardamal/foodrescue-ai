@@ -72,3 +72,10 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
 }
+
+export type Theme = 'light' | 'dark';
+
+export interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+}

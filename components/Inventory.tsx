@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { FoodItem, FoodCategory } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
-import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils } from 'lucide-react';
+import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X } from 'lucide-react';
+import { useTheme } from '../App';
 
 interface InventoryProps {
   items: FoodItem[];
@@ -63,6 +63,95 @@ const getVisualDetails = (item: FoodItem) => {
   return { emoji, statusText, statusColor, progressPercent, progressColor };
 };
 
+interface SwipeableCardProps {
+  children: React.ReactNode;
+  onEdit: () => void;
+  onDelete: () => void;
+  onInteract: () => void;
+}
+
+const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelete, onInteract }) => {
+  const [offset, setOffset] = useState(0);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const startOffset = useRef(0);
+  const isDragging = useRef(false);
+  const isScrolling = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    onInteract();
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    startOffset.current = offset;
+    isDragging.current = true;
+    isScrolling.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || isScrolling.current) return;
+    
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - startX.current;
+    const diffY = currentY - startY.current;
+
+    // Detect scrolling intent (vertical move > horizontal move)
+    if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 5) {
+        isScrolling.current = true;
+        return;
+    }
+
+    // Drag left (negative) up to -120px, drag right up to 0
+    // We add a little resistance if dragging right when closed (optional, here restricted to 0)
+    const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
+    setOffset(newOffset);
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    isScrolling.current = false;
+    // Snap logic: if pulled more than half way (60px), snap open (-120px)
+    if (offset < -60) {
+      setOffset(-120);
+    } else {
+      setOffset(0);
+    }
+  };
+
+  return (
+    <div className="relative w-full h-[88px] overflow-hidden rounded-[12px]">
+      {/* Background Actions */}
+      <div className="absolute inset-y-0 right-0 w-[120px] flex rounded-r-[12px]">
+        <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(); setOffset(0); }}
+            className="flex-1 bg-blue-500 text-white flex flex-col items-center justify-center active:bg-blue-600 transition-colors"
+        >
+            <Pencil size={18} />
+            <span className="text-[10px] font-bold mt-1">Edit</span>
+        </button>
+        <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(); setOffset(0); }}
+            className="flex-1 bg-[#F44336] text-white flex flex-col items-center justify-center active:bg-red-600 transition-colors"
+        >
+            <Trash2 size={18} />
+            <span className="text-[10px] font-bold mt-1">Delete</span>
+        </button>
+      </div>
+      
+      {/* Foreground Card */}
+      <div 
+        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-[12px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] z-10 transition-transform duration-200 ease-out touch-pan-y hover:shadow-md"
+        style={{ transform: `translateX(${offset}px)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const CATEGORIES = [
   "All",
   "Produce",
@@ -82,12 +171,23 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
 
   // Add Item Logic
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState(false); // Used for scanning loading state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Manual Add Logic
+  const [showManualAdd, setShowManualAdd] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    name: '',
+    category: 'Produce',
+    quantity: '1',
+    unit: 'pcs',
+    expiryDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+  });
 
   const scrollTabs = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -187,38 +287,71 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       }
     };
 
+    const handleManualSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onAddItem({
+            id: Math.random().toString(36).substr(2, 9),
+            name: manualForm.name,
+            category: manualForm.category as FoodCategory,
+            quantity: parseFloat(manualForm.quantity) || 1,
+            unit: manualForm.unit,
+            expiryDate: new Date(manualForm.expiryDate).toISOString(),
+            status: 'active',
+            condition: 'Good'
+        });
+        setShowManualAdd(false);
+        setManualForm({
+            name: '',
+            category: 'Produce',
+            quantity: '1',
+            unit: 'pcs',
+            expiryDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+        });
+    };
+
   return (
-    <div className="bg-[#FFFFFF] min-h-screen pb-24 animate-in fade-in duration-300" onClick={() => { setActiveMenuId(null); setShowSortMenu(false); }}>
+    <div className="bg-[#FFFFFF] dark:bg-slate-950 min-h-screen pb-24 md:pb-0 animate-in fade-in duration-300 transition-colors" onClick={() => { setActiveMenuId(null); setShowSortMenu(false); }}>
       
-      {/* 2) Header Area */}
-      <header className="flex justify-between items-center h-[64px] px-4 pt-[16px] bg-white sticky top-0 z-50">
+      {/* 2) Header Area (Mobile Only) */}
+      <header className="flex md:hidden justify-between items-center h-[64px] px-4 pt-[16px] bg-white dark:bg-slate-900 sticky top-0 z-50">
         <div className="flex items-center gap-3">
-            {/* Logo placeholder - using Leaf icon */}
             <div className="w-[48px] h-[48px] flex items-center justify-start">
-                <div className="w-[40px] h-[40px] bg-[#1CAE9E] rounded-full flex items-center justify-center shadow-md shadow-teal-100">
+                <div className="w-[40px] h-[40px] bg-[#1CAE9E] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
                     <Leaf size={20} color="white" fill="white" />
                 </div>
             </div>
-            <h1 className="text-[16px] font-[600] text-[#212121]">FoodSaver</h1>
+            <h1 className="text-[16px] font-[600] text-[#212121] dark:text-white">FoodSaver</h1>
         </div>
         <button className="w-[44px] h-[44px] flex items-center justify-end active:scale-90 transition-transform">
-            <Menu size={24} color="#757575" />
+            <Menu size={24} className="text-[#757575] dark:text-slate-400" />
         </button>
       </header>
 
       {/* 3) Page Title Section */}
-      <div className="px-[16px] pt-[12px] flex justify-between items-start">
+      <div className="px-[16px] md:px-0 pt-[12px] flex justify-between items-start">
         <div>
-            <h2 className="text-[28px] font-[700] text-[#212121] leading-[36px]">Food Inventory</h2>
-            <p className="text-[14px] font-[400] text-[#757575] mt-[4px]">{items.filter(i => i.status === 'active').length} items tracked</p>
+            <h2 className="text-[28px] md:text-[36px] font-[700] text-[#212121] dark:text-white leading-[36px]">Food Inventory</h2>
+            <p className="text-[14px] md:text-[16px] font-[400] text-[#757575] dark:text-slate-400 mt-[4px]">{items.filter(i => i.status === 'active').length} items tracked</p>
         </div>
-        <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-[#1CAE9E] text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-[#179c8d]"
-        >
-            <Plus size={16} strokeWidth={3} />
-            <span className="text-[14px] font-[500]">Add Food</span>
-        </button>
+        
+        <div className="flex gap-2">
+            <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-[#1CAE9E] text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-[#179c8d]"
+            >
+                <Camera size={18} strokeWidth={2.5} />
+                <span className="text-[14px] font-[600]">Scan Food</span>
+            </button>
+            <button 
+                onClick={() => setShowManualAdd(true)}
+                className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
+            >
+                <Plus size={18} strokeWidth={2.5} />
+                <span className="text-[14px] font-[600] hidden md:inline">Add Manual</span>
+                <span className="text-[14px] font-[600] md:hidden">Add</span>
+            </button>
+        </div>
+
         <input 
             type="file" 
             accept="image/*" 
@@ -230,16 +363,16 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       </div>
 
       {/* 4) Search & Controls Row */}
-      <div className="px-[16px] mt-[16px] flex gap-[12px] relative z-20">
+      <div className="px-[16px] md:px-0 mt-[16px] flex gap-[12px] relative z-20">
         {/* Search Bar */}
         <div className="flex-1 relative h-[44px]">
-            <Search className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[#757575]" size={20} />
+            <Search className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[#757575] dark:text-slate-500" size={20} />
             <input 
                 type="text" 
                 placeholder="Search food items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-full bg-[#F5F5F5] rounded-[12px] pl-[40px] pr-[12px] text-[14px] outline-none focus:ring-2 focus:ring-[#1CAE9E]/20 transition-all placeholder-[#757575]"
+                className="w-full h-full bg-[#F5F5F5] dark:bg-slate-800 rounded-[12px] pl-[40px] pr-[12px] text-[14px] outline-none focus:ring-2 focus:ring-[#1CAE9E]/20 transition-all placeholder-[#757575] dark:placeholder-slate-500 text-[#212121] dark:text-white"
             />
         </div>
 
@@ -248,21 +381,21 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             {/* Sort Button */}
             <button 
                 onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
-                className="h-[36px] w-[90px] bg-white border border-[#EEEEEE] rounded-[8px] flex items-center justify-center gap-2 text-[#212121] text-[12px] font-[500] shadow-sm active:bg-gray-50"
+                className="h-[36px] w-[90px] bg-white dark:bg-slate-800 border border-[#EEEEEE] dark:border-slate-700 rounded-[8px] flex items-center justify-center gap-2 text-[#212121] dark:text-slate-200 text-[12px] font-[500] shadow-sm active:bg-gray-50 dark:active:bg-slate-700"
             >
                 <Filter size={14} /> {sortMode === 'expiry' ? 'Expiry' : 'Name'}
             </button>
             {/* Sort Dropdown */}
             {showSortMenu && (
-                <div className="absolute top-[40px] right-0 bg-white border border-slate-100 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200">
-                    <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'expiry' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575]'}`}>Expiry Date</button>
-                    <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'name' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575]'}`}>Name (A-Z)</button>
+                <div className="absolute top-[40px] right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200">
+                    <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'expiry' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}>Expiry Date</button>
+                    <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'name' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}>Name (A-Z)</button>
                 </div>
             )}
             
             {/* View Toggle */}
             <div className="flex gap-[12px] pr-1">
-                <LayoutGrid size={20} color="#757575" className="opacity-50" />
+                <LayoutGrid size={20} className="text-[#757575] dark:text-slate-500 opacity-50" />
                 <List size={20} color="#1CAE9E" />
             </div>
         </div>
@@ -270,17 +403,16 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
       {/* 5) Category Filter Tabs */}
       <div className="relative mt-[16px] h-[40px] flex items-center">
-        <button onClick={() => scrollTabs('left')} className="absolute left-0 h-full pl-2 bg-gradient-to-r from-white via-white to-transparent z-10 flex items-center">
-            <ChevronLeft size={16} color="#757575" />
+        <button onClick={() => scrollTabs('left')} className="absolute left-0 h-full pl-2 bg-gradient-to-r from-white via-white dark:from-slate-950 dark:via-slate-950 to-transparent z-10 flex items-center">
+            <ChevronLeft size={16} className="text-[#757575] dark:text-slate-400" />
         </button>
         
         <div 
             ref={scrollContainerRef}
-            className="flex overflow-x-auto gap-[8px] px-[16px] scrollbar-hide w-full"
+            className="flex overflow-x-auto gap-[8px] px-[16px] md:px-0 scrollbar-hide w-full"
             style={{ scrollSnapType: 'x mandatory' }}
         >
             {CATEGORIES.map(cat => {
-                // Count items in category for (count)
                 let count = 0;
                 if (cat === "All") count = items.filter(i => i.status === 'active').length;
                 else count = items.filter(i => i.category === cat && i.status === 'active').length;
@@ -292,7 +424,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                         onClick={() => setActiveCategory(cat)}
                         className={`
                             whitespace-nowrap px-[16px] h-[36px] rounded-[20px] text-[12px] font-[600] transition-colors scroll-snap-align-start
-                            ${isActive ? 'bg-[#1CAE9E] text-white shadow-md shadow-teal-100' : 'bg-[#F5F5F5] text-[#757575] hover:bg-slate-200'}
+                            ${isActive 
+                                ? 'bg-[#1CAE9E] text-white shadow-md shadow-teal-100 dark:shadow-teal-900/20' 
+                                : 'bg-[#F5F5F5] dark:bg-slate-800 text-[#757575] dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}
                         `}
                     >
                         {cat} ({count})
@@ -301,77 +435,83 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             })}
         </div>
 
-        <button onClick={() => scrollTabs('right')} className="absolute right-0 h-full pr-2 bg-gradient-to-l from-white via-white to-transparent z-10 flex items-center">
-            <ChevronRight size={16} color="#757575" />
+        <button onClick={() => scrollTabs('right')} className="absolute right-0 h-full pr-2 bg-gradient-to-l from-white via-white dark:from-slate-950 dark:via-slate-950 to-transparent z-10 flex items-center">
+            <ChevronRight size={16} className="text-[#757575] dark:text-slate-400" />
         </button>
       </div>
 
-      {/* 6) Food Items List */}
-      <div className="px-[16px] mt-[20px] flex flex-col gap-[8px]">
+      {/* 6) Food Items List (Responsive Grid with Swipe) */}
+      <div className="px-[16px] md:px-0 mt-[20px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
         {filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-center opacity-50 text-[#757575] dark:text-slate-400">
                 <Search size={48} className="mb-4" />
                 <p>No food items found.</p>
             </div>
         ) : filteredItems.map(item => {
             const visual = getVisualDetails(item);
             return (
-                <div key={item.id} className="relative bg-white rounded-[12px] h-[88px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] flex items-center px-[16px] hover:shadow-md transition-shadow">
-                    
-                    {/* Left: Emoji */}
-                    <div className="w-[32px] h-[32px] text-[28px] flex items-center justify-center mr-[12px]">
-                        {visual.emoji}
-                    </div>
-
-                    {/* Center Column */}
-                    <div className="flex-1 flex flex-col justify-center gap-[4px]">
-                        <div className="flex items-baseline gap-[8px]">
-                            <span className="text-[16px] font-[700] text-[#212121] truncate max-w-[140px]">{item.name}</span>
-                            <span className="text-[14px] font-[400] text-[#757575]">{item.quantity} {item.unit}</span>
+                <SwipeableCard 
+                    key={item.id} 
+                    onEdit={() => console.log('Edit item', item.id)}
+                    onDelete={() => onDeleteItem(item.id)}
+                    onInteract={() => setActiveMenuId(null)}
+                >
+                    <div className="w-full h-full flex items-center px-[16px]">
+                        {/* Left: Emoji */}
+                        <div className="w-[32px] h-[32px] text-[28px] flex items-center justify-center mr-[12px]">
+                            {visual.emoji}
                         </div>
-                        <div className="flex items-center gap-[8px]">
-                            <span className="bg-[#F5F5F5] text-[#757575] text-[10px] px-[6px] py-[2px] rounded-[4px] uppercase font-bold tracking-wide">
-                                {item.category}
-                            </span>
-                            <span 
-                                className="text-[12px] font-[500]"
-                                style={{ color: visual.statusColor }}
-                            >
-                                {visual.statusText}
-                            </span>
-                        </div>
-                    </div>
 
-                    {/* Right: Menu */}
-                    <div className="relative">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === item.id ? null : item.id); }}
-                            className="w-[44px] h-[44px] flex items-center justify-end -mr-[8px] active:scale-90 transition-transform"
-                        >
-                            <MoreVertical size={20} color="#757575" />
-                        </button>
-                        
-                        {/* Context Menu Popup */}
-                        {activeMenuId === item.id && (
-                             <div className="absolute right-0 top-10 w-32 bg-white rounded-xl shadow-xl border border-slate-100 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); setActiveMenuId(null); }}
-                                    className="w-full text-left px-4 py-3 text-sm text-emerald-600 hover:bg-emerald-50 flex items-center gap-2"
-                                >
-                                    <Utensils size={14} /> Eat
-                                </button>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); setActiveMenuId(null); }}
-                                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                >
-                                    <Trash2 size={14} /> Delete
-                                </button>
+                        {/* Center Column */}
+                        <div className="flex-1 flex flex-col justify-center gap-[4px] min-w-0">
+                            <div className="flex items-baseline gap-[8px]">
+                                <span className="text-[16px] font-[700] text-[#212121] dark:text-slate-100 truncate">{item.name}</span>
+                                <span className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 shrink-0">{item.quantity} {item.unit}</span>
                             </div>
-                        )}
+                            <div className="flex items-center gap-[8px]">
+                                <span className="bg-[#F5F5F5] dark:bg-slate-700 text-[#757575] dark:text-slate-300 text-[10px] px-[6px] py-[2px] rounded-[4px] uppercase font-bold tracking-wide shrink-0">
+                                    {item.category}
+                                </span>
+                                <span 
+                                    className="text-[12px] font-[500] truncate"
+                                    style={{ color: visual.statusColor }}
+                                >
+                                    {visual.statusText}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Right: Menu */}
+                        <div className="relative ml-2">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === item.id ? null : item.id); }}
+                                className="w-[44px] h-[44px] flex items-center justify-end -mr-[8px] active:scale-90 transition-transform"
+                            >
+                                <MoreVertical size={20} className="text-[#757575] dark:text-slate-400" />
+                            </button>
+                            
+                            {/* Context Menu Popup */}
+                            {activeMenuId === item.id && (
+                                <div className="absolute right-0 top-10 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); setActiveMenuId(null); }}
+                                        className="w-full text-left px-4 py-3 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2"
+                                    >
+                                        <Utensils size={14} /> Eat
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); setActiveMenuId(null); }}
+                                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                    >
+                                        <Trash2 size={14} /> Delete
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Bottom Progress Bar */}
-                    <div className="absolute bottom-[6px] left-[16px] right-[16px] h-[4px] bg-[#F5F5F5] rounded-[2px] overflow-hidden">
+                    <div className="absolute bottom-[6px] left-[16px] right-[16px] h-[4px] bg-[#F5F5F5] dark:bg-slate-700 rounded-[2px] overflow-hidden pointer-events-none">
                         <div 
                             className="h-full rounded-[2px] transition-all duration-500" 
                             style={{ 
@@ -380,35 +520,123 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                             }}
                         ></div>
                     </div>
-                </div>
+                </SwipeableCard>
             );
         })}
       </div>
 
-       {/* Add Item Modal (Minimal for functionality) */}
+       {/* Scan Loading Modal */}
        {isAdding && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200">
-             <div className="bg-white rounded-[24px] p-6 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-200">
+             <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-200">
                  {isAnalyzing ? (
                      <div className="py-8">
                          <Loader2 className="animate-spin mx-auto text-[#1CAE9E] mb-4" size={48} />
-                         <p className="text-[#212121] font-bold text-lg">Analyzing Food...</p>
-                         <p className="text-[#757575]">Identifying items & expiration</p>
+                         <p className="text-[#212121] dark:text-white font-bold text-lg">Analyzing Food...</p>
+                         <p className="text-[#757575] dark:text-slate-400">Identifying items & expiration</p>
                      </div>
                  ) : (
                     <div className="text-left">
                         {scanError ? (
                             <div className="text-center py-6">
                                 <AlertTriangle className="mx-auto text-red-500 mb-2" size={32} />
-                                <p className="text-[#212121] font-bold mb-1">Scan Failed</p>
-                                <p className="text-[#757575] text-sm mb-4">{scanError}</p>
-                                <button onClick={() => setIsAdding(false)} className="w-full py-3 bg-[#F5F5F5] rounded-xl font-bold text-[#757575]">Close</button>
+                                <p className="text-[#212121] dark:text-white font-bold mb-1">Scan Failed</p>
+                                <p className="text-[#757575] dark:text-slate-400 text-sm mb-4">{scanError}</p>
+                                <button onClick={() => setIsAdding(false)} className="w-full py-3 bg-[#F5F5F5] dark:bg-slate-800 rounded-xl font-bold text-[#757575] dark:text-slate-300">Close</button>
                             </div>
                         ) : null}
                     </div>
                  )}
              </div>
         </div>
+       )}
+
+       {/* Manual Add Modal */}
+       {showManualAdd && (
+         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 relative">
+                <button 
+                    onClick={() => setShowManualAdd(false)}
+                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                    <X size={20} className="text-slate-400" />
+                </button>
+                
+                <h3 className="text-xl font-bold text-[#212121] dark:text-white mb-6">Add Item Manually</h3>
+                
+                <form onSubmit={handleManualSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Item Name</label>
+                        <input 
+                            type="text" 
+                            value={manualForm.name}
+                            onChange={(e) => setManualForm({...manualForm, name: e.target.value})}
+                            className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                            placeholder="e.g. Bananas"
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                         <div>
+                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Category</label>
+                            <select 
+                                value={manualForm.category}
+                                onChange={(e) => setManualForm({...manualForm, category: e.target.value})}
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium appearance-none"
+                            >
+                                {CATEGORIES.filter(c => c !== "All").map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                        </div>
+                         <div>
+                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Expiry Date</label>
+                            <input 
+                                type="date"
+                                value={manualForm.expiryDate}
+                                onChange={(e) => setManualForm({...manualForm, expiryDate: e.target.value})}
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                         <div>
+                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Quantity</label>
+                            <input 
+                                type="number"
+                                min="0.1"
+                                step="any"
+                                value={manualForm.quantity}
+                                onChange={(e) => setManualForm({...manualForm, quantity: e.target.value})}
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                                required
+                            />
+                        </div>
+                         <div>
+                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Unit</label>
+                            <input 
+                                type="text"
+                                value={manualForm.unit}
+                                onChange={(e) => setManualForm({...manualForm, unit: e.target.value})}
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                                placeholder="pcs, kg..."
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <button 
+                        type="submit"
+                        className="w-full bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-colors mt-4 active:scale-95"
+                    >
+                        Add Item
+                    </button>
+                </form>
+            </div>
+         </div>
        )}
 
     </div>

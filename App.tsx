@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState } from './types';
+import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun } from 'lucide-react';
+import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme } from './types';
 import { AuthService } from './services/auth';
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
@@ -10,7 +9,15 @@ import Recipes from './components/Recipes';
 import Donation from './components/Donation';
 import { Login, Signup } from './components/Auth';
 
-// Initial Mock Data (Matches Spec Payload)
+// --- Theme Context ---
+export const ThemeContext = createContext<ThemeContextType>({
+  theme: 'light',
+  toggleTheme: () => {},
+});
+
+export const useTheme = () => useContext(ThemeContext);
+
+// Initial Mock Data
 const INITIAL_INVENTORY: FoodItem[] = [
   { 
     id: "1", 
@@ -93,7 +100,76 @@ const INITIAL_STATS: UserStats = {
   xp: 850
 };
 
-// Bottom Navigation Component
+// Sidebar for Desktop
+const Sidebar = ({ handleLogout }: { handleLogout: () => void }) => {
+  const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  
+  const navItems = [
+    { path: '/', icon: Home, label: 'Dashboard' },
+    { path: '/inventory', icon: Package, label: 'Inventory' },
+    { path: '/recipes', icon: ChefHat, label: 'Recipes' },
+    { path: '/donate', icon: Heart, label: 'Donate' },
+    { path: '/ngos', icon: MapPin, label: 'NGOs' },
+  ];
+
+  return (
+    <aside className="hidden md:flex flex-col w-[240px] h-screen bg-white dark:bg-slate-900 border-r border-[#EEEEEE] dark:border-slate-800 fixed left-0 top-0 z-50 transition-colors duration-300">
+      <div className="p-6 flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-[#1CAE9E] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20">
+           <Leaf size={20} fill="white" />
+        </div>
+        <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100">FoodSaver</h1>
+      </div>
+
+      <nav className="flex-1 px-4 space-y-2">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group active:scale-95 ${
+                isActive 
+                  ? 'bg-[#1CAE9E]/10 text-[#1CAE9E] font-semibold' 
+                  : 'text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-sm dark:hover:shadow-none'
+              }`}
+            >
+              <item.icon 
+                size={22} 
+                strokeWidth={isActive ? 2.5 : 2}
+                className={isActive ? 'text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}
+              />
+              <span className={isActive ? 'text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'} >
+                {item.label}
+              </span>
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      <div className="p-4 border-t border-[#EEEEEE] dark:border-slate-800 space-y-2">
+        <button 
+          onClick={toggleTheme}
+          className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-sm active:scale-95 transition-all w-full"
+        >
+          {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
+          <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+        </button>
+
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:shadow-sm active:scale-95 w-full transition-all"
+        >
+          <LogOut size={22} />
+          <span>Log Out</span>
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+// Bottom Navigation Component (Mobile Only)
 const BottomNav = () => {
   const location = useLocation();
   const navItems = [
@@ -105,14 +181,14 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-[420px] mx-auto h-[80px] bg-white border-t border-[rgba(33,33,33,0.04)] z-[100] flex justify-around items-start pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[80px] bg-white dark:bg-slate-900 border-t border-[rgba(33,33,33,0.04)] dark:border-slate-800 z-[100] flex justify-around items-start pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)] transition-colors duration-300">
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
           <NavLink
             key={item.path}
             to={item.path}
-            className="flex flex-col items-center justify-center w-[60px] relative group"
+            className="flex flex-col items-center justify-center w-[60px] relative group active:scale-90 transition-transform"
           >
             {isActive && (
               <div className="absolute -top-3 w-[32px] h-[3px] bg-[#1CAE9E] rounded-b-[2px] shadow-[0_2px_8px_#1CAE9E80]"></div>
@@ -121,11 +197,12 @@ const BottomNav = () => {
                <item.icon 
                 size={24} 
                 strokeWidth={isActive ? 2.5 : 2}
-                color={isActive ? '#1CAE9E' : '#757575'} 
+                color={isActive ? '#1CAE9E' : undefined}
+                className={!isActive ? 'text-[#757575] dark:text-slate-500' : ''}
                 />
             </div>
             <span 
-              className={`text-[10px] font-medium mt-[4px] leading-none transition-colors ${isActive ? 'text-[#1CAE9E]' : 'text-[#757575]'}`}
+              className={`text-[10px] font-medium mt-[4px] leading-none transition-colors ${isActive ? 'text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-500'}`}
             >
               {item.label}
             </span>
@@ -138,48 +215,49 @@ const BottomNav = () => {
 
 const AppContent = ({ auth, stats, inventory, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleDonateComplete }: any) => {
   return (
-    <div className="min-h-screen bg-[#F5F5F5] font-sans text-[#212121] flex justify-center">
-      <div className="w-full max-w-[420px] bg-[#F5F5F5] min-h-screen relative shadow-2xl overflow-hidden flex flex-col">
-        
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto pb-[90px] scroll-smooth">
-          <Routes>
-            <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
-            <Route path="/inventory" element={
-               <Inventory 
-                  items={inventory} 
-                  onAddItem={handleAddItem} 
-                  onUpdateStatus={handleUpdateStatus}
-                  onDeleteItem={handleDeleteItem}
-                />
-            } />
-            <Route path="/recipes" element={
-              <div className="p-[20px]">
-                <Recipes 
-                  inventory={inventory} 
-                  onCookRecipe={handleCookRecipe} 
-                />
-              </div>
-            } />
-            <Route path="/donate" element={
-               <div className="p-[20px]">
-                <Donation 
-                    inventory={inventory} 
-                    onDonateComplete={handleDonateComplete} 
-                />
-               </div>
-            } />
-             <Route path="/ngos" element={
-               <div className="p-[20px] flex flex-col items-center justify-center h-[70vh] text-[#757575]">
-                  <MapPin size={48} className="text-[#1CAE9E] mb-4 opacity-50" />
-                  <h3 className="font-bold text-lg">NGO Map</h3>
-                  <p className="text-sm">Coming in v2.0</p>
-               </div>
-            } />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
+      {/* Desktop Sidebar */}
+      <Sidebar handleLogout={handleLogout} />
 
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
+        <main className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
+          <div className="w-full max-w-[1200px] mx-auto md:p-8">
+            <Routes>
+              <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
+              <Route path="/inventory" element={
+                 <Inventory 
+                    items={inventory} 
+                    onAddItem={handleAddItem} 
+                    onUpdateStatus={handleUpdateStatus}
+                    onDeleteItem={handleDeleteItem}
+                  />
+              } />
+              <Route path="/recipes" element={
+                  <Recipes 
+                    inventory={inventory} 
+                    onCookRecipe={handleCookRecipe} 
+                  />
+              } />
+              <Route path="/donate" element={
+                  <Donation 
+                      inventory={inventory} 
+                      onDonateComplete={handleDonateComplete} 
+                  />
+              } />
+               <Route path="/ngos" element={
+                 <div className="p-[20px] flex flex-col items-center justify-center h-[70vh] text-[#757575] dark:text-slate-500">
+                    <MapPin size={48} className="text-[#1CAE9E] mb-4 opacity-50" />
+                    <h3 className="font-bold text-lg text-[#212121] dark:text-slate-200">NGO Map</h3>
+                    <p className="text-sm">Coming in v2.0</p>
+                 </div>
+              } />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </main>
+        
+        {/* Mobile Nav */}
         <BottomNav />
       </div>
     </div>
@@ -191,6 +269,12 @@ export default function App() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [inventory, setInventory] = useState<FoodItem[]>(INITIAL_INVENTORY);
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
+  
+  // Theme State
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+  });
 
   useEffect(() => {
     // Load data from local storage if available to simulate DB
@@ -204,6 +288,20 @@ export default function App() {
         localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
     }
   }, [inventory, auth.isAuthenticated]);
+
+  // Theme Logic
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const handleLogin = (state: AuthState) => {
     setAuth(state);
@@ -223,9 +321,6 @@ export default function App() {
   };
 
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
-    // If it's wasted, maybe remove it or mark it? Spec implies status update.
-    // For this demo, if 'consumed' or 'wasted' via menu, we might just remove or update status.
-    // Let's keep it in the list but change status, or filter out in views.
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     
     // Update Stats
@@ -268,36 +363,28 @@ export default function App() {
   };
 
   if (!auth.isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#F5F5F5] font-sans text-[#212121] flex justify-center">
-        <div className="w-full max-w-[420px] bg-white min-h-screen relative shadow-2xl p-6 flex flex-col items-center justify-center">
-             <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 bg-[#1CAE9E] rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">F</div>
-                <h1 className="font-bold text-2xl tracking-tight text-[#212121]">FoodSaver</h1>
-            </div>
-          {isLoginView ? (
-            <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
-          ) : (
-            <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
-          )}
-        </div>
-      </div>
+    return isLoginView ? (
+      <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
+    ) : (
+      <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
     );
   }
 
   return (
-    <HashRouter>
-      <AppContent 
-        auth={auth}
-        stats={stats}
-        inventory={inventory}
-        handleLogout={handleLogout}
-        handleAddItem={handleAddItem}
-        handleDeleteItem={handleDeleteItem}
-        handleUpdateStatus={handleUpdateStatus}
-        handleCookRecipe={handleCookRecipe}
-        handleDonateComplete={handleDonateComplete}
-      />
-    </HashRouter>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      <HashRouter>
+        <AppContent 
+          auth={auth}
+          stats={stats}
+          inventory={inventory}
+          handleLogout={handleLogout}
+          handleAddItem={handleAddItem}
+          handleDeleteItem={handleDeleteItem}
+          handleUpdateStatus={handleUpdateStatus}
+          handleCookRecipe={handleCookRecipe}
+          handleDonateComplete={handleDonateComplete}
+        />
+      </HashRouter>
+    </ThemeContext.Provider>
   );
 }
