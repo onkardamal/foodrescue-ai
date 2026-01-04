@@ -8,6 +8,68 @@ interface AuthProps {
   onToggle: () => void;
 }
 
+// Replace with your actual Google Client ID from Google Cloud Console
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+
+// Shared function to handle Google Auth Flow
+const performGoogleLogin = async (): Promise<AuthState> => {
+    return new Promise((resolve, reject) => {
+        if (!window.google) {
+            reject(new Error("Google Identity Services not loaded. Check your internet connection."));
+            return;
+        }
+
+        // Initialize the token client for Implicit Flow
+        const client = window.google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+            callback: async (tokenResponse: any) => {
+                if (tokenResponse.error) {
+                    reject(new Error("Google Login Failed: " + tokenResponse.error));
+                    return;
+                }
+
+                if (tokenResponse.access_token) {
+                    try {
+                        // Fetch User Info using the access token
+                        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                            headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                        });
+                        
+                        if (!userInfoResponse.ok) {
+                            throw new Error('Failed to fetch user profile');
+                        }
+
+                        const userInfo = await userInfoResponse.json();
+
+                        // Construct Auth State
+                        const authState: AuthState = {
+                            user: {
+                                id: userInfo.sub,
+                                name: userInfo.name,
+                                email: userInfo.email,
+                                avatar: userInfo.picture
+                            },
+                            token: tokenResponse.access_token,
+                            isAuthenticated: true
+                        };
+                        
+                        // Persist session to mock local storage (to maintain consistency with AuthService)
+                        localStorage.setItem('ecotable_session', JSON.stringify(authState));
+
+                        resolve(authState);
+                    } catch (err) {
+                        reject(err);
+                    }
+                }
+            },
+        });
+
+        // Trigger the pop-up
+        client.requestAccessToken();
+    });
+};
+
 // Internal component for the Google G Logo
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -109,21 +171,36 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setError('');
-    // Simulate Google Login Delay
-    setTimeout(() => {
+    try {
+        if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+            // Fallback mock if Client ID is not configured by user
+            console.warn("Google Client ID not set. Falling back to mock login.");
+            setTimeout(() => {
+                const mockState = {
+                    user: {
+                        id: 'google-user-mock',
+                        name: 'Alex Google (Mock)',
+                        email: 'alex.mock@gmail.com',
+                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
+                    },
+                    token: 'mock-token',
+                    isAuthenticated: true
+                };
+                localStorage.setItem('ecotable_session', JSON.stringify(mockState));
+                onLogin(mockState);
+                setGoogleLoading(false);
+            }, 1000);
+            return;
+        }
+
+        const authState = await performGoogleLogin();
+        onLogin(authState);
+    } catch (err: any) {
+        console.error(err);
+        setError("Google Login failed. " + (err.message || ""));
+    } finally {
         setGoogleLoading(false);
-        // Mock Google User
-        onLogin({
-            user: {
-                id: 'google-user-123',
-                name: 'Alex Google',
-                email: 'alex.google@example.com',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
-            },
-            token: 'mock-google-token',
-            isAuthenticated: true
-        });
-    }, 1500);
+    }
   };
 
   return (
@@ -141,7 +218,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={googleLoading || loading}
-                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden"
+                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
             >
                 {googleLoading ? (
                      <Loader2 className="animate-spin text-[#1CAE9E]" />
@@ -230,15 +307,17 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       const state = await AuthService.signup(name, email, password);
       onLogin(state);
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -246,32 +325,54 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    // Simulate Google Login Delay
-    setTimeout(() => {
+    setError('');
+    try {
+        if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+            console.warn("Google Client ID not set. Falling back to mock login.");
+            setTimeout(() => {
+                const mockState = {
+                    user: {
+                        id: 'google-user-mock',
+                        name: 'Alex Google (Mock)',
+                        email: 'alex.mock@gmail.com',
+                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
+                    },
+                    token: 'mock-token',
+                    isAuthenticated: true
+                };
+                localStorage.setItem('ecotable_session', JSON.stringify(mockState));
+                onLogin(mockState);
+                setGoogleLoading(false);
+            }, 1000);
+            return;
+        }
+
+        const authState = await performGoogleLogin();
+        onLogin(authState);
+    } catch (err: any) {
+        console.error(err);
+        setError("Google Signup failed. " + (err.message || ""));
+    } finally {
         setGoogleLoading(false);
-        // Mock Google User
-        onLogin({
-            user: {
-                id: 'google-user-123',
-                name: 'Alex Google',
-                email: 'alex.google@example.com',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
-            },
-            token: 'mock-google-token',
-            isAuthenticated: true
-        });
-    }, 1500);
+    }
   };
 
   return (
     <AuthLayout title="Create Account" subtitle="Join the zero-waste movement today.">
+         {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-2 border border-red-100 dark:border-red-900/30">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></div>
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4">
              {/* Google Login Button */}
              <button 
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={googleLoading || loading}
-                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden"
+                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
             >
                 {googleLoading ? (
                      <Loader2 className="animate-spin text-[#1CAE9E]" />

@@ -1,4 +1,5 @@
 
+
 export enum FoodCategory {
   PRODUCE = 'Produce',
   DAIRY = 'Dairy',
@@ -38,8 +39,12 @@ export interface NGO {
   distance: string;
   needs: FoodCategory[];
   rating: number;
-  coordinates: { lat: number, lng: number };
+  lat: number;
+  lng: number;
   urgency?: string;
+  description?: string;
+  address?: string;
+  phone?: string;
 }
 
 export interface UserStats {
@@ -78,4 +83,11 @@ export type Theme = 'light' | 'dark';
 export interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+}
+
+// Global declaration for Google Identity Services
+declare global {
+  interface Window {
+    google: any;
+  }
 }

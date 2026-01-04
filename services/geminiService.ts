@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { FoodItem, Recipe, ScanResult, FoodCategory } from '../types';
+import { FoodItem, Recipe, ScanResult, FoodCategory, NGO } from '../types';
 
 // Initialize Gemini
 // Note: process.env.API_KEY is guaranteed to be available in this environment
@@ -150,3 +149,69 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
     return [];
   }
 };
+
+/**
+ * Searches for nearby NGOs using Gemini Google Maps grounding.
+ */
+export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Find 10 food banks, soup kitchens, or food rescue organizations near this location (Lat: ${lat}, Lng: ${lng}).
+      For each place, provide:
+      1. Name
+      2. Estimated Latitude (if available from map data, otherwise estimate near the user)
+      3. Estimated Longitude
+      4. Address
+      5. A short description
+
+      Format the output as a strict JSON array of objects with keys: "name", "lat" (number), "lng" (number), "address", "description", "rating" (number between 3.5 and 5.0).
+      Do not include any other text, markdown formatting, or explanations. Start with [. End with ].
+      If specific coordinates are not available, use ${lat} and ${lng} with a small random offset (approx 0.01 degrees) for visualization.
+      `,
+      config: {
+        tools: [{ googleMaps: {} }],
+        toolConfig: {
+          retrievalConfig: {
+            latLng: {
+              latitude: lat,
+              longitude: lng
+            }
+          }
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) return [];
+
+    // Clean potential markdown
+    const cleanText = text.replace(/```json|```/g, '').trim();
+    
+    // Attempt parse
+    try {
+        const data = JSON.parse(cleanText);
+        if (Array.isArray(data)) {
+            return data.map((item: any, i: number) => ({
+                id: `real-${Date.now()}-${i}`,
+                name: item.name,
+                distance: "Nearby", // Simplified for now
+                rating: item.rating || 4.5,
+                description: item.description || "Food assistance organization.",
+                lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
+                lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
+                address: item.address,
+                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED] // Default needs
+            }));
+        }
+    } catch (e) {
+        console.warn("Failed to parse NGO JSON", e);
+    }
+    
+    return [];
+
+  } catch (error) {
+    console.error("Gemini NGO Search Error:", error);
+    return [];
+  }
+}

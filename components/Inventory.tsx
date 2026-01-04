@@ -1,8 +1,9 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { FoodItem, FoodCategory } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
-import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X } from 'lucide-react';
+import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X, CheckSquare, Sparkles } from 'lucide-react';
 import { useTheme } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 interface InventoryProps {
   items: FoodItem[];
@@ -17,13 +18,15 @@ const getVisualDetails = (item: FoodItem) => {
   
   // Emojis mapping based on spec
   let emoji = "📦";
-  if (nameLower.includes("beef")) emoji = "🥩";
-  else if (nameLower.includes("tomato") || nameLower.includes("lettuce")) emoji = "🥬";
-  else if (nameLower.includes("bun")) emoji = "🍞";
+  if (nameLower.includes("beef") || nameLower.includes("meat")) emoji = "🥩";
+  else if (nameLower.includes("tomato") || nameLower.includes("lettuce") || nameLower.includes("vegetable")) emoji = "🥬";
+  else if (nameLower.includes("bun") || nameLower.includes("bread")) emoji = "🍞";
   else if (nameLower.includes("cheese")) emoji = "🧀"; 
   else if (nameLower.includes("milk") || nameLower.includes("yogurt")) emoji = "🥛";
   else if (nameLower.includes("apple")) emoji = "🍎";
   else if (nameLower.includes("banana")) emoji = "🍌";
+  else if (nameLower.includes("chicken")) emoji = "🍗";
+  else if (nameLower.includes("egg")) emoji = "🥚";
 
   // Status calculation logic to match spec
   const now = new Date();
@@ -38,16 +41,16 @@ const getVisualDetails = (item: FoodItem) => {
 
   if (diffDays < 0) {
     statusText = "Expired";
-    statusColor = "#F44336"; // Red
+    statusColor = "#D93025"; // Red AA compliant
     progressPercent = 100;
-    progressColor = "#F44336";
+    progressColor = "#D93025";
   } else if (diffDays <= 4) {
     statusText = `Expires in ${diffDays} days`;
-    statusColor = "#FFC107"; // Yellow
+    // Changed to Darker Orange for WCAG AA compliance on white/light backgrounds
+    statusColor = "#D97706"; // Amber 600
     progressPercent = 80;
-    progressColor = "#FFC107";
+    progressColor = "#F59E0B"; // Amber 500 for bar is okay
   } else if (diffDays > 300) {
-     // Specific check for long expiry items
      const dateStr = expiry.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
      statusText = dateStr;
      progressPercent = 10;
@@ -57,8 +60,8 @@ const getVisualDetails = (item: FoodItem) => {
   }
 
   // Visual Overrides for demo consistency
-  if (item.condition === "Expired") { statusText = "Expired"; statusColor = "#F44336"; progressPercent=100; progressColor="#F44336"; }
-  if (item.condition === "Expiring Soon") { statusColor = "#FFC107"; progressColor="#FFC107"; }
+  if (item.condition === "Expired") { statusText = "Expired"; statusColor = "#D93025"; progressPercent=100; progressColor="#D93025"; }
+  if (item.condition === "Expiring Soon") { statusColor = "#D97706"; progressColor="#F59E0B"; }
 
   return { emoji, statusText, statusColor, progressPercent, progressColor };
 };
@@ -68,9 +71,10 @@ interface SwipeableCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onInteract: () => void;
+  disabled: boolean;
 }
 
-const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelete, onInteract }) => {
+const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelete, onInteract, disabled }) => {
   const [offset, setOffset] = useState(0);
   const startX = useRef(0);
   const startY = useRef(0);
@@ -79,6 +83,7 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
   const isScrolling = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (disabled) return;
     onInteract();
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
@@ -88,7 +93,7 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current || isScrolling.current) return;
+    if (!isDragging.current || isScrolling.current || disabled) return;
     
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
@@ -96,22 +101,24 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     const diffY = currentY - startY.current;
 
     // Detect scrolling intent (vertical move > horizontal move)
-    if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 5) {
+    // Increased threshold for scroll detection stability
+    if (Math.abs(diffY) > Math.abs(diffX) || Math.abs(diffY) > 10) {
         isScrolling.current = true;
         return;
     }
 
     // Drag left (negative) up to -120px, drag right up to 0
-    // We add a little resistance if dragging right when closed (optional, here restricted to 0)
     const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
     setOffset(newOffset);
   };
 
   const handleTouchEnd = () => {
+    if (disabled) return;
     isDragging.current = false;
     isScrolling.current = false;
-    // Snap logic: if pulled more than half way (60px), snap open (-120px)
-    if (offset < -60) {
+    
+    // Threshold snap logic: Must pull at least 50px to snap open
+    if (offset < -50) {
       setOffset(-120);
     } else {
       setOffset(0);
@@ -164,14 +171,18 @@ const CATEGORIES = [
 ];
 
 const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus, onDeleteItem }) => {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortMode, setSortMode] = useState<'expiry' | 'name'>('expiry');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   
+  // Selection Mode State
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
 
   // Add Item Logic
   const [isAdding, setIsAdding] = useState(false); // Used for scanning loading state
@@ -201,15 +212,12 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
   const filteredItems = useMemo(() => {
     let filtered = items.filter(item => {
-      // Basic Status Filter (hide consumed/donated from main list for demo clarity)
       if (item.status !== 'active') return false;
-
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = activeCategory === "All" || item.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
 
-    // Sort Logic
     return filtered.sort((a, b) => {
         if (sortMode === 'expiry') {
             return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
@@ -218,6 +226,16 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
         }
     });
   }, [items, searchTerm, activeCategory, sortMode]);
+
+  const toggleSelection = (id: string) => {
+      const newSet = new Set(selectedItemIds);
+      if (newSet.has(id)) {
+          newSet.delete(id);
+      } else {
+          newSet.add(id);
+      }
+      setSelectedItemIds(newSet);
+  };
 
   const compressImage = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
@@ -309,6 +327,12 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
         });
     };
 
+    const handleCookSelected = () => {
+        const selectedItems = items.filter(i => selectedItemIds.has(i.id));
+        const ingredientNames = selectedItems.map(i => i.name).join(', ');
+        navigate('/recipes', { state: { ingredients: ingredientNames } });
+    };
+
   return (
     <div className="bg-[#FFFFFF] dark:bg-slate-950 min-h-screen pb-24 md:pb-0 animate-in fade-in duration-300 transition-colors" onClick={() => { setActiveMenuId(null); setShowSortMenu(false); }}>
       
@@ -330,27 +354,39 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       {/* 3) Page Title Section */}
       <div className="px-[16px] md:px-0 pt-[12px] flex justify-between items-start">
         <div>
-            <h2 className="text-[28px] md:text-[36px] font-[700] text-[#212121] dark:text-white leading-[36px]">Food Inventory</h2>
-            <p className="text-[14px] md:text-[16px] font-[400] text-[#757575] dark:text-slate-400 mt-[4px]">{items.filter(i => i.status === 'active').length} items tracked</p>
+            <h2 className="text-[28px] md:text-[36px] font-[700] text-[#212121] dark:text-white leading-[36px]">
+                {isSelectionMode ? "Select Ingredients" : "Food Inventory"}
+            </h2>
+            <p className="text-[14px] md:text-[16px] font-[400] text-[#757575] dark:text-slate-400 mt-[4px]">
+                {isSelectionMode ? `${selectedItemIds.size} items selected` : `${items.filter(i => i.status === 'active').length} items tracked`}
+            </p>
         </div>
         
-        <div className="flex gap-2">
-            <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-[#1CAE9E] text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-[#179c8d]"
-            >
-                <Camera size={18} strokeWidth={2.5} />
-                <span className="text-[14px] font-[600]">Scan Food</span>
-            </button>
-            <button 
-                onClick={() => setShowManualAdd(true)}
-                className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-            >
-                <Plus size={18} strokeWidth={2.5} />
-                <span className="text-[14px] font-[600] hidden md:inline">Add Manual</span>
-                <span className="text-[14px] font-[600] md:hidden">Add</span>
-            </button>
-        </div>
+        {isSelectionMode ? (
+             <button 
+                onClick={() => { setIsSelectionMode(false); setSelectedItemIds(new Set()); }}
+                className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 px-[16px] h-[40px] rounded-[12px] font-semibold text-sm"
+             >
+                 Cancel
+             </button>
+        ) : (
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-[#1CAE9E] text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-[#179c8d]"
+                >
+                    <Camera size={18} strokeWidth={2.5} />
+                    <span className="text-[14px] font-[600] hidden md:inline">Scan</span>
+                </button>
+                <button 
+                    onClick={() => setShowManualAdd(true)}
+                    className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
+                >
+                    <Plus size={18} strokeWidth={2.5} />
+                    <span className="text-[14px] font-[600] hidden md:inline ml-2">Add</span>
+                </button>
+            </div>
+        )}
 
         <input 
             type="file" 
@@ -378,26 +414,31 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
         {/* Controls Column */}
         <div className="flex flex-col gap-[8px] items-end relative">
-            {/* Sort Button */}
-            <button 
-                onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
-                className="h-[36px] w-[90px] bg-white dark:bg-slate-800 border border-[#EEEEEE] dark:border-slate-700 rounded-[8px] flex items-center justify-center gap-2 text-[#212121] dark:text-slate-200 text-[12px] font-[500] shadow-sm active:bg-gray-50 dark:active:bg-slate-700"
-            >
-                <Filter size={14} /> {sortMode === 'expiry' ? 'Expiry' : 'Name'}
-            </button>
+            <div className="flex gap-2">
+                 <button 
+                    onClick={() => setIsSelectionMode(!isSelectionMode)}
+                    className={`h-[36px] w-[36px] md:w-auto md:px-3 rounded-[8px] flex items-center justify-center gap-2 border shadow-sm transition-all ${isSelectionMode ? 'bg-[#1CAE9E] border-[#1CAE9E] text-white' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#212121] dark:text-slate-200'}`}
+                    title="Select Ingredients"
+                 >
+                     <CheckSquare size={16} />
+                     <span className="hidden md:inline text-xs font-medium">Select</span>
+                 </button>
+
+                <button 
+                    onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
+                    className="h-[36px] w-[90px] bg-white dark:bg-slate-800 border border-[#EEEEEE] dark:border-slate-700 rounded-[8px] flex items-center justify-center gap-2 text-[#212121] dark:text-slate-200 text-[12px] font-[500] shadow-sm active:bg-gray-50 dark:active:bg-slate-700"
+                >
+                    <Filter size={14} /> {sortMode === 'expiry' ? 'Expiry' : 'Name'}
+                </button>
+            </div>
+            
             {/* Sort Dropdown */}
             {showSortMenu && (
-                <div className="absolute top-[40px] right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-[40px] right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200 z-30">
                     <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'expiry' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}>Expiry Date</button>
                     <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'name' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}>Name (A-Z)</button>
                 </div>
             )}
-            
-            {/* View Toggle */}
-            <div className="flex gap-[12px] pr-1">
-                <LayoutGrid size={20} className="text-[#757575] dark:text-slate-500 opacity-50" />
-                <List size={20} color="#1CAE9E" />
-            </div>
         </div>
       </div>
 
@@ -449,81 +490,113 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             </div>
         ) : filteredItems.map(item => {
             const visual = getVisualDetails(item);
+            const isSelected = selectedItemIds.has(item.id);
+
             return (
-                <SwipeableCard 
-                    key={item.id} 
-                    onEdit={() => console.log('Edit item', item.id)}
-                    onDelete={() => onDeleteItem(item.id)}
-                    onInteract={() => setActiveMenuId(null)}
-                >
-                    <div className="w-full h-full flex items-center px-[16px]">
-                        {/* Left: Emoji */}
-                        <div className="w-[32px] h-[32px] text-[28px] flex items-center justify-center mr-[12px]">
-                            {visual.emoji}
-                        </div>
+                <div key={item.id} className="relative group">
+                    <SwipeableCard 
+                        onEdit={() => console.log('Edit item', item.id)}
+                        onDelete={() => onDeleteItem(item.id)}
+                        onInteract={() => setActiveMenuId(null)}
+                        disabled={isSelectionMode} // Disable Swipe in selection mode
+                    >
+                        <div 
+                            className={`w-full h-full flex items-center px-[16px] cursor-pointer ${isSelectionMode && isSelected ? 'bg-teal-50 dark:bg-teal-900/20' : ''}`}
+                            onClick={() => {
+                                if (isSelectionMode) toggleSelection(item.id);
+                            }}
+                        >
+                            {/* Selection Checkbox (Visible in Mode) */}
+                            {isSelectionMode && (
+                                <div className={`mr-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-[#1CAE9E] bg-[#1CAE9E]' : 'border-slate-300 dark:border-slate-600'}`}>
+                                    {isSelected && <CheckSquare size={14} className="text-white" />}
+                                </div>
+                            )}
 
-                        {/* Center Column */}
-                        <div className="flex-1 flex flex-col justify-center gap-[4px] min-w-0">
-                            <div className="flex items-baseline gap-[8px]">
-                                <span className="text-[16px] font-[700] text-[#212121] dark:text-slate-100 truncate">{item.name}</span>
-                                <span className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 shrink-0">{item.quantity} {item.unit}</span>
+                            {/* Left: Emoji */}
+                            <div className="w-[32px] h-[32px] text-[28px] flex items-center justify-center mr-[12px]">
+                                {visual.emoji}
                             </div>
-                            <div className="flex items-center gap-[8px]">
-                                <span className="bg-[#F5F5F5] dark:bg-slate-700 text-[#757575] dark:text-slate-300 text-[10px] px-[6px] py-[2px] rounded-[4px] uppercase font-bold tracking-wide shrink-0">
-                                    {item.category}
-                                </span>
-                                <span 
-                                    className="text-[12px] font-[500] truncate"
-                                    style={{ color: visual.statusColor }}
-                                >
-                                    {visual.statusText}
-                                </span>
-                            </div>
-                        </div>
 
-                        {/* Right: Menu */}
-                        <div className="relative ml-2">
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === item.id ? null : item.id); }}
-                                className="w-[44px] h-[44px] flex items-center justify-end -mr-[8px] active:scale-90 transition-transform"
-                            >
-                                <MoreVertical size={20} className="text-[#757575] dark:text-slate-400" />
-                            </button>
-                            
-                            {/* Context Menu Popup */}
-                            {activeMenuId === item.id && (
-                                <div className="absolute right-0 top-10 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); setActiveMenuId(null); }}
-                                        className="w-full text-left px-4 py-3 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2"
+                            {/* Center Column */}
+                            <div className="flex-1 flex flex-col justify-center gap-[4px] min-w-0">
+                                <div className="flex items-baseline gap-[8px]">
+                                    <span className="text-[16px] font-[700] text-[#212121] dark:text-slate-100 truncate">{item.name}</span>
+                                    <span className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 shrink-0">{item.quantity} {item.unit}</span>
+                                </div>
+                                <div className="flex items-center gap-[8px]">
+                                    <span className="bg-[#F5F5F5] dark:bg-slate-700 text-[#757575] dark:text-slate-300 text-[10px] px-[6px] py-[2px] rounded-[4px] uppercase font-bold tracking-wide shrink-0">
+                                        {item.category}
+                                    </span>
+                                    {/* High Contrast Color for Accessibility */}
+                                    <span 
+                                        className="text-[12px] font-[600] truncate"
+                                        style={{ color: visual.statusColor }}
                                     >
-                                        <Utensils size={14} /> Eat
-                                    </button>
+                                        {visual.statusText}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Right: Menu */}
+                            {!isSelectionMode && (
+                                <div className="relative ml-2">
                                     <button 
-                                        onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); setActiveMenuId(null); }}
-                                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === item.id ? null : item.id); }}
+                                        className="w-[44px] h-[44px] flex items-center justify-end -mr-[8px] active:scale-90 transition-transform"
                                     >
-                                        <Trash2 size={14} /> Delete
+                                        <MoreVertical size={20} className="text-[#757575] dark:text-slate-400" />
                                     </button>
+                                    
+                                    {/* Context Menu Popup */}
+                                    {activeMenuId === item.id && (
+                                        <div className="absolute right-0 top-10 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); setActiveMenuId(null); }}
+                                                className="w-full text-left px-4 py-3 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2"
+                                            >
+                                                <Utensils size={14} /> Eat
+                                            </button>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); setActiveMenuId(null); }}
+                                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                            >
+                                                <Trash2 size={14} /> Delete
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    {/* Bottom Progress Bar */}
-                    <div className="absolute bottom-[6px] left-[16px] right-[16px] h-[4px] bg-[#F5F5F5] dark:bg-slate-700 rounded-[2px] overflow-hidden pointer-events-none">
-                        <div 
-                            className="h-full rounded-[2px] transition-all duration-500" 
-                            style={{ 
-                                width: `${visual.progressPercent}%`, 
-                                backgroundColor: visual.progressColor 
-                            }}
-                        ></div>
-                    </div>
-                </SwipeableCard>
+                        {/* Bottom Progress Bar */}
+                        <div className="absolute bottom-[6px] left-[16px] right-[16px] h-[4px] bg-[#F5F5F5] dark:bg-slate-700 rounded-[2px] overflow-hidden pointer-events-none">
+                            <div 
+                                className="h-full rounded-[2px] transition-all duration-500" 
+                                style={{ 
+                                    width: `${visual.progressPercent}%`, 
+                                    backgroundColor: visual.progressColor 
+                                }}
+                            ></div>
+                        </div>
+                    </SwipeableCard>
+                </div>
             );
         })}
       </div>
+      
+      {/* Floating Action Button for Recipe Generation */}
+      {isSelectionMode && selectedItemIds.size > 0 && (
+          <div className="fixed bottom-24 md:bottom-8 right-6 z-40 animate-in zoom-in slide-in-from-bottom-4">
+              <button 
+                onClick={handleCookSelected}
+                className="bg-[#1CAE9E] text-white px-6 py-4 rounded-2xl shadow-xl shadow-teal-500/30 flex items-center gap-3 font-bold text-lg hover:scale-105 active:scale-95 transition-all"
+              >
+                  <Sparkles fill="white" size={24} />
+                  <span>Cook {selectedItemIds.size} Items</span>
+              </button>
+          </div>
+      )}
 
        {/* Scan Loading Modal */}
        {isAdding && (

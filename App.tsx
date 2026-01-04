@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
 import Donation from './components/Donation';
+import NGOMap from './components/NGOMap';
 import { Login, Signup } from './components/Auth';
 
 // --- Theme Context ---
@@ -213,7 +214,7 @@ const BottomNav = () => {
   );
 };
 
-const AppContent = ({ auth, stats, inventory, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleDonateComplete }: any) => {
+const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
       {/* Desktop Sidebar */}
@@ -236,6 +237,8 @@ const AppContent = ({ auth, stats, inventory, handleLogout, handleAddItem, handl
               <Route path="/recipes" element={
                   <Recipes 
                     inventory={inventory} 
+                    recipes={recipes}
+                    onUpdateRecipes={handleUpdateRecipes}
                     onCookRecipe={handleCookRecipe} 
                   />
               } />
@@ -245,13 +248,7 @@ const AppContent = ({ auth, stats, inventory, handleLogout, handleAddItem, handl
                       onDonateComplete={handleDonateComplete} 
                   />
               } />
-               <Route path="/ngos" element={
-                 <div className="p-[20px] flex flex-col items-center justify-center h-[70vh] text-[#757575] dark:text-slate-500">
-                    <MapPin size={48} className="text-[#1CAE9E] mb-4 opacity-50" />
-                    <h3 className="font-bold text-lg text-[#212121] dark:text-slate-200">NGO Map</h3>
-                    <p className="text-sm">Coming in v2.0</p>
-                 </div>
-              } />
+               <Route path="/ngos" element={<NGOMap />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
@@ -269,6 +266,7 @@ export default function App() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [inventory, setInventory] = useState<FoodItem[]>(INITIAL_INVENTORY);
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
+  const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
   // Theme State
   const [theme, setTheme] = useState<Theme>(() => {
@@ -377,11 +375,13 @@ export default function App() {
           auth={auth}
           stats={stats}
           inventory={inventory}
+          recipes={generatedRecipes}
           handleLogout={handleLogout}
           handleAddItem={handleAddItem}
           handleDeleteItem={handleDeleteItem}
           handleUpdateStatus={handleUpdateStatus}
           handleCookRecipe={handleCookRecipe}
+          handleUpdateRecipes={setGeneratedRecipes}
           handleDonateComplete={handleDonateComplete}
         />
       </HashRouter>
