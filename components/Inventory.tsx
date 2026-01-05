@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { FoodItem, FoodCategory } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
-import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X, CheckSquare, Sparkles, Check } from 'lucide-react';
+import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X, CheckSquare, Sparkles, Check, Heart } from 'lucide-react';
 import { useTheme } from '../App';
 import { useNavigate } from 'react-router-dom';
 
@@ -680,15 +680,18 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                 </div>
                             </div>
 
-                            {/* Right: Direct Eat Button (No more Three Dots) */}
+                            {/* Right: Direct Donate Button */}
                             {!isSelectionMode && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); }}
-                                    className="h-[40px] px-3 bg-[#00796B]/10 text-[#00796B] hover:bg-[#00796B] hover:text-white rounded-[10px] flex items-center gap-2 font-semibold text-xs active:scale-95 transition-all group-hover:shadow-sm border border-transparent hover:border-[#00796B]"
-                                    aria-label="Mark as Eaten"
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        navigate('/donate', { state: { preSelectedItemIds: [item.id] } });
+                                    }}
+                                    className="h-[40px] px-3 bg-red-50 dark:bg-red-900/20 text-[#D32F2F] hover:bg-[#D32F2F] hover:text-white rounded-[10px] flex items-center gap-2 font-semibold text-xs active:scale-95 transition-all group-hover:shadow-sm border border-transparent hover:border-[#D32F2F]"
+                                    aria-label="Donate Item"
                                 >
-                                    <Utensils size={16} strokeWidth={2.5} />
-                                    <span>Eat</span>
+                                    <Heart size={16} strokeWidth={2.5} />
+                                    <span>Donate</span>
                                 </button>
                             )}
                         </div>

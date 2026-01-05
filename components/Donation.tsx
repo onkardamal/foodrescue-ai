@@ -146,18 +146,21 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
 
   const donatableItems = inventory.filter(i => i.status === 'active');
 
-  // Handle pre-selection from Map
+  // Handle pre-selection from Map & Inventory
   useEffect(() => {
+      // Handle pre-selected NGO
       if (location.state?.preSelectedNgo) {
           const pre = location.state.preSelectedNgo;
-          // Check if already in list, if not add it
           setNgos(prev => {
               if (prev.find(n => n.id === pre.id)) return prev;
               return [pre, ...prev];
           });
           setSelectedNgoId(pre.id);
-          // Auto-advance if we have items, otherwise stay on step 1 but remember ngo
-          // For simplicity, just set ID and let user pick items first.
+      }
+      
+      // Handle pre-selected Items from Inventory
+      if (location.state?.preSelectedItemIds) {
+          setSelectedItems(location.state.preSelectedItemIds);
       }
   }, [location.state]);
 
