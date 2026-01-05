@@ -147,7 +147,7 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
       
       {/* Foreground Card */}
       <div 
-        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-[12px] shadow-[0_2px_4px_rgba(0,0,0,0.08)] z-10 transition-transform duration-200 ease-out touch-pan-y hover:shadow-md"
+        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-[12px] shadow-sm border border-slate-200 dark:border-slate-700 z-10 transition-transform duration-200 ease-out touch-pan-y hover:shadow-md"
         style={{ transform: `translateX(${offset}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

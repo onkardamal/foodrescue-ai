@@ -72,7 +72,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       {/* 3) Key Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {/* Card 1: Meals Saved */}
-        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-[0_2px_4px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#1CAE9E] flex items-center justify-center">
                 <Utensils size={24} color="white" strokeWidth={2} />
             </div>
@@ -87,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
         {/* Card 2: CO2 Prevented */}
-        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-[0_2px_4px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#1CAE9E] flex items-center justify-center">
                 <Leaf size={24} color="white" strokeWidth={2} />
             </div>
@@ -102,7 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
          {/* Card 3: Money Saved */}
-         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-[0_2px_4px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
+         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#FF9800] flex items-center justify-center">
                 <DollarSign size={24} color="white" strokeWidth={2} />
             </div>
@@ -117,7 +117,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
          {/* Card 4: Food Rescued */}
-         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-[0_2px_4px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
+         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#2196F3] flex items-center justify-center">
                 <Share2 size={24} color="white" strokeWidth={2} />
             </div>
@@ -147,7 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <button 
                     key={i}
                     onClick={() => navigate(action.path)}
-                    className="bg-white dark:bg-slate-800 min-w-[120px] h-[96px] rounded-[12px] p-[12px] flex flex-col items-start shadow-[0_2px_4px_rgba(0,0,0,0.1)] active:scale-95 transition-all hover:shadow-md hover:-translate-y-1 hover:border-slate-200 dark:hover:border-slate-600 border border-transparent"
+                    className="bg-white dark:bg-slate-800 min-w-[120px] h-[96px] rounded-[12px] p-[12px] flex flex-col items-start shadow-sm border border-slate-200 dark:border-slate-700 active:scale-95 transition-all hover:shadow-md hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-600"
                 >
                     <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center mb-2 shadow-sm" style={{ backgroundColor: action.bg }}>
                         <action.icon size={24} color="white" strokeWidth={2} />
@@ -169,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             </div>
             <div className="flex flex-col gap-[12px]">
                 {expiringItems.length === 0 ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-[12px] p-8 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-[12px] p-8 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
                         <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-2">
                             <Leaf className="text-green-500" size={24} />
                         </div>
@@ -180,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     expiringItems.map(item => {
                         const isExpired = item.daysLeft < 0;
                         return (
-                            <div key={item.id} className="bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-[0_2px_4px_rgba(0,0,0,0.05)] flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:shadow-sm active:scale-[0.99] active:bg-slate-100 dark:active:bg-slate-700 transition-all cursor-pointer" onClick={() => navigate('/inventory')}>
+                            <div key={item.id} className="bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:shadow-md active:scale-[0.99] active:bg-slate-100 dark:active:bg-slate-700 transition-all cursor-pointer" onClick={() => navigate('/inventory')}>
                                 <div className={`w-[48px] h-[48px] rounded-[8px] mr-[12px] flex items-center justify-center text-2xl ${isExpired ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>
                                     {isExpired ? '⚠️' : '🕒'}
                                 </div>
@@ -211,7 +211,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Your Badges</h3>
                     <button className="text-[#1CAE9E] text-[14px] font-medium hover:text-[#179c8d] hover:underline active:opacity-70 transition-colors">View all</button>
                 </div>
-                <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-[0_2px_4px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
                     <p className="text-center font-normal text-[14px] text-[#757575] dark:text-slate-400">Start your journey to earn badges!</p>
                     <p className="font-semibold text-[14px] text-[#212121] dark:text-slate-100 mt-[12px]">Level 1 - {stats.xp} pts - <span className="font-normal">1000 points to next level</span></p>
                     <div className="w-full h-[8px] bg-[#F0F4F3] dark:bg-slate-700 rounded-[8px] mt-[8px] overflow-hidden">

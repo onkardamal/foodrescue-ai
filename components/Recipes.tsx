@@ -18,7 +18,7 @@ const IngredientChip: React.FC<{
 }> = ({ label, onPress }) => (
   <button 
     onClick={() => onPress(label)}
-    className="h-[32px] px-[12px] bg-white dark:bg-slate-800 rounded-[16px] flex items-center justify-center active:scale-95 transition-transform mr-[8px] shadow-sm border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+    className="h-[32px] px-[12px] bg-white dark:bg-slate-800 rounded-[16px] flex items-center justify-center active:scale-95 transition-transform mr-[8px] shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
   >
     <span className="text-[14px] font-[500] text-[#212121] dark:text-slate-200 whitespace-nowrap">{label}</span>
   </button>
@@ -37,7 +37,7 @@ const RecipeCard: React.FC<{
   return (
     <div 
       onClick={onView}
-      className="group bg-white dark:bg-slate-800 rounded-[20px] p-[20px] mb-[16px] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-slate-700/50 cursor-pointer relative overflow-hidden"
+      className="group bg-white dark:bg-slate-800 rounded-[20px] p-[20px] mb-[16px] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-slate-700 cursor-pointer relative overflow-hidden"
     >
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 dark:bg-orange-900/10 rounded-bl-[100px] -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
