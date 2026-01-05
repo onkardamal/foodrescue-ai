@@ -62,6 +62,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   // Get Earned Badge Objects
   const earnedBadgeObjects = ALL_BADGES.filter(b => stats.earnedBadges.includes(b.id));
 
+  const handleQuickAction = (path: string, state?: any) => {
+      navigate(path, { state });
+  };
+
   return (
     <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500 relative">
       
@@ -164,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             </p>
           </div>
           <button 
-            onClick={() => navigate('/inventory')}
+            onClick={() => handleQuickAction('/inventory', { action: 'add' })}
             className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-[24px] py-[14px] rounded-[20px] shadow-lg shadow-teal-500/20 dark:shadow-teal-900/40 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all min-h-[48px]"
             aria-label="Add food to inventory"
           >
@@ -248,8 +252,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         {/* Responsive Grid Layout for Actions */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-[12px]">
             {[
-                { icon: Plus, color: '#00796B', darkColor: '#80CBC4', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', title: 'Add Item', path: '/inventory' },
-                { icon: Camera, color: '#0288D1', darkColor: '#81D4FA', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', title: 'Scan Food', path: '/inventory' },
+                { icon: Plus, color: '#00796B', darkColor: '#80CBC4', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', title: 'Add Item', path: '/inventory', state: { action: 'add' } },
+                { icon: Camera, color: '#0288D1', darkColor: '#81D4FA', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', title: 'Scan Food', path: '/inventory', state: { action: 'scan' } },
                 { icon: Heart, color: '#D32F2F', darkColor: '#EF9A9A', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', title: 'Donate', path: '/donate' },
                 { icon: BookOpen, color: '#E65100', darkColor: '#FFCC80', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', title: 'Recipes', path: '/recipes' },
                 { icon: MapPin, color: '#7B1FA2', darkColor: '#CE93D8', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', title: 'Find NGOs', path: '/ngos' },
@@ -257,7 +261,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             ].map((action, i) => (
                 <button 
                     key={i}
-                    onClick={() => navigate(action.path)}
+                    onClick={() => handleQuickAction(action.path, action.state)}
                     className={`
                         ${action.bg} ${action.border} relative h-[110px] rounded-[24px] flex flex-col items-center justify-center p-2
                         transition-all duration-200 hover:shadow-lg hover:-translate-y-1 active:scale-95 active:translate-y-0

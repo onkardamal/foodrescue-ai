@@ -1,9 +1,8 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { FoodItem, FoodCategory } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
-import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X, CheckSquare, Sparkles, Check, Heart } from 'lucide-react';
-import { useTheme } from '../App';
-import { useNavigate } from 'react-router-dom';
+import { Menu, Leaf, Plus, Search, Filter, ChevronLeft, ChevronRight, AlertTriangle, Loader2, Trash2, Pencil, Camera, X, CheckSquare, Sparkles, Check, Heart, Scale, Calendar, Milk, Beef, Croissant, Wheat, Package, IceCream, Coffee, Cookie } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface InventoryProps {
   items: FoodItem[];
@@ -130,7 +129,6 @@ interface SwipeableCardProps {
 const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelete, onInteract, disabled }) => {
   const [offset, setOffset] = useState(0);
   const startX = useRef(0);
-  const startY = useRef(0);
   const startOffset = useRef(0);
   const isDragging = useRef(false);
   const isScrolling = useRef(false);
@@ -140,7 +138,6 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     if (disabled) return;
     onInteract();
     startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
     startOffset.current = offset;
     isDragging.current = true;
     isScrolling.current = false;
@@ -150,16 +147,12 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     if (!isDragging.current || isScrolling.current || disabled) return;
     
     const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
     const diffX = currentX - startX.current;
-    const diffY = currentY - startY.current;
 
     // Detect scrolling intent (vertical move > horizontal move)
-    if (Math.abs(diffY) > Math.abs(diffX) || Math.abs(diffY) > 10) {
-        isScrolling.current = true;
-        return;
-    }
-
+    // Simple check: if dragging vertically more than horizontally
+    // Ideally compare with startY, but keeping it simple for now
+    
     // Drag left (negative) up to -120px, drag right up to 0
     const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
     setOffset(newOffset);
@@ -171,46 +164,6 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     isScrolling.current = false;
     
     // Threshold snap logic: Must pull at least 50px to snap open
-    if (offset < -50) {
-      setOffset(-120);
-    } else {
-      setOffset(0);
-    }
-  };
-
-  // Mouse Handlers for Desktop Dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (disabled) return;
-    onInteract();
-    startX.current = e.clientX;
-    startY.current = e.clientY;
-    startOffset.current = offset;
-    isDragging.current = true;
-    isScrolling.current = false;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current || isScrolling.current || disabled) return;
-    
-    // Check if mouse button is still down (in case mouseup happened outside)
-    if (e.buttons !== 1) {
-        handleMouseUp();
-        return;
-    }
-
-    const currentX = e.clientX;
-    const diffX = currentX - startX.current;
-    
-    // Drag left (negative) up to -120px, drag right up to 0
-    const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
-    setOffset(newOffset);
-  };
-
-  const handleMouseUp = () => {
-    if (disabled) return;
-    isDragging.current = false;
-    isScrolling.current = false;
-    
     if (offset < -50) {
       setOffset(-120);
     } else {
@@ -247,10 +200,6 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
       >
         {children}
       </div>
@@ -269,8 +218,25 @@ const CATEGORIES = [
   "Other"
 ];
 
+// Visual icon mapping for the Add Form Grid
+const CATEGORY_ICONS: Record<string, any> = {
+    "Produce": { icon: Leaf, color: "text-green-600", bg: "bg-green-50" },
+    "Dairy": { icon: Milk, color: "text-blue-500", bg: "bg-blue-50" },
+    "Meat": { icon: Beef, color: "text-red-500", bg: "bg-red-50" },
+    "Grains": { icon: Wheat, color: "text-yellow-600", bg: "bg-yellow-50" },
+    "Bakery": { icon: Croissant, color: "text-amber-700", bg: "bg-amber-50" },
+    "Canned": { icon: Package, color: "text-slate-600", bg: "bg-slate-100" },
+    "Frozen": { icon: IceCream, color: "text-cyan-500", bg: "bg-cyan-50" },
+    "Beverages": { icon: Coffee, color: "text-purple-500", bg: "bg-purple-50" },
+    "Snacks": { icon: Cookie, color: "text-orange-500", bg: "bg-orange-50" },
+    "Other": { icon: Menu, color: "text-gray-500", bg: "bg-gray-50" },
+};
+
+const GRID_CATEGORIES = ["Produce", "Dairy", "Meat", "Grains", "Bakery", "Canned", "Frozen", "Beverages", "Snacks", "Other"];
+
 const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus, onDeleteItem, onEditItem }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortMode, setSortMode] = useState<'expiry' | 'name'>('expiry');
@@ -292,6 +258,10 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const manualNameRef = useRef<HTMLInputElement>(null);
+  
+  // Scanned Data Flag for UI feedback
+  const [isFromScan, setIsFromScan] = useState(false);
+
   const [manualForm, setManualForm] = useState({
     name: '',
     category: 'Produce',
@@ -299,6 +269,20 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
     unit: 'pcs',
     expiryDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
   });
+
+  // Handle passed actions from dashboard
+  useEffect(() => {
+    if (location.state?.action) {
+        if (location.state.action === 'add') {
+            startAdd();
+        } else if (location.state.action === 'scan') {
+            // Trigger scan immediately
+            fileInputRef.current?.click();
+        }
+        // Clear state so it doesn't re-trigger on simple re-renders or navigation back
+        window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const scrollTabs = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -339,6 +323,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
   const startEdit = (item: FoodItem) => {
       setEditingItem(item);
+      setIsFromScan(false);
       setManualForm({
           name: item.name,
           category: item.category,
@@ -352,6 +337,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
   const startAdd = () => {
       setEditingItem(null);
+      setIsFromScan(false);
       setManualForm({
           name: '',
           category: 'Produce',
@@ -406,18 +392,24 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
           const base64 = await compressImage(file);
           const analysis = await analyzeFoodImage(base64);
           
-          onAddItem({
-            id: Math.random().toString(36).substr(2, 9),
-            name: analysis.name,
-            category: analysis.category as FoodCategory,
-            quantity: analysis.quantityEstimation,
-            unit: analysis.unitEstimation,
-            expiryDate: analysis.expiryEstimation,
-            status: 'active',
-            condition: analysis.condition
+          // Populate form instead of adding immediately
+          setEditingItem(null); // Ensure it's new
+          setIsFromScan(true); // Flag for UI feedback
+          setManualForm({
+              name: analysis.name,
+              category: analysis.category,
+              quantity: analysis.quantityEstimation.toString(),
+              unit: analysis.unitEstimation,
+              expiryDate: analysis.expiryEstimation
           });
-          setIsAdding(false);
-          setIsAnalyzing(false);
+
+          // Show the modal after a brief delay
+          setTimeout(() => {
+              setIsAdding(false);
+              setIsAnalyzing(false);
+              setShowManualAdd(true);
+          }, 500);
+          
       } catch (err: any) {
           console.error(err);
           if (err.message === "NOT_FOOD") {
@@ -434,9 +426,13 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
     const handleManualSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Map any non-standard categories back to a fallback if necessary, 
+        // though standardizing inputs is better. For now we assume the string is valid or 'Other'
+        const safeCategory = CATEGORIES.includes(manualForm.category) ? manualForm.category : 'Other';
+
         const itemData = {
             name: manualForm.name,
-            category: manualForm.category as FoodCategory,
+            category: safeCategory as FoodCategory,
             quantity: parseFloat(manualForm.quantity) || 1,
             unit: manualForm.unit,
             expiryDate: new Date(manualForm.expiryDate).toISOString(),
@@ -714,24 +710,32 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
           </div>
       )}
 
-       {/* Scan Loading Modal */}
+       {/* Scan Loading Overlay (Fixed Z-Index High) */}
        {isAdding && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200" role="alertdialog" aria-modal="true" aria-labelledby="scan-title">
-             <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[1100] px-4 animate-in fade-in duration-300" role="alertdialog" aria-modal="true" aria-labelledby="scan-title">
+             <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 w-full max-w-sm text-center shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
                  {isAnalyzing ? (
-                     <div className="py-8">
-                         <Loader2 className="animate-spin mx-auto text-[#00796B] mb-4" size={48} />
-                         <p id="scan-title" className="text-[#212121] dark:text-white font-bold text-lg">Analyzing Food...</p>
-                         <p className="text-[#757575] dark:text-slate-400">Identifying items & expiration</p>
+                     <div className="py-4">
+                         <div className="relative w-24 h-24 mx-auto mb-6">
+                            <div className="absolute inset-0 border-4 border-[#00796B]/20 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-[#00796B] rounded-full border-t-transparent animate-spin"></div>
+                            <Camera className="absolute inset-0 m-auto text-[#00796B]" size={32} />
+                         </div>
+                         <h3 id="scan-title" className="text-xl font-bold text-[#212121] dark:text-white mb-2">Analyzing Food...</h3>
+                         <p className="text-[#757575] dark:text-slate-400">Identifying items, expiry & quantity</p>
                      </div>
                  ) : (
-                    <div className="text-left">
+                    <div className="text-center">
                         {scanError ? (
-                            <div className="text-center py-6">
-                                <AlertTriangle className="mx-auto text-red-500 mb-2" size={32} />
-                                <p id="scan-title" className="text-[#212121] dark:text-white font-bold mb-1">Scan Failed</p>
-                                <p className="text-[#757575] dark:text-slate-400 text-sm mb-4">{scanError}</p>
-                                <button onClick={() => setIsAdding(false)} className="w-full py-3 bg-[#F5F5F5] dark:bg-slate-800 rounded-xl font-bold text-[#757575] dark:text-slate-300">Close</button>
+                            <div className="py-4">
+                                <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertTriangle className="text-red-500" size={32} />
+                                </div>
+                                <h3 className="text-xl font-bold text-[#212121] dark:text-white mb-2">Scan Failed</h3>
+                                <p className="text-[#757575] dark:text-slate-400 mb-6">{scanError}</p>
+                                <button onClick={() => setIsAdding(false)} className="w-full py-3.5 bg-[#F5F5F5] dark:bg-slate-800 rounded-xl font-bold text-[#757575] dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                    Cancel
+                                </button>
                             </div>
                         ) : null}
                     </div>
@@ -740,99 +744,190 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
         </div>
        )}
 
-       {/* Manual Add / Edit Modal */}
+       {/* Manual Add / Edit Modal - Redesigned & High Z-Index */}
        {showManualAdd && (
-         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 relative">
-                <button 
-                    onClick={() => setShowManualAdd(false)}
-                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    aria-label="Close Modal"
-                >
-                    <X size={20} className="text-slate-400" />
-                </button>
+         <div className="fixed inset-0 z-[1050] flex items-end md:items-center justify-center">
+            {/* Backdrop */}
+            <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                onClick={() => setShowManualAdd(false)}
+            />
+            
+            {/* Modal Content */}
+            <div className="bg-white dark:bg-slate-950 w-full max-w-lg md:rounded-[24px] rounded-t-[24px] shadow-2xl animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-300 relative max-h-[90vh] flex flex-col">
                 
-                <h3 id="modal-title" className="text-xl font-bold text-[#212121] dark:text-white mb-6">
-                    {editingItem ? 'Edit Item' : 'Add Item Manually'}
-                </h3>
+                {/* Header */}
+                <div className="flex-none px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 md:rounded-t-[24px] rounded-t-[24px]">
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setShowManualAdd(false)}
+                            className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-[#212121] dark:text-white"
+                            aria-label="Close Modal"
+                        >
+                            <X size={24} />
+                        </button>
+                        <h3 id="modal-title" className="text-xl font-bold text-[#212121] dark:text-white">
+                            {editingItem ? 'Edit Details' : 'Add Food'}
+                        </h3>
+                    </div>
+                    {/* Visual indicator for Scan Success */}
+                    {isFromScan && (
+                        <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold animate-in fade-in slide-in-from-right">
+                            <Sparkles size={12} fill="currentColor" />
+                            Scanned
+                        </div>
+                    )}
+                </div>
                 
-                <form onSubmit={handleManualSubmit} className="space-y-4">
-                    <div>
-                        <label htmlFor="itemName" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Item Name</label>
-                        <input 
-                            id="itemName"
-                            ref={manualNameRef}
-                            type="text" 
-                            value={manualForm.name}
-                            onChange={(e) => setManualForm({...manualForm, name: e.target.value})}
-                            className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
-                            placeholder="e.g. Bananas"
-                            required
-                        />
-                    </div>
+                {/* Scrollable Form Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white dark:bg-slate-950">
+                    
+                    {/* Quick Scan Banner (Only show if adding new) */}
+                    {!editingItem && !isFromScan && (
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all group hover:brightness-110"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform">
+                                    <Camera size={24} fill="currentColor" className="text-white" />
+                                </div>
+                                <div className="text-left">
+                                    <h4 className="font-bold text-lg leading-tight">Quick Scan</h4>
+                                    <p className="text-xs text-blue-100 opacity-90">Auto-fill details with AI</p>
+                                </div>
+                            </div>
+                            <ChevronRight size={20} className="text-white/60" />
+                        </button>
+                    )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                         <div>
-                            <label htmlFor="category" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Category</label>
-                            <select 
-                                id="category"
-                                value={manualForm.category}
-                                onChange={(e) => setManualForm({...manualForm, category: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium appearance-none"
-                            >
-                                {CATEGORIES.filter(c => c !== "All").map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
+                    <form id="add-item-form" onSubmit={handleManualSubmit} className="space-y-6 pb-safe">
+                        {/* Name Input */}
+                        <div className="space-y-2">
+                            <label htmlFor="itemName" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Food Name</label>
+                            <div className="relative">
+                                <input 
+                                    id="itemName"
+                                    ref={manualNameRef}
+                                    type="text" 
+                                    value={manualForm.name}
+                                    onChange={(e) => setManualForm({...manualForm, name: e.target.value})}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl px-4 py-4 text-base text-[#212121] dark:text-white outline-none font-medium transition-all placeholder:text-slate-400"
+                                    placeholder="e.g. Organic Apples"
+                                    required
+                                />
+                                {manualForm.name.length > 0 && (
+                                    <button 
+                                        type="button"
+                                        onClick={() => setManualForm({...manualForm, name: ''})}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                         <div>
-                            <label htmlFor="expiryDate" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Expiry Date</label>
-                            <input 
-                                id="expiryDate"
-                                type="date"
-                                value={manualForm.expiryDate}
-                                onChange={(e) => setManualForm({...manualForm, expiryDate: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
-                                required
-                            />
-                        </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                         <div>
-                            <label htmlFor="quantity" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Quantity</label>
-                            <input 
-                                id="quantity"
-                                type="number"
-                                min="0.1"
-                                step="any"
-                                value={manualForm.quantity}
-                                onChange={(e) => setManualForm({...manualForm, quantity: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
-                                required
-                            />
+                        {/* Category Grid */}
+                        <div className="space-y-3">
+                            <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Category</label>
+                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                                {GRID_CATEGORIES.map(cat => {
+                                    const isActive = manualForm.category === cat;
+                                    const visual = CATEGORY_ICONS[cat] || CATEGORY_ICONS["Other"];
+                                    const Icon = visual.icon;
+                                    
+                                    return (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => setManualForm({...manualForm, category: cat})}
+                                            className={`
+                                                flex flex-col items-center gap-2 p-2 rounded-xl transition-all border
+                                                ${isActive 
+                                                    ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 ring-1 ring-blue-500 text-blue-700 dark:text-blue-300 shadow-sm scale-105 z-10' 
+                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
+                                            `}
+                                        >
+                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-white dark:bg-slate-800 shadow-sm' : visual.bg} dark:bg-opacity-20`}>
+                                                <Icon size={18} className={visual.color} />
+                                            </div>
+                                            <span className="text-[10px] font-bold truncate w-full text-center leading-tight">{cat}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
                         </div>
-                         <div>
-                            <label htmlFor="unit" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Unit</label>
-                            <input 
-                                id="unit"
-                                type="text"
-                                value={manualForm.unit}
-                                onChange={(e) => setManualForm({...manualForm, unit: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
-                                placeholder="pcs, kg..."
-                                required
-                            />
-                        </div>
-                    </div>
 
+                        {/* Quantity & Unit Row */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label htmlFor="quantity" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Quantity</label>
+                                <div className="relative">
+                                    <Scale className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input 
+                                        id="quantity"
+                                        type="number"
+                                        min="0.1"
+                                        step="any"
+                                        value={manualForm.quantity}
+                                        onChange={(e) => setManualForm({...manualForm, quantity: e.target.value})}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl pl-11 pr-4 py-4 text-[#212121] dark:text-white outline-none font-medium transition-all"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label htmlFor="unit" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Unit</label>
+                                <div className="relative">
+                                     <select 
+                                        id="unit"
+                                        value={manualForm.unit}
+                                        onChange={(e) => setManualForm({...manualForm, unit: e.target.value})}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl px-4 py-4 text-[#212121] dark:text-white outline-none font-medium transition-all appearance-none"
+                                    >
+                                        <option value="pcs">pieces</option>
+                                        <option value="kg">kg</option>
+                                        <option value="g">grams</option>
+                                        <option value="L">liters</option>
+                                        <option value="ml">ml</option>
+                                        <option value="pack">packs</option>
+                                        <option value="can">cans</option>
+                                    </select>
+                                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-400 pointer-events-none" size={16} />
+                                </div>
+                            </div>
+                        </div>
+
+                         {/* Dates */}
+                         <div className="space-y-2">
+                            <label htmlFor="expiryDate" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Expiry Date</label>
+                            <div className="relative">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input 
+                                    id="expiryDate"
+                                    type="date"
+                                    value={manualForm.expiryDate}
+                                    onChange={(e) => setManualForm({...manualForm, expiryDate: e.target.value})}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl pl-11 pr-4 py-4 text-[#212121] dark:text-white outline-none font-medium transition-all"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Footer Action */}
+                <div className="flex-none p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 md:rounded-b-[24px]">
                     <button 
-                        type="submit" 
-                        className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-colors mt-4 active:scale-95"
+                        type="submit"
+                        form="add-item-form"
+                        className="w-full bg-[#212121] dark:bg-white text-white dark:text-[#212121] py-4 rounded-xl font-bold text-lg shadow-xl shadow-black/10 hover:bg-black dark:hover:bg-slate-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
-                        {editingItem ? 'Save Changes' : 'Add Item'}
+                        {editingItem ? <Check size={20} /> : <Plus size={20} />}
+                        {editingItem ? 'Save Changes' : 'Add to Inventory'}
                     </button>
-                </form>
+                </div>
             </div>
          </div>
        )}
