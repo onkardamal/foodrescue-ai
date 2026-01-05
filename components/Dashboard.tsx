@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserStats, FoodItem, User } from '../types';
 import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,38 @@ interface DashboardProps {
   stats: UserStats;
   inventory: FoodItem[];
 }
+
+const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { value: number, prefix?: string, suffix?: string, decimals?: number }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+    const duration = 1500; // 1.5 seconds animation
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      
+      // Ease out cubic
+      const easeOutCubic = (x: number): number => 1 - Math.pow(1 - x, 3);
+      
+      if (progress < duration) {
+        const timeRatio = progress / duration;
+        const easedProgress = easeOutCubic(timeRatio);
+        setCount(easedProgress * value);
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(value);
+      }
+    };
+    
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [value]);
+
+  return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>;
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   const navigate = useNavigate();
@@ -120,7 +152,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 Welcome back,<br />{user?.name.split(' ')[0] || 'Chef'} 👋
             </h2>
             <p className="font-normal text-[13px] md:text-[16px] text-[#757575] dark:text-slate-400">
-                You've saved {stats.mealsSaved} meals this month!
+                You've saved <AnimatedCounter value={stats.mealsSaved} /> meals this month!
             </p>
           </div>
           <button 
@@ -140,7 +172,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <Utensils size={24} color="white" strokeWidth={2} />
             </div>
             <div>
-                <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">{stats.mealsSaved}</div>
+                <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
+                    <AnimatedCounter value={stats.mealsSaved} />
+                </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Meals Saved</div>
                 <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />
@@ -155,7 +189,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <Leaf size={24} color="white" strokeWidth={2} />
             </div>
             <div>
-                <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">{stats.co2Saved} kg</div>
+                <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
+                    <AnimatedCounter value={stats.co2Saved} suffix=" kg" decimals={1} />
+                </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">CO₂ Prevented</div>
                 <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />
@@ -170,7 +206,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <DollarSign size={24} color="white" strokeWidth={2} />
             </div>
             <div>
-                <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">${stats.moneySaved}</div>
+                <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
+                    <AnimatedCounter value={stats.moneySaved} prefix="$" />
+                </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Money Saved</div>
                 <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />

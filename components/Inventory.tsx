@@ -28,7 +28,7 @@ const getVisualDetails = (item: FoodItem) => {
   else if (nameLower.includes("chicken")) emoji = "🍗";
   else if (nameLower.includes("egg")) emoji = "🥚";
 
-  // Status calculation logic to match spec
+  // Status calculation logic
   const now = new Date();
   const expiry = new Date(item.expiryDate);
   const diffTime = expiry.getTime() - now.getTime();
@@ -36,34 +36,86 @@ const getVisualDetails = (item: FoodItem) => {
 
   let statusText = `${diffDays} days`;
   let statusColor = "#1CAE9E"; // Teal (Normal)
-  let progressPercent = 50;
-  let progressColor = "#1CAE9E";
-
+  let freshnessPercent = 100;
+  
+  // Calculate freshness (100 = Fresh, 0 = Expired)
   if (diffDays < 0) {
     statusText = "Expired";
-    statusColor = "#D93025"; // Red AA compliant
-    progressPercent = 100;
-    progressColor = "#D93025";
+    statusColor = "#D93025"; // Red
+    freshnessPercent = 0;
+  } else if (diffDays <= 2) {
+    statusText = `Expires soon`;
+    statusColor = "#D93025"; // Red
+    freshnessPercent = 10 + (diffDays * 5); // 10% to 20%
   } else if (diffDays <= 4) {
-    statusText = `Expires in ${diffDays} days`;
-    // Changed to Darker Orange for WCAG AA compliance on white/light backgrounds
-    statusColor = "#D97706"; // Amber 600
-    progressPercent = 80;
-    progressColor = "#F59E0B"; // Amber 500 for bar is okay
-  } else if (diffDays > 300) {
+    statusText = `${diffDays} days left`;
+    statusColor = "#D97706"; // Amber
+    freshnessPercent = 30 + (diffDays * 5); // 45% approx
+  } else if (diffDays > 30) {
      const dateStr = expiry.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
      statusText = dateStr;
-     progressPercent = 10;
+     freshnessPercent = 100;
   } else {
      statusText = `${diffDays} days`;
-     progressPercent = Math.max(10, 100 - (diffDays * 5)); 
+     freshnessPercent = Math.min(100, 30 + (diffDays * 3));
   }
 
   // Visual Overrides for demo consistency
-  if (item.condition === "Expired") { statusText = "Expired"; statusColor = "#D93025"; progressPercent=100; progressColor="#D93025"; }
-  if (item.condition === "Expiring Soon") { statusColor = "#D97706"; progressColor="#F59E0B"; }
+  if (item.condition === "Expired") { statusText = "Expired"; statusColor = "#D93025"; freshnessPercent=0; }
+  if (item.condition === "Expiring Soon") { statusColor = "#D97706"; freshnessPercent=25; }
 
-  return { emoji, statusText, statusColor, progressPercent, progressColor };
+  // Clamp
+  freshnessPercent = Math.max(0, Math.min(100, freshnessPercent));
+
+  return { emoji, statusText, statusColor, freshnessPercent };
+};
+
+// Circular Progress Component
+const CircularItem = ({ emoji, percent, color }: { emoji: string, percent: number, color: string }) => {
+    const radius = 26;
+    const stroke = 4;
+    const normalizedRadius = radius - stroke * 0.5;
+    const circumference = normalizedRadius * 2 * Math.PI;
+    const strokeDashoffset = circumference - (percent / 100) * circumference;
+  
+    return (
+      <div className="relative w-[60px] h-[60px] flex items-center justify-center mr-[16px] shrink-0">
+         {/* Background Circle */}
+        <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
+           <circle
+              stroke="#E0E0E0" // Light gray track
+              strokeWidth={stroke}
+              fill="transparent"
+              r={normalizedRadius}
+              cx={radius}
+              cy={radius}
+              className="dark:stroke-slate-700"
+           />
+           <circle
+              stroke={color}
+              strokeWidth={stroke}
+              strokeDasharray={circumference + ' ' + circumference}
+              style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+              strokeLinecap="round"
+              fill="transparent"
+              r={normalizedRadius}
+              cx={radius}
+              cy={radius}
+           />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center text-[28px]">
+            {emoji}
+        </div>
+        
+        {/* Percentage Badge */}
+        <div 
+            className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white border border-white dark:border-slate-800 shadow-sm"
+            style={{ backgroundColor: color }}
+        >
+            {Math.round(percent)}%
+        </div>
+      </div>
+    );
 };
 
 interface SwipeableCardProps {
@@ -101,7 +153,6 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     const diffY = currentY - startY.current;
 
     // Detect scrolling intent (vertical move > horizontal move)
-    // Increased threshold for scroll detection stability
     if (Math.abs(diffY) > Math.abs(diffX) || Math.abs(diffY) > 10) {
         isScrolling.current = true;
         return;
@@ -510,10 +561,12 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                 </div>
                             )}
 
-                            {/* Left: Emoji */}
-                            <div className="w-[32px] h-[32px] text-[28px] flex items-center justify-center mr-[12px]">
-                                {visual.emoji}
-                            </div>
+                            {/* Left: Circular Progress with Emoji */}
+                            <CircularItem 
+                                emoji={visual.emoji} 
+                                percent={visual.freshnessPercent} 
+                                color={visual.statusColor} 
+                            />
 
                             {/* Center Column */}
                             <div className="flex-1 flex flex-col justify-center gap-[4px] min-w-0">
@@ -525,7 +578,6 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                     <span className="bg-[#F5F5F5] dark:bg-slate-700 text-[#757575] dark:text-slate-300 text-[10px] px-[6px] py-[2px] rounded-[4px] uppercase font-bold tracking-wide shrink-0">
                                         {item.category}
                                     </span>
-                                    {/* High Contrast Color for Accessibility */}
                                     <span 
                                         className="text-[12px] font-[600] truncate"
                                         style={{ color: visual.statusColor }}
@@ -564,17 +616,6 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                     )}
                                 </div>
                             )}
-                        </div>
-
-                        {/* Bottom Progress Bar */}
-                        <div className="absolute bottom-[6px] left-[16px] right-[16px] h-[4px] bg-[#F5F5F5] dark:bg-slate-700 rounded-[2px] overflow-hidden pointer-events-none">
-                            <div 
-                                className="h-full rounded-[2px] transition-all duration-500" 
-                                style={{ 
-                                    width: `${visual.progressPercent}%`, 
-                                    backgroundColor: visual.progressColor 
-                                }}
-                            ></div>
                         </div>
                     </SwipeableCard>
                 </div>
