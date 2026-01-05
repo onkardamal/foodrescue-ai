@@ -165,7 +165,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           </div>
           <button 
             onClick={() => navigate('/inventory')}
-            className="bg-[#00796B] text-white font-semibold text-[16px] px-[24px] py-[14px] rounded-[16px] shadow-[0_4px_10px_rgba(28,160,150,0.2)] hover:shadow-[0_6px_14px_rgba(28,160,150,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all min-h-[48px] hover:bg-[#00695C]"
+            className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-[24px] py-[14px] rounded-[20px] shadow-lg shadow-teal-500/20 dark:shadow-teal-900/40 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all min-h-[48px]"
             aria-label="Add food to inventory"
           >
             Add Food
@@ -175,7 +175,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       {/* 3) Key Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {/* Card 1: Meals Saved */}
-        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
                 <Utensils size={24} color="white" strokeWidth={2} />
             </div>
@@ -192,7 +192,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
         {/* Card 2: CO2 Prevented */}
-        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
                 <Leaf size={24} color="white" strokeWidth={2} />
             </div>
@@ -209,7 +209,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
          {/* Card 3: Money Saved */}
-         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#E65100] flex items-center justify-center">
                 <DollarSign size={24} color="white" strokeWidth={2} />
             </div>
@@ -226,7 +226,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
          {/* Card 4: Food Rescued */}
-         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#1565C0] flex items-center justify-center">
                 <Share2 size={24} color="white" strokeWidth={2} />
             </div>
@@ -243,26 +243,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
       {/* 4) Quick Actions */}
       <div>
-        <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[12px]">Quick Actions</h3>
-        <div className="flex gap-[12px] overflow-x-auto pb-[10px] px-[4px] -mx-[4px] scrollbar-hide">
+        <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[16px]">Quick Actions</h3>
+        
+        {/* Responsive Grid Layout for Actions */}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-[12px]">
             {[
-                { icon: Plus, bg: '#00796B', title: 'Add Item', desc: 'Track new food', path: '/inventory' },
-                { icon: Camera, bg: '#00796B', title: 'Scan Food', desc: 'AI recognition', path: '/inventory' },
-                { icon: Heart, bg: '#D32F2F', title: 'Donate', desc: 'Help others', path: '/donate' },
-                { icon: BookOpen, bg: '#E65100', title: 'Recipes', desc: 'Use expiring food', path: '/recipes' },
-                { icon: MapPin, bg: '#7B1FA2', title: 'Find NGOs', desc: 'Nearby partners', path: '/ngos' },
-                { icon: BarChart3, bg: '#1565C0', title: 'Analytics', desc: 'View impact', path: '/analytics' }
+                { icon: Plus, color: '#00796B', darkColor: '#80CBC4', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', title: 'Add Item', path: '/inventory' },
+                { icon: Camera, color: '#0288D1', darkColor: '#81D4FA', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', title: 'Scan Food', path: '/inventory' },
+                { icon: Heart, color: '#D32F2F', darkColor: '#EF9A9A', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', title: 'Donate', path: '/donate' },
+                { icon: BookOpen, color: '#E65100', darkColor: '#FFCC80', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', title: 'Recipes', path: '/recipes' },
+                { icon: MapPin, color: '#7B1FA2', darkColor: '#CE93D8', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', title: 'Find NGOs', path: '/ngos' },
+                { icon: BarChart3, color: '#455A64', darkColor: '#B0BEC5', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', title: 'Analytics', path: '/analytics' }
             ].map((action, i) => (
                 <button 
                     key={i}
                     onClick={() => navigate(action.path)}
-                    className="bg-white dark:bg-slate-800 min-w-[120px] h-[96px] rounded-[12px] p-[12px] flex flex-col items-start shadow-sm border border-slate-200 dark:border-slate-700 active:scale-95 transition-all hover:shadow-md hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-600"
+                    className={`
+                        ${action.bg} ${action.border} relative h-[110px] rounded-[24px] flex flex-col items-center justify-center p-2
+                        transition-all duration-200 hover:shadow-lg hover:-translate-y-1 active:scale-95 active:translate-y-0
+                        group border
+                    `}
                 >
-                    <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center mb-2 shadow-sm" style={{ backgroundColor: action.bg }}>
-                        <action.icon size={24} color="white" strokeWidth={2} />
+                    <div 
+                        className="w-[48px] h-[48px] rounded-[18px] bg-white dark:bg-slate-950 shadow-sm flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform duration-300"
+                    >
+                        <action.icon size={24} strokeWidth={2.5} className="dark:hidden" style={{ color: action.color }} />
+                        <action.icon size={24} strokeWidth={2.5} className="hidden dark:block" style={{ color: action.darkColor }} />
                     </div>
-                    <div className="font-semibold text-[14px] text-[#212121] dark:text-slate-100 mt-[8px] leading-none">{action.title}</div>
-                    <div className="font-normal text-[12px] text-[#757575] dark:text-slate-400 mt-1">{action.desc}</div>
+                    <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
+                        {action.title}
+                    </span>
                 </button>
             ))}
         </div>
