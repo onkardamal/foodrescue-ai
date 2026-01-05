@@ -226,7 +226,7 @@ const BottomNav = () => {
   );
 };
 
-const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
+const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
 
@@ -254,6 +254,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
                     onAddItem={handleAddItem} 
                     onUpdateStatus={handleUpdateStatus}
                     onDeleteItem={handleDeleteItem}
+                    onEditItem={handleEditItem}
                   />
               } />
               <Route path="/recipes" element={
@@ -349,6 +350,10 @@ export default function App() {
       setInventory(prev => prev.filter(i => i.id !== id));
   };
 
+  const handleEditItem = (updatedItem: FoodItem) => {
+    setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  };
+
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     
@@ -411,6 +416,7 @@ export default function App() {
           handleAddItem={handleAddItem}
           handleDeleteItem={handleDeleteItem}
           handleUpdateStatus={handleUpdateStatus}
+          handleEditItem={handleEditItem}
           handleCookRecipe={handleCookRecipe}
           handleUpdateRecipes={setGeneratedRecipes}
           handleDonateComplete={handleDonateComplete}

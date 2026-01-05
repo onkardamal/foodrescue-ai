@@ -253,7 +253,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label htmlFor="login-password" class="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
+                <label htmlFor="login-password" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
                 <div className="relative">
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
@@ -424,7 +424,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label htmlFor="signup-password" class="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
+                <label htmlFor="signup-password" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
                 <div className="relative">
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 

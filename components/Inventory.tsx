@@ -1,7 +1,7 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { FoodItem, FoodCategory } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
-import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X, CheckSquare, Sparkles } from 'lucide-react';
+import { Menu, Leaf, Plus, Search, Filter, LayoutGrid, List, MoreVertical, ChevronLeft, ChevronRight, ScanEye, AlertTriangle, Loader2, Trash2, Utensils, Pencil, Camera, X, CheckSquare, Sparkles, Check } from 'lucide-react';
 import { useTheme } from '../App';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +10,7 @@ interface InventoryProps {
   onAddItem: (item: FoodItem) => void;
   onUpdateStatus: (id: string, status: 'donated' | 'wasted' | 'consumed') => void;
   onDeleteItem: (id: string) => void;
+  onEditItem: (item: FoodItem) => void;
 }
 
 // Visual mapping helper for the specific items in the spec
@@ -134,6 +135,7 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
   const isDragging = useRef(false);
   const isScrolling = useRef(false);
 
+  // Touch Handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disabled) return;
     onInteract();
@@ -176,6 +178,46 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     }
   };
 
+  // Mouse Handlers for Desktop Dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (disabled) return;
+    onInteract();
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    startOffset.current = offset;
+    isDragging.current = true;
+    isScrolling.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || isScrolling.current || disabled) return;
+    
+    // Check if mouse button is still down (in case mouseup happened outside)
+    if (e.buttons !== 1) {
+        handleMouseUp();
+        return;
+    }
+
+    const currentX = e.clientX;
+    const diffX = currentX - startX.current;
+    
+    // Drag left (negative) up to -120px, drag right up to 0
+    const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
+    setOffset(newOffset);
+  };
+
+  const handleMouseUp = () => {
+    if (disabled) return;
+    isDragging.current = false;
+    isScrolling.current = false;
+    
+    if (offset < -50) {
+      setOffset(-120);
+    } else {
+      setOffset(0);
+    }
+  };
+
   return (
     <div className="relative w-full h-[88px] overflow-hidden rounded-[12px]">
       {/* Background Actions */}
@@ -205,6 +247,10 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
         {children}
       </div>
@@ -223,13 +269,12 @@ const CATEGORIES = [
   "Other"
 ];
 
-const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus, onDeleteItem }) => {
+const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus, onDeleteItem, onEditItem }) => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortMode, setSortMode] = useState<'expiry' | 'name'>('expiry');
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   
   // Selection Mode State
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -243,8 +288,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
   const [scanError, setScanError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Manual Add Logic
+  // Manual Add / Edit Logic
   const [showManualAdd, setShowManualAdd] = useState(false);
+  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const manualNameRef = useRef<HTMLInputElement>(null);
   const [manualForm, setManualForm] = useState({
     name: '',
@@ -289,6 +335,32 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
           newSet.add(id);
       }
       setSelectedItemIds(newSet);
+  };
+
+  const startEdit = (item: FoodItem) => {
+      setEditingItem(item);
+      setManualForm({
+          name: item.name,
+          category: item.category,
+          quantity: item.quantity.toString(),
+          unit: item.unit,
+          expiryDate: item.expiryDate.split('T')[0]
+      });
+      setShowManualAdd(true);
+      setTimeout(() => manualNameRef.current?.focus(), 100);
+  };
+
+  const startAdd = () => {
+      setEditingItem(null);
+      setManualForm({
+          name: '',
+          category: 'Produce',
+          quantity: '1',
+          unit: 'pcs',
+          expiryDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+      });
+      setShowManualAdd(true);
+      setTimeout(() => manualNameRef.current?.focus(), 100);
   };
 
   const compressImage = (file: File): Promise<string> => {
@@ -361,24 +433,27 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
     const handleManualSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onAddItem({
-            id: Math.random().toString(36).substr(2, 9),
+        
+        const itemData = {
             name: manualForm.name,
             category: manualForm.category as FoodCategory,
             quantity: parseFloat(manualForm.quantity) || 1,
             unit: manualForm.unit,
             expiryDate: new Date(manualForm.expiryDate).toISOString(),
-            status: 'active',
-            condition: 'Good'
-        });
+            status: 'active' as const,
+            condition: editingItem ? editingItem.condition : 'Good'
+        };
+
+        if (editingItem) {
+            onEditItem({ ...editingItem, ...itemData });
+        } else {
+             onAddItem({
+                id: Math.random().toString(36).substr(2, 9),
+                ...itemData
+            });
+        }
+
         setShowManualAdd(false);
-        setManualForm({
-            name: '',
-            category: 'Produce',
-            quantity: '1',
-            unit: 'pcs',
-            expiryDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
-        });
     };
 
     const handleCookSelected = () => {
@@ -388,7 +463,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
     };
 
   return (
-    <div className="bg-[#FFFFFF] dark:bg-slate-950 min-h-screen pb-24 md:pb-0 animate-in fade-in duration-300 transition-colors" onClick={() => { setActiveMenuId(null); setShowSortMenu(false); }}>
+    <div className="bg-[#FFFFFF] dark:bg-slate-950 min-h-screen pb-24 md:pb-0 animate-in fade-in duration-300 transition-colors" onClick={() => setShowSortMenu(false)}>
       
       {/* 2) Header Area (Unified) */}
       <header className="pt-[12px] px-[16px] pb-[4px] md:px-0 flex flex-col gap-[8px]">
@@ -425,7 +500,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                         <span className="text-[14px] font-[600] hidden md:inline ml-2">Scan</span>
                     </button>
                     <button 
-                        onClick={() => { setShowManualAdd(true); setTimeout(() => manualNameRef.current?.focus(), 100); }}
+                        onClick={startAdd}
                         className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
                         aria-label="Manually add food item"
                     >
@@ -552,9 +627,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             return (
                 <div key={item.id} className="relative group">
                     <SwipeableCard 
-                        onEdit={() => console.log('Edit item', item.id)}
+                        onEdit={() => startEdit(item)}
                         onDelete={() => onDeleteItem(item.id)}
-                        onInteract={() => setActiveMenuId(null)}
+                        onInteract={() => {}}
                         disabled={isSelectionMode} // Disable Swipe in selection mode
                     >
                         <div 
@@ -587,7 +662,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                             />
 
                             {/* Center Column */}
-                            <div className="flex-1 flex flex-col justify-center gap-[4px] min-w-0">
+                            <div className="flex-1 flex flex-col justify-center gap-[4px] min-w-0 pr-4">
                                 <div className="flex items-baseline gap-[8px]">
                                     <span className="text-[16px] font-[700] text-[#212121] dark:text-slate-100 truncate">{item.name}</span>
                                     <span className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 shrink-0">{item.quantity} {item.unit}</span>
@@ -605,39 +680,16 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                 </div>
                             </div>
 
-                            {/* Right: Menu */}
+                            {/* Right: Direct Eat Button (No more Three Dots) */}
                             {!isSelectionMode && (
-                                <div className="relative ml-2">
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === item.id ? null : item.id); }}
-                                        className="w-[44px] h-[44px] flex items-center justify-end -mr-[8px] active:scale-90 transition-transform"
-                                        aria-label="Item Options"
-                                        aria-haspopup="true"
-                                        aria-expanded={activeMenuId === item.id}
-                                    >
-                                        <MoreVertical size={20} className="text-[#757575] dark:text-slate-400" />
-                                    </button>
-                                    
-                                    {/* Context Menu Popup */}
-                                    {activeMenuId === item.id && (
-                                        <div className="absolute right-0 top-10 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden" role="menu">
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); setActiveMenuId(null); }}
-                                                className="w-full text-left px-4 py-3 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2"
-                                                role="menuitem"
-                                            >
-                                                <Utensils size={14} /> Eat
-                                            </button>
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); setActiveMenuId(null); }}
-                                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                                                role="menuitem"
-                                            >
-                                                <Trash2 size={14} /> Delete
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); }}
+                                    className="h-[40px] px-3 bg-[#00796B]/10 text-[#00796B] hover:bg-[#00796B] hover:text-white rounded-[10px] flex items-center gap-2 font-semibold text-xs active:scale-95 transition-all group-hover:shadow-sm border border-transparent hover:border-[#00796B]"
+                                    aria-label="Mark as Eaten"
+                                >
+                                    <Utensils size={16} strokeWidth={2.5} />
+                                    <span>Eat</span>
+                                </button>
                             )}
                         </div>
                     </SwipeableCard>
@@ -685,7 +737,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
         </div>
        )}
 
-       {/* Manual Add Modal */}
+       {/* Manual Add / Edit Modal */}
        {showManualAdd && (
          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 relative">
@@ -697,7 +749,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                     <X size={20} className="text-slate-400" />
                 </button>
                 
-                <h3 id="modal-title" className="text-xl font-bold text-[#212121] dark:text-white mb-6">Add Item Manually</h3>
+                <h3 id="modal-title" className="text-xl font-bold text-[#212121] dark:text-white mb-6">
+                    {editingItem ? 'Edit Item' : 'Add Item Manually'}
+                </h3>
                 
                 <form onSubmit={handleManualSubmit} className="space-y-4">
                     <div>
@@ -773,7 +827,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                         type="submit" 
                         className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-colors mt-4 active:scale-95"
                     >
-                        Add Item
+                        {editingItem ? 'Save Changes' : 'Add Item'}
                     </button>
                 </form>
             </div>
