@@ -129,29 +129,43 @@ interface SwipeableCardProps {
 const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelete, onInteract, disabled }) => {
   const [offset, setOffset] = useState(0);
   const startX = useRef(0);
+  const startY = useRef(0);
   const startOffset = useRef(0);
   const isDragging = useRef(false);
   const isScrolling = useRef(false);
+  const hasSwiped = useRef(false);
 
   // Touch Handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disabled) return;
     onInteract();
     startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
     startOffset.current = offset;
     isDragging.current = true;
     isScrolling.current = false;
+    hasSwiped.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current || isScrolling.current || disabled) return;
     
     const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
     const diffX = currentX - startX.current;
+    const diffY = currentY - startY.current;
 
     // Detect scrolling intent (vertical move > horizontal move)
-    // Simple check: if dragging vertically more than horizontally
-    // Ideally compare with startY, but keeping it simple for now
+    // If predominantly vertical, assume list scroll and abort swipe
+    if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 5) {
+        isScrolling.current = true;
+        isDragging.current = false;
+        return;
+    }
+
+    if (Math.abs(diffX) > 5) {
+        hasSwiped.current = true;
+    }
     
     // Drag left (negative) up to -120px, drag right up to 0
     const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
@@ -163,12 +177,70 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
     isDragging.current = false;
     isScrolling.current = false;
     
-    // Threshold snap logic: Must pull at least 50px to snap open
-    if (offset < -50) {
+    // Threshold snap logic
+    if (offset < -60) {
       setOffset(-120);
     } else {
       setOffset(0);
     }
+  };
+
+  // Mouse Handlers (For Desktop Testing)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (disabled) return;
+    onInteract();
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    startOffset.current = offset;
+    isDragging.current = true;
+    isScrolling.current = false;
+    hasSwiped.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || disabled) return;
+    
+    const currentX = e.clientX;
+    const diffX = currentX - startX.current;
+
+    if (Math.abs(diffX) > 5) {
+        hasSwiped.current = true;
+    }
+
+    const newOffset = Math.min(0, Math.max(-120, startOffset.current + diffX));
+    setOffset(newOffset);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    
+    if (offset < -60) {
+      setOffset(-120);
+    } else {
+      setOffset(0);
+    }
+
+    if (hasSwiped.current) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+  };
+
+  const handleMouseLeave = () => {
+      if (isDragging.current) {
+          isDragging.current = false;
+          if (offset < -60) setOffset(-120); else setOffset(0);
+      }
+  };
+
+  // Intercept click on children if a swipe occurred
+  const handleClickCapture = (e: React.MouseEvent) => {
+      if (hasSwiped.current) {
+          e.preventDefault();
+          e.stopPropagation();
+          hasSwiped.current = false;
+      }
   };
 
   return (
@@ -195,11 +267,16 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
       
       {/* Foreground Card */}
       <div 
-        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-[12px] shadow-sm border border-slate-200 dark:border-slate-700 z-10 transition-transform duration-200 ease-out touch-pan-y hover:shadow-md"
+        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-[12px] shadow-sm border border-slate-200 dark:border-slate-700 z-10 transition-transform duration-200 ease-out touch-pan-y hover:shadow-md cursor-grab active:cursor-grabbing"
         style={{ transform: `translateX(${offset}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onClickCapture={handleClickCapture}
       >
         {children}
       </div>

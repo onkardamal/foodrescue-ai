@@ -10,6 +10,7 @@ import Donation from './components/Donation';
 import NGOMap from './components/NGOMap';
 import Analytics from './components/Analytics';
 import Badges from './components/Badges';
+import Leaderboard from './components/Leaderboard';
 import Profile from './components/Profile';
 import { Login, Signup } from './components/Auth';
 
@@ -121,7 +122,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
   return (
     <aside className="hidden md:flex flex-col w-[240px] h-screen bg-white dark:bg-slate-900 border-r border-[#EEEEEE] dark:border-slate-800 fixed left-0 top-0 z-50 transition-colors duration-300">
       <div className="p-6 flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-[#1CAE9E] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20">
+        <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20">
            <Leaf size={20} fill="white" />
         </div>
         <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100">FoodSaver</h1>
@@ -136,16 +137,16 @@ const Sidebar = ({ user }: { user: User | null }) => {
               to={item.path}
               className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group active:scale-95 ${
                 isActive 
-                  ? 'bg-[#1CAE9E]/10 text-[#1CAE9E] font-semibold' 
+                  ? 'bg-[#00796B]/10 text-[#00796B] font-semibold' 
                   : 'text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-sm dark:hover:shadow-none'
               }`}
             >
               <item.icon 
                 size={22} 
                 strokeWidth={isActive ? 2.5 : 2}
-                className={isActive ? 'text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}
+                className={isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}
               />
-              <span className={isActive ? 'text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'} >
+              <span className={isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'} >
                 {item.label}
               </span>
             </NavLink>
@@ -204,18 +205,18 @@ const BottomNav = () => {
             className="flex flex-col items-center justify-center w-[60px] relative group active:scale-90 transition-transform"
           >
             {isActive && (
-              <div className="absolute -top-3 w-[32px] h-[3px] bg-[#1CAE9E] rounded-b-[2px] shadow-[0_2px_8px_#1CAE9E80]"></div>
+              <div className="absolute -top-3 w-[32px] h-[3px] bg-[#00796B] rounded-b-[2px] shadow-[0_2px_8px_#00796B80]"></div>
             )}
             <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
                <item.icon 
                 size={24} 
                 strokeWidth={isActive ? 2.5 : 2}
-                color={isActive ? '#1CAE9E' : undefined}
+                color={isActive ? '#00796B' : undefined}
                 className={!isActive ? 'text-[#757575] dark:text-slate-500' : ''}
                 />
             </div>
             <span 
-              className={`text-[10px] font-medium mt-[4px] leading-none transition-colors ${isActive ? 'text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-500'}`}
+              className={`text-[10px] font-medium mt-[4px] leading-none transition-colors ${isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-500'}`}
             >
               {item.label}
             </span>
@@ -226,7 +227,7 @@ const BottomNav = () => {
   );
 };
 
-const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
+const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
 
@@ -254,6 +255,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
                     onAddItem={handleAddItem} 
                     onUpdateStatus={handleUpdateStatus}
                     onDeleteItem={handleDeleteItem}
+                    onEditItem={handleEditItem}
                   />
               } />
               <Route path="/recipes" element={
@@ -273,6 +275,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
                <Route path="/ngos" element={<NGOMap />} />
                <Route path="/analytics" element={<Analytics stats={stats} />} />
                <Route path="/badges" element={<Badges stats={stats} />} />
+               <Route path="/leaderboard" element={<Leaderboard user={auth.user} stats={stats} />} />
                <Route path="/profile" element={
                  <Profile 
                     user={auth.user} 
@@ -349,6 +352,10 @@ export default function App() {
       setInventory(prev => prev.filter(i => i.id !== id));
   };
 
+  const handleEditItem = (updatedItem: FoodItem) => {
+    setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  };
+
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     
@@ -411,6 +418,7 @@ export default function App() {
           handleAddItem={handleAddItem}
           handleDeleteItem={handleDeleteItem}
           handleUpdateStatus={handleUpdateStatus}
+          handleEditItem={handleEditItem}
           handleCookRecipe={handleCookRecipe}
           handleUpdateRecipes={setGeneratedRecipes}
           handleDonateComplete={handleDonateComplete}

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { UserStats, FoodItem, User } from '../types';
-import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun } from 'lucide-react';
+import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun, Trophy, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { ALL_BADGES } from './Badges'; // Import badge constants
+import { MOCK_LEADERBOARD_DATA } from './Leaderboard'; // Import mock data for widget calculation
 
 interface DashboardProps {
   user: User | null;
@@ -61,6 +62,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
     
   // Get Earned Badge Objects
   const earnedBadgeObjects = ALL_BADGES.filter(b => stats.earnedBadges.includes(b.id));
+
+  // Dynamic Leaderboard Calculation for Widget
+  const leaderboardWidgetData = useMemo(() => {
+    const currentUserEntry = {
+        id: 'current-user',
+        name: user?.name || 'You',
+        meals: stats.mealsSaved,
+        xp: stats.xp,
+        avatar: user?.avatar,
+        isCurrentUser: true,
+        rank: 0
+    };
+    
+    // Combine and Sort
+    const all = [...MOCK_LEADERBOARD_DATA, currentUserEntry].sort((a, b) => b.xp - a.xp);
+    
+    // Assign Ranks
+    const ranked = all.map((u, i) => ({ ...u, rank: i + 1 }));
+    
+    // Determine display list: Top 3
+    // Note: In a real app we might show "around me", but for a dashboard widget, Top 3 is standard motivation.
+    return ranked.slice(0, 3);
+  }, [user, stats]);
 
   const handleQuickAction = (path: string, state?: any) => {
       navigate(path, { state });
@@ -373,32 +397,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 </button>
               </div>
 
-              {/* Community Leaders */}
+              {/* Community Leaders (Updated to be Dynamic) */}
               <div>
                 <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Community Leaders</h3>
                 <p className="font-normal text-[13px] text-[#757575] dark:text-slate-400 mb-[16px]">This month's top contributors</p>
                 
-                <div className="flex flex-col gap-[16px]">
-                    {[
-                        { rank: 1, name: 'Sarah M.', meals: '234 meals', points: '12,450', bg: '#FFEB3B', initial: 'S', badge: '#FFD700' },
-                        { rank: 2, name: 'Green Grocers', meals: '198 meals', points: '11,200', bg: '#BDBDBD', initial: 'G', badge: '#C0C0C0' },
-                        { rank: 3, name: 'FreshMart', meals: '167 meals', points: '9,800', bg: '#8D6E63', initial: 'F', badge: '#CD7F32' },
-                    ].map((leader, i) => (
-                        <div key={i} className="flex items-center hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl -mx-2 transition-colors cursor-default" tabIndex={0}>
-                            <div className="w-[24px] font-bold text-[16px] text-[#212121] dark:text-slate-300">{leader.rank}</div>
-                            <div className="relative w-[40px] h-[40px] rounded-full flex items-center justify-center mr-[12px] shadow-sm" style={{ backgroundColor: leader.bg }}>
-                                <span className="text-white font-bold text-[16px] drop-shadow-sm">{leader.initial}</span>
-                                {leader.badge && (
-                                    <div className="absolute bottom-0 right-0 w-[14px] h-[14px] rounded-full border border-white" style={{ backgroundColor: leader.badge }}></div>
-                                )}
+                <div className="flex flex-col gap-[12px]">
+                    {leaderboardWidgetData.map((leader, i) => (
+                        <div 
+                            key={i} 
+                            onClick={() => navigate('/leaderboard')}
+                            className={`flex items-center p-2 rounded-xl -mx-2 transition-all cursor-pointer ${leader.isCurrentUser ? 'bg-[#00796B]/10 border border-[#00796B]/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'}`} 
+                        >
+                            <div className="w-[24px] font-bold text-[16px] text-[#212121] dark:text-slate-300 text-center">{leader.rank}</div>
+                            <div className="relative w-[40px] h-[40px] rounded-full mx-[12px] shadow-sm overflow-hidden bg-slate-200">
+                                <img src={leader.avatar} alt={leader.name} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1">
-                                <div className="font-bold text-[14px] text-[#212121] dark:text-slate-100">{leader.name}</div>
-                                <div className="font-normal text-[12px] text-[#757575] dark:text-slate-400">{leader.meals}</div>
+                                <div className={`font-bold text-[14px] ${leader.isCurrentUser ? 'text-[#00796B]' : 'text-[#212121] dark:text-slate-100'}`}>
+                                    {leader.name} {leader.isCurrentUser && '(You)'}
+                                </div>
+                                <div className="font-normal text-[12px] text-[#757575] dark:text-slate-400">{leader.meals} meals saved</div>
                             </div>
-                            <div className="font-bold text-[14px] text-[#00796B] text-right">{leader.points}</div>
+                            <div className="font-bold text-[14px] text-[#00796B] text-right">{leader.xp.toLocaleString()}</div>
                         </div>
                     ))}
+                    
+                    <button 
+                        onClick={() => navigate('/leaderboard')}
+                        className="w-full py-2 text-center text-sm font-bold text-[#00796B] hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center justify-center gap-1"
+                    >
+                        View Full Ranking <ChevronRight size={16} />
+                    </button>
                 </div>
               </div>
           </div>
