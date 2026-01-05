@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User, UserStats } from '../types';
 import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,8 +13,17 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [notifications, setNotifications] = useState(true);
 
   if (!user) return null;
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+        navigate(-1);
+    } else {
+        navigate('/');
+    }
+  };
 
   const MenuRow = ({ icon: Icon, label, onClick, value, danger = false }: any) => (
     <button 
@@ -39,7 +48,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
       {/* Header */}
       <header className="pt-4 px-4 pb-4 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm mb-4 flex items-center gap-3">
         <button 
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
             <ArrowLeft size={24} className="text-[#212121] dark:text-white" />
@@ -90,13 +99,13 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
             <MenuRow 
                 icon={Bell} 
                 label="Notifications" 
-                value="On"
-                onClick={() => {}} 
+                value={notifications ? "On" : "Off"}
+                onClick={() => setNotifications(!notifications)} 
             />
             <MenuRow 
                 icon={Shield} 
                 label="Privacy & Security" 
-                onClick={() => {}} 
+                onClick={() => alert("Privacy & Security module is under development.")} 
             />
         </div>
 
