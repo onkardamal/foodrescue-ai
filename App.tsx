@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User } from './types';
@@ -227,6 +227,16 @@ const BottomNav = () => {
 };
 
 const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Reset scroll position on route change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
       {/* Desktop Sidebar */}
@@ -234,7 +244,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
-        <main className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
+        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
           <div className="w-full max-w-[1200px] mx-auto md:p-8">
             <Routes>
               <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />

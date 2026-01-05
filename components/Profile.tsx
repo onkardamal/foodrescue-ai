@@ -18,11 +18,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
   if (!user) return null;
 
   const handleBack = () => {
-    if (window.history.state && window.history.state.idx > 0) {
-        navigate(-1);
-    } else {
-        navigate('/');
-    }
+    navigate(-1);
   };
 
   const MenuRow = ({ icon: Icon, label, onClick, value, danger = false }: any) => (
@@ -50,6 +46,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
         <button 
             onClick={handleBack}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            type="button"
         >
             <ArrowLeft size={24} className="text-[#212121] dark:text-white" />
         </button>
