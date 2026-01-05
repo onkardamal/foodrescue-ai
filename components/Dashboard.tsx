@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UserStats, FoodItem, User } from '../types';
 import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Get Expiring Items (Real Data)
   const expiringItems = inventory
@@ -26,10 +27,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
     .slice(0, 3); // Show top 3
 
   return (
-    <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500">
+    <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500 relative">
       
       {/* 2) Header and Welcome Area */}
-      <header className="flex md:hidden justify-between items-center">
+      <header className="flex md:hidden justify-between items-center relative z-50">
         <div className="flex items-center gap-[12px]">
             <div className="w-[48px] h-[48px] bg-[#1CAE9E] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
                 <Leaf size={24} color="white" fill="white" />
@@ -40,12 +41,62 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-[#757575] dark:text-slate-400">
                 {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
             </button>
-            <div className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all">
-                <Bell size={24} className="text-[#757575] dark:text-slate-400" />
-                {expiringItems.length > 0 && (
-                    <div className="absolute top-[2px] right-[2px] w-[16px] h-[16px] bg-[#F44336] rounded-full border-[2px] border-white dark:border-slate-900 flex items-center justify-center">
-                        <span className="text-white text-[9px] font-bold">{expiringItems.length}</span>
-                    </div>
+            
+            {/* Interactive Notification Bell */}
+            <div className="relative">
+                <button 
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all relative outline-none"
+                    aria-label="Notifications"
+                >
+                    <Bell size={24} className="text-[#757575] dark:text-slate-400" />
+                    {expiringItems.length > 0 && (
+                        <div className="absolute top-[2px] right-[2px] w-[16px] h-[16px] bg-[#F44336] rounded-full border-[2px] border-white dark:border-slate-900 flex items-center justify-center">
+                            <span className="text-white text-[9px] font-bold">{expiringItems.length}</span>
+                        </div>
+                    )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                    <>
+                        <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowNotifications(false)} />
+                        <div className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                             <div className="p-3 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                                <h3 className="font-bold text-[#212121] dark:text-white text-xs uppercase tracking-wider">Notifications</h3>
+                                {expiringItems.length > 0 && <span className="text-[10px] bg-[#1CAE9E] text-white px-2 py-0.5 rounded-full font-bold">{expiringItems.length} new</span>}
+                            </div>
+                            <div className="max-h-[320px] overflow-y-auto">
+                                {expiringItems.length > 0 ? (
+                                    expiringItems.map(item => (
+                                         <button 
+                                            key={item.id}
+                                            onClick={() => navigate('/inventory')}
+                                            className="w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors flex gap-3 group"
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                                <span className="text-lg">⚠️</span>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-sm text-[#212121] dark:text-white leading-tight">{item.name}</p>
+                                                <p className="text-xs text-[#757575] dark:text-slate-400 mt-1">Expiring in <span className="text-orange-500 font-bold">{item.daysLeft} days</span></p>
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center text-[#757575] dark:text-slate-400">
+                                        <Bell size={32} className="mx-auto mb-2 opacity-20" />
+                                        <p className="text-sm">You're all caught up!</p>
+                                    </div>
+                                )}
+                            </div>
+                            {expiringItems.length > 0 && (
+                                <div className="p-2 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-center">
+                                    <button onClick={() => navigate('/inventory')} className="text-xs font-bold text-[#1CAE9E] hover:underline">View Inventory</button>
+                                </div>
+                            )}
+                        </div>
+                    </>
                 )}
             </div>
         </div>
@@ -142,7 +193,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 { icon: Heart, bg: '#F44336', title: 'Donate', desc: 'Help others', path: '/donate' },
                 { icon: BookOpen, bg: '#FF9800', title: 'Recipes', desc: 'Use expiring food', path: '/recipes' },
                 { icon: MapPin, bg: '#9C27B0', title: 'Find NGOs', desc: 'Nearby partners', path: '/ngos' },
-                { icon: BarChart3, bg: '#2196F3', title: 'Analytics', desc: 'View impact', path: '/' }
+                { icon: BarChart3, bg: '#2196F3', title: 'Analytics', desc: 'View impact', path: '/analytics' }
             ].map((action, i) => (
                 <button 
                     key={i}

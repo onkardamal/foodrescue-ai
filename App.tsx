@@ -8,6 +8,7 @@ import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
 import Donation from './components/Donation';
 import NGOMap from './components/NGOMap';
+import Analytics from './components/Analytics';
 import { Login, Signup } from './components/Auth';
 
 // --- Theme Context ---
@@ -249,6 +250,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
                   />
               } />
                <Route path="/ngos" element={<NGOMap />} />
+               <Route path="/analytics" element={<Analytics stats={stats} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
