@@ -346,9 +346,6 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             </div>
             <h1 className="text-[16px] font-[600] text-[#212121] dark:text-white">FoodSaver</h1>
         </div>
-        <button className="w-[44px] h-[44px] flex items-center justify-end active:scale-90 transition-transform">
-            <Menu size={24} className="text-[#757575] dark:text-slate-400" />
-        </button>
       </header>
 
       {/* 3) Page Title Section */}

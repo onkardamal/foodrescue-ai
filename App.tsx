@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme } from './types';
+import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
+import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User } from './types';
 import { AuthService } from './services/auth';
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
@@ -9,6 +9,8 @@ import Recipes from './components/Recipes';
 import Donation from './components/Donation';
 import NGOMap from './components/NGOMap';
 import Analytics from './components/Analytics';
+import Badges from './components/Badges';
+import Profile from './components/Profile';
 import { Login, Signup } from './components/Auth';
 
 // --- Theme Context ---
@@ -99,11 +101,12 @@ const INITIAL_STATS: UserStats = {
   moneySaved: 340,
   streakDays: 12,
   level: 5,
-  xp: 850
+  xp: 850,
+  earnedBadges: ['b1', 'b2'] // Initial Mock Badges
 };
 
 // Sidebar for Desktop
-const Sidebar = ({ handleLogout }: { handleLogout: () => void }) => {
+const Sidebar = ({ user }: { user: User | null }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   
@@ -153,19 +156,27 @@ const Sidebar = ({ handleLogout }: { handleLogout: () => void }) => {
       <div className="p-4 border-t border-[#EEEEEE] dark:border-slate-800 space-y-2">
         <button 
           onClick={toggleTheme}
-          className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-sm active:scale-95 transition-all w-full"
+          className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-sm active:scale-95 transition-all w-full mb-2"
         >
           {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
           <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
         </button>
 
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:shadow-sm active:scale-95 w-full transition-all"
+        <NavLink 
+          to="/profile"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
         >
-          <LogOut size={22} />
-          <span>Log Out</span>
-        </button>
+          <img 
+            src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
+            alt="Profile" 
+            className="w-10 h-10 rounded-full bg-slate-200" 
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-[#212121] dark:text-white truncate">{user?.name}</p>
+            <p className="text-xs text-[#757575] dark:text-slate-400 truncate">View Profile</p>
+          </div>
+          <UserIcon size={16} className="text-slate-400" />
+        </NavLink>
       </div>
     </aside>
   );
@@ -219,7 +230,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
       {/* Desktop Sidebar */}
-      <Sidebar handleLogout={handleLogout} />
+      <Sidebar user={auth.user} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
@@ -251,6 +262,14 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
               } />
                <Route path="/ngos" element={<NGOMap />} />
                <Route path="/analytics" element={<Analytics stats={stats} />} />
+               <Route path="/badges" element={<Badges stats={stats} />} />
+               <Route path="/profile" element={
+                 <Profile 
+                    user={auth.user} 
+                    stats={stats} 
+                    onLogout={handleLogout} 
+                 />
+               } />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

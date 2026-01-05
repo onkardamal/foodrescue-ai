@@ -3,6 +3,7 @@ import { UserStats, FoodItem, User } from '../types';
 import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
+import { ALL_BADGES } from './Badges'; // Import badge constants
 
 interface DashboardProps {
   user: User | null;
@@ -25,6 +26,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
     .filter(item => item.daysLeft <= 4)
     .sort((a, b) => a.daysLeft - b.daysLeft)
     .slice(0, 3); // Show top 3
+    
+  // Get Earned Badge Objects
+  const earnedBadgeObjects = ALL_BADGES.filter(b => stats.earnedBadges.includes(b.id));
 
   return (
     <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500 relative">
@@ -37,12 +41,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             </div>
             <h1 className="font-semibold text-[20px] text-[#212121] dark:text-white">FoodSaver</h1>
         </div>
-        <div className="flex items-center gap-[16px]">
-            <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-[#757575] dark:text-slate-400">
-                {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
-            </button>
-            
-            {/* Interactive Notification Bell */}
+        <div className="flex items-center gap-[12px]">
+             {/* Interactive Notification Bell */}
             <div className="relative">
                 <button 
                     onClick={() => setShowNotifications(!showNotifications)}
@@ -99,6 +99,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     </>
                 )}
             </div>
+            
+            {/* User Profile Link */}
+            <button 
+                onClick={() => navigate('/profile')}
+                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-transparent hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+            >
+                <img 
+                    src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                />
+            </button>
         </div>
       </header>
 
@@ -260,14 +272,40 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
               <div>
                 <div className="flex justify-between items-baseline mb-[12px]">
                     <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Your Badges</h3>
-                    <button className="text-[#1CAE9E] text-[14px] font-medium hover:text-[#179c8d] hover:underline active:opacity-70 transition-colors">View all</button>
+                    <button 
+                        onClick={() => navigate('/badges')}
+                        className="text-[#1CAE9E] text-[14px] font-medium hover:text-[#179c8d] hover:underline active:opacity-70 transition-colors"
+                    >
+                        View all
+                    </button>
                 </div>
-                <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                    <p className="text-center font-normal text-[14px] text-[#757575] dark:text-slate-400">Start your journey to earn badges!</p>
-                    <p className="font-semibold text-[14px] text-[#212121] dark:text-slate-100 mt-[12px]">Level 1 - {stats.xp} pts - <span className="font-normal">1000 points to next level</span></p>
-                    <div className="w-full h-[8px] bg-[#F0F4F3] dark:bg-slate-700 rounded-[8px] mt-[8px] overflow-hidden">
-                        <div className="h-full bg-[#1CAE9E] rounded-[8px] transition-all duration-1000" style={{ width: `${(stats.xp / 1000) * 100}%` }}></div>
+                <div 
+                    onClick={() => navigate('/badges')}
+                    className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center gap-4 mb-3">
+                        {earnedBadgeObjects.slice(0, 3).map(badge => (
+                            <div key={badge.id} className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${badge.color}20` }}>
+                                {badge.icon}
+                            </div>
+                        ))}
+                        {earnedBadgeObjects.length === 0 && (
+                            <p className="text-center font-normal text-[14px] text-[#757575] dark:text-slate-400 w-full">Start your journey to earn badges!</p>
+                        )}
+                        {earnedBadgeObjects.length > 3 && (
+                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-300">
+                                +{earnedBadgeObjects.length - 3}
+                            </div>
+                        )}
                     </div>
+                    
+                    <p className="font-semibold text-[14px] text-[#212121] dark:text-slate-100 mt-[12px]">Level {stats.level} - {stats.xp} pts</p>
+                    <div className="w-full h-[8px] bg-[#F0F4F3] dark:bg-slate-700 rounded-[8px] mt-[8px] overflow-hidden">
+                        <div className="h-full bg-[#1CAE9E] rounded-[8px] transition-all duration-1000" style={{ width: `${(stats.xp % 1000 / 1000) * 100}%` }}></div>
+                    </div>
+                    <p className="text-[10px] text-[#757575] dark:text-slate-500 mt-2 text-right">
+                        {1000 - (stats.xp % 1000)} pts to next level
+                    </p>
                 </div>
               </div>
 

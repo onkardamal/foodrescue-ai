@@ -47,6 +47,15 @@ export interface NGO {
   phone?: string;
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string; // Emoji
+  color: string;
+  requirement: string;
+}
+
 export interface UserStats {
   mealsSaved: number;
   co2Saved: number; // in kg
@@ -54,6 +63,7 @@ export interface UserStats {
   streakDays: number;
   level: number;
   xp: number;
+  earnedBadges: string[]; // IDs of earned badges
 }
 
 export interface ScanResult {
