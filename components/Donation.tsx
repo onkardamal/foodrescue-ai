@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FoodItem, NGO, FoodCategory } from '../types';
-import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Calendar, Truck, MessageSquare, Clock } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import { searchNearbyNGOs } from '../services/geminiService';
 
@@ -24,10 +24,10 @@ interface DonationProps {
 
 // Initial Mock Data (Fallback)
 const DEFAULT_NGOS: NGO[] = [
-  { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", urgency: "High", lat: 37.7749, lng: -122.4194, description: "Shelter", needs: [], rating: 4.8 },
-  { id: '2', name: "City Food Bank", distance: "3.5 km", urgency: "Medium", lat: 37.7849, lng: -122.4094, description: "Food Bank", needs: [], rating: 4.5 },
-  { id: '3', name: "Green Earth Rescue", distance: "5.0 km", urgency: "Low", lat: 37.7649, lng: -122.4294, description: "Community Fridge", needs: [], rating: 4.9 },
-  { id: '4', name: "St. Mary's Kitchen", distance: "2.1 km", urgency: "High", lat: 37.7699, lng: -122.4100, description: "Soup Kitchen", needs: [], rating: 4.7 },
+  { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", urgency: "High", lat: 37.7749, lng: -122.4194, description: "Shelter", needs: [], rating: 4.8, phone: "+1 (555) 123-4567" },
+  { id: '2', name: "City Food Bank", distance: "3.5 km", urgency: "Medium", lat: 37.7849, lng: -122.4094, description: "Food Bank", needs: [], rating: 4.5, phone: "+1 (555) 987-6543" },
+  { id: '3', name: "Green Earth Rescue", distance: "5.0 km", urgency: "Low", lat: 37.7649, lng: -122.4294, description: "Community Fridge", needs: [], rating: 4.9, phone: "+1 (555) 456-7890" },
+  { id: '4', name: "St. Mary's Kitchen", distance: "2.1 km", urgency: "High", lat: 37.7699, lng: -122.4100, description: "Soup Kitchen", needs: [], rating: 4.7, phone: "+1 (555) 789-0123" },
 ];
 
 // --- Component: Stepper ---
@@ -44,10 +44,10 @@ const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
         let textColor = '#757575';
 
         if (isCompleted) {
-            bgColor = '#EC4899'; // Pink
+            bgColor = '#00796B'; // Completed (Teal)
             textColor = '#FFFFFF';
         } else if (isActive) {
-            bgColor = '#1CAE9E'; // Teal
+            bgColor = '#00796B'; // Active (Teal)
             textColor = '#FFFFFF';
         }
 
@@ -63,7 +63,7 @@ const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
 
             {/* Connector Line */}
             {index < steps.length - 1 && (
-              <div className={`w-[40px] h-[2px] mx-[4px] transition-colors duration-300 ${isCompleted ? 'bg-[#EC4899]' : 'bg-[#E0E0E0]'}`} />
+              <div className={`w-[40px] h-[2px] mx-[4px] transition-colors duration-300 ${isCompleted ? 'bg-[#00796B]' : 'bg-[#E0E0E0]'}`} />
             )}
           </React.Fragment>
         );
@@ -86,14 +86,21 @@ const DonationItemRow: React.FC<{
     <div 
         onClick={() => onToggle(item.id)}
         className={`h-[84px] w-full px-[16px] mb-[8px] flex items-center border-b border-[#EEEEEE] dark:border-slate-800 transition-colors duration-200 cursor-pointer ${
-            selected ? 'bg-[#F0FFFB] dark:bg-[#1CAE9E]/10' : 'bg-white dark:bg-slate-900'
+            selected ? 'bg-[#F0FFFB] dark:bg-[#00796B]/10' : 'bg-white dark:bg-slate-900'
         }`}
         role="checkbox"
         aria-checked={selected}
+        tabIndex={0}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onToggle(item.id);
+            }
+        }}
     >
         {/* Checkbox */}
         <div className={`w-[24px] h-[24px] rounded-[4px] border-[2px] flex items-center justify-center transition-colors ${
-            selected ? 'bg-[#1CAE9E] border-[#1CAE9E]' : 'border-[#BDBDBD] bg-transparent'
+            selected ? 'bg-[#00796B] border-[#00796B]' : 'border-[#BDBDBD] bg-transparent'
         }`}>
             {selected && <Check size={16} color="white" strokeWidth={3} />}
         </div>
@@ -116,6 +123,7 @@ const DonationItemRow: React.FC<{
 
 const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   
@@ -127,7 +135,31 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
 
+  // Step 3 State (Logistics)
+  const [logistics, setLogistics] = useState({
+      mode: 'dropoff' as 'dropoff' | 'pickup',
+      contactPhone: '',
+      notes: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '12:00'
+  });
+
   const donatableItems = inventory.filter(i => i.status === 'active');
+
+  // Handle pre-selection from Map
+  useEffect(() => {
+      if (location.state?.preSelectedNgo) {
+          const pre = location.state.preSelectedNgo;
+          // Check if already in list, if not add it
+          setNgos(prev => {
+              if (prev.find(n => n.id === pre.id)) return prev;
+              return [pre, ...prev];
+          });
+          setSelectedNgoId(pre.id);
+          // Auto-advance if we have items, otherwise stay on step 1 but remember ngo
+          // For simplicity, just set ID and let user pick items first.
+      }
+  }, [location.state]);
 
   const handleToggleItem = (id: string) => {
     setSelectedItems(prev => 
@@ -144,9 +176,9 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       if (currentStep < 3) {
           setCurrentStep(prev => prev + 1);
       } else {
-          // Finish
+          // Finish (Step 3 -> 4 happens via state, not navigation)
           onDonateComplete(selectedItems, selectedItems.length * 10);
-          navigate('/');
+          setCurrentStep(4); // Show Success Screen
       }
   };
 
@@ -241,7 +273,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                      <h3 className="text-[16px] font-[600] text-[#212121] dark:text-white mb-[8px]">No items in your inventory</h3>
                      <button 
                         onClick={() => navigate('/inventory')}
-                        className="bg-[#1CAE9E] text-white h-[44px] px-[24px] rounded-[8px] font-[600] text-[14px]"
+                        className="bg-[#00796B] text-white h-[44px] px-[24px] rounded-[8px] font-[600] text-[14px]"
                      >
                         Add Food Items
                      </button>
@@ -264,13 +296,15 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
              <div className="flex bg-[#F5F5F5] dark:bg-slate-800 p-1 rounded-lg">
                  <button 
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}
+                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#00796B]' : 'text-[#757575] dark:text-slate-400'}`}
+                    aria-label="List View"
                  >
                      <List size={20} />
                  </button>
                  <button 
                     onClick={() => setViewMode('map')}
-                    className={`p-2 rounded-md transition-all ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}
+                    className={`p-2 rounded-md transition-all ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#00796B]' : 'text-[#757575] dark:text-slate-400'}`}
+                    aria-label="Map View"
                  >
                      <MapIcon size={20} />
                  </button>
@@ -280,7 +314,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto pb-[100px] relative">
             {loadingNGOs && viewMode === 'list' && (
-                 <div className="px-[16px] mb-4 flex items-center gap-2 text-[#1CAE9E]">
+                 <div className="px-[16px] mb-4 flex items-center gap-2 text-[#00796B]">
                     <Loader2 className="animate-spin" size={16} />
                     <span className="text-sm">Finding nearby organizations...</span>
                  </div>
@@ -294,9 +328,18 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                             onClick={() => setSelectedNgoId(ngo.id)}
                             className={`p-[16px] rounded-[12px] border transition-all cursor-pointer flex justify-between items-center ${
                                 selectedNgoId === ngo.id 
-                                ? 'bg-[#F0FFFB] dark:bg-[#1CAE9E]/20 border-[#1CAE9E]' 
-                                : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 hover:border-[#1CAE9E]/50'
+                                ? 'bg-[#F0FFFB] dark:bg-[#00796B]/20 border-[#00796B]' 
+                                : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 hover:border-[#00796B]/50'
                             }`}
+                            tabIndex={0}
+                            role="radio"
+                            aria-checked={selectedNgoId === ngo.id}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setSelectedNgoId(ngo.id);
+                                }
+                            }}
                         >
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -315,7 +358,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                             </div>
                             
                             {selectedNgoId === ngo.id ? (
-                                <div className="w-[24px] h-[24px] rounded-full bg-[#1CAE9E] flex items-center justify-center">
+                                <div className="w-[24px] h-[24px] rounded-full bg-[#00796B] flex items-center justify-center">
                                     <Check size={14} color="white" strokeWidth={3} />
                                 </div>
                             ) : (
@@ -328,7 +371,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                 <div ref={mapContainerRef} className="w-full h-full bg-[#E0E0E0] dark:bg-slate-800 relative">
                      {loadingNGOs && (
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                            <Loader2 className="animate-spin text-[#1CAE9E]" size={16} />
+                            <Loader2 className="animate-spin text-[#00796B]" size={16} />
                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Searching area...</span>
                         </div>
                     )}
@@ -338,52 +381,172 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
     </div>
   );
 
+  // Step 3: Logistics & Contact
+  const renderStep3 = () => {
+      const selectedNgo = ngos.find(n => n.id === selectedNgoId);
+      return (
+        <div className="flex-1 overflow-y-auto px-[16px] pb-[100px]">
+            <div className="mt-[24px] mb-[20px]">
+                <h2 className="text-[20px] font-[700] text-[#212121] dark:text-white">Coordinate Handover</h2>
+                <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">How will {selectedNgo?.name} receive this?</p>
+            </div>
+
+            {/* Mode Selection */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <button
+                    onClick={() => setLogistics({...logistics, mode: 'dropoff'})}
+                    className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'dropoff' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#757575]'}`}
+                >
+                    <MapPin size={24} />
+                    <span className="font-bold text-sm">I'll Drop Off</span>
+                </button>
+                <button
+                    onClick={() => setLogistics({...logistics, mode: 'pickup'})}
+                    className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'pickup' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#757575]'}`}
+                >
+                    <Truck size={24} />
+                    <span className="font-bold text-sm">Request Pickup</span>
+                </button>
+            </div>
+
+            {/* Contact Details Form */}
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-bold text-[#212121] dark:text-white mb-2 flex items-center gap-2">
+                        <Phone size={16} /> Your Contact Phone
+                    </label>
+                    <input 
+                        type="tel" 
+                        placeholder="(555) 000-0000"
+                        value={logistics.contactPhone}
+                        onChange={(e) => setLogistics({...logistics, contactPhone: e.target.value})}
+                        className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#00796B] outline-none transition-all font-medium"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-[#212121] dark:text-white mb-2 flex items-center gap-2">
+                            <Calendar size={16} /> Date
+                        </label>
+                        <input 
+                            type="date" 
+                            value={logistics.date}
+                            onChange={(e) => setLogistics({...logistics, date: e.target.value})}
+                            className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#00796B] outline-none transition-all font-medium"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-[#212121] dark:text-white mb-2 flex items-center gap-2">
+                            <Clock size={16} /> Time
+                        </label>
+                        <input 
+                            type="time" 
+                            value={logistics.time}
+                            onChange={(e) => setLogistics({...logistics, time: e.target.value})}
+                            className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#00796B] outline-none transition-all font-medium"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-[#212121] dark:text-white mb-2 flex items-center gap-2">
+                        <MessageSquare size={16} /> Notes for NGO
+                    </label>
+                    <textarea 
+                        placeholder={logistics.mode === 'pickup' ? "Gate code, parking info..." : "Estimated arrival time, specific bags..."}
+                        value={logistics.notes}
+                        onChange={(e) => setLogistics({...logistics, notes: e.target.value})}
+                        className="w-full h-[80px] p-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#00796B] outline-none transition-all font-medium resize-none"
+                    />
+                </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-start gap-3">
+                <AlertCircle size={20} className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    By confirming, we will send an automated SMS and Email to <strong>{selectedNgo?.name}</strong> with these details. They will contact you at the provided number to confirm the {logistics.mode}.
+                </p>
+            </div>
+        </div>
+      );
+  }
+
+  // Step 4: Success
+  const renderStep4 = () => {
+      const selectedNgo = ngos.find(n => n.id === selectedNgoId);
+      return (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95 duration-300">
+              <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-200 dark:shadow-green-900/10">
+                  <Check size={48} className="text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2 text-[#212121] dark:text-white">Request Sent!</h2>
+              <div className="bg-[#F5F5F5] dark:bg-slate-800 px-4 py-2 rounded-full mb-6">
+                  <span className="text-sm font-mono font-bold text-[#757575] dark:text-slate-400">ID: DON-{Math.floor(1000 + Math.random() * 9000)}</span>
+              </div>
+              <p className="text-[#757575] dark:text-slate-300 mb-8 leading-relaxed max-w-xs mx-auto">
+                  We have notified <strong>{selectedNgo?.name}</strong>. They have received your request for <strong>{logistics.mode}</strong> and will call you at <span className="font-bold whitespace-nowrap">{logistics.contactPhone || "your number"}</span> shortly.
+              </p>
+              
+              <div className="w-full max-w-xs space-y-3">
+                  <button 
+                    onClick={() => navigate('/')}
+                    className="w-full h-[52px] bg-[#00796B] rounded-xl text-white font-bold shadow-lg shadow-teal-500/30 hover:bg-[#00695C] transition-all"
+                  >
+                      Return to Dashboard
+                  </button>
+                  <button 
+                    onClick={() => window.open(`tel:${selectedNgo?.phone || '555-0123'}`)}
+                    className="w-full h-[52px] border border-[#00796B] text-[#00796B] rounded-xl font-bold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all flex items-center justify-center gap-2"
+                  >
+                      <Phone size={18} /> Call NGO Now
+                  </button>
+              </div>
+          </div>
+      );
+  }
+
   return (
     <div className="h-screen bg-white dark:bg-slate-950 flex flex-col relative">
       {/* A. Header */}
-      <header className="pt-[12px] px-[16px] flex flex-col items-center relative z-20 bg-white dark:bg-slate-950">
-         <div className="w-full h-[44px] flex items-center justify-between">
-            <button 
-                onClick={handleBack}
-                className="w-[44px] h-[44px] flex items-center justify-center -ml-[12px] rounded-full active:bg-slate-100 dark:active:bg-slate-800"
-            >
-                <ChevronLeft size={24} className="text-[#212121] dark:text-white" />
-            </button>
-            <h1 className="text-[18px] font-[700] text-[#212121] dark:text-white absolute left-0 right-0 text-center pointer-events-none">
-                {currentStep === 1 ? 'Donate Food' : currentStep === 2 ? 'Select Recipient' : 'Confirm'}
-            </h1>
-            <div className="w-[44px]" /> 
-         </div>
-      </header>
+      {currentStep < 4 && (
+        <header className="pt-[12px] px-[16px] flex flex-col items-center relative z-20 bg-white dark:bg-slate-950">
+            <div className="w-full h-[44px] flex items-center justify-between">
+                <button 
+                    onClick={handleBack}
+                    className="w-[44px] h-[44px] flex items-center justify-center -ml-[12px] rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                    aria-label="Back"
+                >
+                    <ChevronLeft size={24} className="text-[#212121] dark:text-white" />
+                </button>
+                <h1 className="text-[18px] font-[700] text-[#212121] dark:text-white absolute left-0 right-0 text-center pointer-events-none">
+                    {currentStep === 1 ? 'Donate Food' : currentStep === 2 ? 'Select Recipient' : 'Logistics'}
+                </h1>
+                <div className="w-[44px]" /> 
+            </div>
+        </header>
+      )}
 
       {/* B. Stepper */}
-      <Stepper currentStep={currentStep} />
+      {currentStep < 4 && <Stepper currentStep={currentStep} />}
 
       {/* Main Content Area */}
       {currentStep === 1 && renderStep1()}
       {currentStep === 2 && renderStep2()}
-      {currentStep === 3 && (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
-                  <Check size={40} className="text-green-600 dark:text-green-400" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2 text-[#212121] dark:text-white">Ready to Donate!</h2>
-              <p className="text-[#757575] dark:text-slate-400 mb-8">
-                  You are donating <strong>{selectedItems.length} items</strong> to <strong>{ngos.find(n => n.id === selectedNgoId)?.name}</strong>.
-              </p>
-          </div>
-      )}
+      {currentStep === 3 && renderStep3()}
+      {currentStep === 4 && renderStep4()}
 
       {/* E. Sticky Footer */}
-      {(donatableItems.length > 0) && (
+      {(donatableItems.length > 0 && currentStep < 4) && (
           <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-950 pt-[16px] pb-[32px] px-[16px] shadow-[0_-4px_12px_rgba(0,0,0,0.05)] border-t border-slate-100 dark:border-slate-800 z-30">
               <button 
                 onClick={handleContinue}
                 disabled={
                     (currentStep === 1 && selectedItems.length === 0) ||
-                    (currentStep === 2 && !selectedNgoId)
+                    (currentStep === 2 && !selectedNgoId) ||
+                    (currentStep === 3 && (!logistics.contactPhone || !logistics.date || !logistics.time))
                 }
-                className="w-full h-[52px] bg-[#1CAE9E] rounded-[10px] flex items-center justify-center text-white text-[16px] font-[600] disabled:bg-[#BDBDBD] disabled:text-white/60 active:scale-[0.98] transition-all"
+                className="w-full h-[52px] bg-[#00796B] rounded-[10px] flex items-center justify-center text-white text-[16px] font-[600] disabled:bg-[#BDBDBD] disabled:text-white/60 active:scale-[0.98] transition-all"
               >
                 {currentStep === 3 ? 'Confirm Donation' : 'Continue'}
               </button>

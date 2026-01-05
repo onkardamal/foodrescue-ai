@@ -68,7 +68,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       {/* 2) Header and Welcome Area */}
       <header className="flex md:hidden justify-between items-center relative z-50">
         <div className="flex items-center gap-[12px]">
-            <div className="w-[48px] h-[48px] bg-[#1CAE9E] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
+            <div className="w-[48px] h-[48px] bg-[#00796B] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
                 <Leaf size={24} color="white" fill="white" />
             </div>
             <h1 className="font-semibold text-[20px] text-[#212121] dark:text-white">FoodSaver</h1>
@@ -80,10 +80,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     onClick={() => setShowNotifications(!showNotifications)}
                     className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all relative outline-none"
                     aria-label="Notifications"
+                    aria-expanded={showNotifications}
+                    aria-haspopup="true"
                 >
                     <Bell size={24} className="text-[#757575] dark:text-slate-400" />
                     {expiringItems.length > 0 && (
-                        <div className="absolute top-[2px] right-[2px] w-[16px] h-[16px] bg-[#F44336] rounded-full border-[2px] border-white dark:border-slate-900 flex items-center justify-center">
+                        <div className="absolute top-[2px] right-[2px] w-[16px] h-[16px] bg-[#D32F2F] rounded-full border-[2px] border-white dark:border-slate-900 flex items-center justify-center">
                             <span className="text-white text-[9px] font-bold">{expiringItems.length}</span>
                         </div>
                     )}
@@ -93,10 +95,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 {showNotifications && (
                     <>
                         <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowNotifications(false)} />
-                        <div className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                        <div 
+                            className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Notifications"
+                        >
                              <div className="p-3 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                                 <h3 className="font-bold text-[#212121] dark:text-white text-xs uppercase tracking-wider">Notifications</h3>
-                                {expiringItems.length > 0 && <span className="text-[10px] bg-[#1CAE9E] text-white px-2 py-0.5 rounded-full font-bold">{expiringItems.length} new</span>}
+                                {expiringItems.length > 0 && <span className="text-[10px] bg-[#00796B] text-white px-2 py-0.5 rounded-full font-bold">{expiringItems.length} new</span>}
                             </div>
                             <div className="max-h-[320px] overflow-y-auto">
                                 {expiringItems.length > 0 ? (
@@ -111,7 +118,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-sm text-[#212121] dark:text-white leading-tight">{item.name}</p>
-                                                <p className="text-xs text-[#757575] dark:text-slate-400 mt-1">Expiring in <span className="text-orange-500 font-bold">{item.daysLeft} days</span></p>
+                                                <p className="text-xs text-[#757575] dark:text-slate-400 mt-1">Expiring in <span className="text-[#C2410C] font-bold">{item.daysLeft} days</span></p>
                                             </div>
                                         </button>
                                     ))
@@ -124,7 +131,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                             </div>
                             {expiringItems.length > 0 && (
                                 <div className="p-2 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-center">
-                                    <button onClick={() => navigate('/inventory')} className="text-xs font-bold text-[#1CAE9E] hover:underline">View Inventory</button>
+                                    <button onClick={() => navigate('/inventory')} className="text-xs font-bold text-[#00796B] hover:underline">View Inventory</button>
                                 </div>
                             )}
                         </div>
@@ -136,6 +143,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             <button 
                 onClick={() => navigate('/profile')}
                 className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-transparent hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+                aria-label="View Profile"
             >
                 <img 
                     src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
@@ -157,8 +165,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           </div>
           <button 
             onClick={() => navigate('/inventory')}
-            className="bg-[#1CAE9E] text-white font-semibold text-[16px] px-[24px] py-[14px] rounded-[16px] shadow-[0_4px_10px_rgba(28,160,150,0.2)] hover:shadow-[0_6px_14px_rgba(28,160,150,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all min-h-[48px] hover:bg-[#179c8d]"
-            aria-label="Add food"
+            className="bg-[#00796B] text-white font-semibold text-[16px] px-[24px] py-[14px] rounded-[16px] shadow-[0_4px_10px_rgba(28,160,150,0.2)] hover:shadow-[0_6px_14px_rgba(28,160,150,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all min-h-[48px] hover:bg-[#00695C]"
+            aria-label="Add food to inventory"
           >
             Add Food
           </button>
@@ -167,8 +175,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       {/* 3) Key Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {/* Card 1: Meals Saved */}
-        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
-            <div className="w-[48px] h-[48px] rounded-full bg-[#1CAE9E] flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
                 <Utensils size={24} color="white" strokeWidth={2} />
             </div>
             <div>
@@ -176,7 +184,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     <AnimatedCounter value={stats.mealsSaved} />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Meals Saved</div>
-                <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
+                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />
                     <span>+12% this week</span>
                 </div>
@@ -184,8 +192,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
         {/* Card 2: CO2 Prevented */}
-        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
-            <div className="w-[48px] h-[48px] rounded-full bg-[#1CAE9E] flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
                 <Leaf size={24} color="white" strokeWidth={2} />
             </div>
             <div>
@@ -193,7 +201,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     <AnimatedCounter value={stats.co2Saved} suffix=" kg" decimals={1} />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">CO₂ Prevented</div>
-                <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
+                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />
                     <span>+12% this week</span>
                 </div>
@@ -201,8 +209,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
          {/* Card 3: Money Saved */}
-         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
-            <div className="w-[48px] h-[48px] rounded-full bg-[#FF9800] flex items-center justify-center">
+         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#E65100] flex items-center justify-center">
                 <DollarSign size={24} color="white" strokeWidth={2} />
             </div>
             <div>
@@ -210,7 +218,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     <AnimatedCounter value={stats.moneySaved} prefix="$" />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Money Saved</div>
-                <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
+                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />
                     <span>+12% this week</span>
                 </div>
@@ -218,14 +226,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
 
          {/* Card 4: Food Rescued */}
-         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] cursor-pointer transition-all duration-300">
-            <div className="w-[48px] h-[48px] rounded-full bg-[#2196F3] flex items-center justify-center">
+         <div className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[110px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#1565C0] flex items-center justify-center">
                 <Share2 size={24} color="white" strokeWidth={2} />
             </div>
             <div>
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">0 kg</div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Food Rescued</div>
-                <div className="flex items-center gap-1 mt-1 text-[#1CAE9E] text-[12px]">
+                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
                     <ArrowUp size={12} strokeWidth={2} />
                     <span>+12% this week</span>
                 </div>
@@ -238,12 +246,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[12px]">Quick Actions</h3>
         <div className="flex gap-[12px] overflow-x-auto pb-[10px] px-[4px] -mx-[4px] scrollbar-hide">
             {[
-                { icon: Plus, bg: '#1CAE9E', title: 'Add Item', desc: 'Track new food', path: '/inventory' },
-                { icon: Camera, bg: '#1CAE9E', title: 'Scan Food', desc: 'AI recognition', path: '/inventory' },
-                { icon: Heart, bg: '#F44336', title: 'Donate', desc: 'Help others', path: '/donate' },
-                { icon: BookOpen, bg: '#FF9800', title: 'Recipes', desc: 'Use expiring food', path: '/recipes' },
-                { icon: MapPin, bg: '#9C27B0', title: 'Find NGOs', desc: 'Nearby partners', path: '/ngos' },
-                { icon: BarChart3, bg: '#2196F3', title: 'Analytics', desc: 'View impact', path: '/analytics' }
+                { icon: Plus, bg: '#00796B', title: 'Add Item', desc: 'Track new food', path: '/inventory' },
+                { icon: Camera, bg: '#00796B', title: 'Scan Food', desc: 'AI recognition', path: '/inventory' },
+                { icon: Heart, bg: '#D32F2F', title: 'Donate', desc: 'Help others', path: '/donate' },
+                { icon: BookOpen, bg: '#E65100', title: 'Recipes', desc: 'Use expiring food', path: '/recipes' },
+                { icon: MapPin, bg: '#7B1FA2', title: 'Find NGOs', desc: 'Nearby partners', path: '/ngos' },
+                { icon: BarChart3, bg: '#1565C0', title: 'Analytics', desc: 'View impact', path: '/analytics' }
             ].map((action, i) => (
                 <button 
                     key={i}
@@ -266,13 +274,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           <div>
             <div className="flex justify-between items-baseline mb-[12px]">
                 <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Expiring Soon</h3>
-                <button onClick={() => navigate('/inventory')} className="text-[#1CAE9E] text-[14px] font-medium hover:text-[#179c8d] hover:underline active:opacity-70 transition-colors">View all</button>
+                <button onClick={() => navigate('/inventory')} className="text-[#00796B] text-[14px] font-medium hover:text-[#00695C] hover:underline active:opacity-70 transition-colors">View all</button>
             </div>
             <div className="flex flex-col gap-[12px]">
                 {expiringItems.length === 0 ? (
                     <div className="bg-white dark:bg-slate-800 rounded-[12px] p-8 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
                         <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-2">
-                            <Leaf className="text-green-500" size={24} />
+                            <Leaf className="text-green-600" size={24} />
                         </div>
                         <p className="font-semibold text-slate-800 dark:text-slate-200">No expiring items!</p>
                         <p className="text-xs text-slate-400">Great job managing your food.</p>
@@ -281,23 +289,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     expiringItems.map(item => {
                         const isExpired = item.daysLeft < 0;
                         return (
-                            <div key={item.id} className="bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:shadow-md active:scale-[0.99] active:bg-slate-100 dark:active:bg-slate-700 transition-all cursor-pointer" onClick={() => navigate('/inventory')}>
+                            <button
+                                key={item.id}
+                                className="w-full text-left bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:shadow-md active:scale-[0.99] active:bg-slate-100 dark:active:bg-slate-700 transition-all cursor-pointer" 
+                                onClick={() => navigate('/inventory')}
+                            >
                                 <div className={`w-[48px] h-[48px] rounded-[8px] mr-[12px] flex items-center justify-center text-2xl ${isExpired ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>
                                     {isExpired ? '⚠️' : '🕒'}
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-semibold text-[16px] text-[#212121] dark:text-slate-100">{item.name}</div>
                                     <div className="flex gap-2">
-                                        <span className={`${isExpired ? 'text-[#F44336]' : 'text-[#FFB300]'} text-[12px] font-medium`}>
+                                        <span className={`${isExpired ? 'text-[#D32F2F]' : 'text-[#C2410C]'} text-[12px] font-medium`}>
                                             {isExpired ? 'Expired!' : `Expires in ${item.daysLeft} days`}
                                         </span>
                                         <span className="text-[#757575] dark:text-slate-500 text-[12px]"> • {item.quantity} {item.unit}</span>
                                     </div>
                                 </div>
-                                <div className={`${isExpired ? 'bg-[#F44336]' : 'bg-[#FFC107]'} text-${isExpired ? 'white' : '[#212121]'} text-[12px] font-medium px-[8px] py-[6px] rounded-[12px]`}>
+                                <div className={`${isExpired ? 'bg-[#D32F2F]' : 'bg-[#FFC107]'} text-${isExpired ? 'white' : '[#212121]'} text-[12px] font-medium px-[8px] py-[6px] rounded-[12px]`}>
                                     {isExpired ? 'Critical' : 'Soon'}
                                 </div>
-                            </div>
+                            </button>
                         );
                     })
                 )}
@@ -312,14 +324,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Your Badges</h3>
                     <button 
                         onClick={() => navigate('/badges')}
-                        className="text-[#1CAE9E] text-[14px] font-medium hover:text-[#179c8d] hover:underline active:opacity-70 transition-colors"
+                        className="text-[#00796B] text-[14px] font-medium hover:text-[#00695C] hover:underline active:opacity-70 transition-colors"
                     >
                         View all
                     </button>
                 </div>
-                <div 
+                <button 
                     onClick={() => navigate('/badges')}
-                    className="bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
+                    className="w-full text-left bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow cursor-pointer"
                 >
                     <div className="flex items-center gap-4 mb-3">
                         {earnedBadgeObjects.slice(0, 3).map(badge => (
@@ -339,12 +351,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     
                     <p className="font-semibold text-[14px] text-[#212121] dark:text-slate-100 mt-[12px]">Level {stats.level} - {stats.xp} pts</p>
                     <div className="w-full h-[8px] bg-[#F0F4F3] dark:bg-slate-700 rounded-[8px] mt-[8px] overflow-hidden">
-                        <div className="h-full bg-[#1CAE9E] rounded-[8px] transition-all duration-1000" style={{ width: `${(stats.xp % 1000 / 1000) * 100}%` }}></div>
+                        <div className="h-full bg-[#00796B] rounded-[8px] transition-all duration-1000" style={{ width: `${(stats.xp % 1000 / 1000) * 100}%` }}></div>
                     </div>
                     <p className="text-[10px] text-[#757575] dark:text-slate-500 mt-2 text-right">
                         {1000 - (stats.xp % 1000)} pts to next level
                     </p>
-                </div>
+                </button>
               </div>
 
               {/* Community Leaders */}
@@ -358,7 +370,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                         { rank: 2, name: 'Green Grocers', meals: '198 meals', points: '11,200', bg: '#BDBDBD', initial: 'G', badge: '#C0C0C0' },
                         { rank: 3, name: 'FreshMart', meals: '167 meals', points: '9,800', bg: '#8D6E63', initial: 'F', badge: '#CD7F32' },
                     ].map((leader, i) => (
-                        <div key={i} className="flex items-center hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl -mx-2 transition-colors cursor-default">
+                        <div key={i} className="flex items-center hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-xl -mx-2 transition-colors cursor-default" tabIndex={0}>
                             <div className="w-[24px] font-bold text-[16px] text-[#212121] dark:text-slate-300">{leader.rank}</div>
                             <div className="relative w-[40px] h-[40px] rounded-full flex items-center justify-center mr-[12px] shadow-sm" style={{ backgroundColor: leader.bg }}>
                                 <span className="text-white font-bold text-[16px] drop-shadow-sm">{leader.initial}</span>
@@ -370,7 +382,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                 <div className="font-bold text-[14px] text-[#212121] dark:text-slate-100">{leader.name}</div>
                                 <div className="font-normal text-[12px] text-[#757575] dark:text-slate-400">{leader.meals}</div>
                             </div>
-                            <div className="font-bold text-[14px] text-[#1CAE9E] text-right">{leader.points}</div>
+                            <div className="font-bold text-[14px] text-[#00796B] text-right">{leader.points}</div>
                         </div>
                     ))}
                 </div>

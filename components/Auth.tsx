@@ -89,7 +89,7 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
         <div className="w-full max-w-md">
           {/* Mobile Header Logo */}
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-[#1CAE9E] rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-200 dark:shadow-teal-900/30">
+            <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-200 dark:shadow-teal-900/30">
               <Leaf size={20} fill="white" />
             </div>
             <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-white">FoodSaver</h1>
@@ -120,7 +120,7 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
 
         {/* Content Overlay */}
         <div className="relative z-10 p-12 text-white max-w-lg">
-          <div className="mb-6 w-16 h-1 bg-[#1CAE9E] rounded-full"></div>
+          <div className="mb-6 w-16 h-1 bg-[#00796B] rounded-full"></div>
           <h2 className="text-4xl font-bold leading-tight mb-6">
             Turn your excess food into meals, not waste.
           </h2>
@@ -221,7 +221,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                 className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
             >
                 {googleLoading ? (
-                     <Loader2 className="animate-spin text-[#1CAE9E]" />
+                     <Loader2 className="animate-spin text-[#00796B]" />
                 ) : (
                     <>
                         <GoogleIcon />
@@ -238,28 +238,30 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Email</label>
+                <label htmlFor="login-email" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Email</label>
                 <div className="relative">
                 <Mail className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
+                    id="login-email"
                     type="email" 
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#1CAE9E] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
                     placeholder="name@example.com"
                     required
                 />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
+                <label htmlFor="login-password" class="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
                 <div className="relative">
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
+                    id="login-password"
                     type="password" 
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#1CAE9E] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     placeholder="••••••••"
                     required
                 />
@@ -267,7 +269,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
             </div>
             
             <div className="flex justify-end">
-                <button type="button" className="text-sm font-semibold text-[#1CAE9E] hover:text-[#179c8d]">
+                <button type="button" className="text-sm font-semibold text-[#00796B] hover:text-[#00695C]">
                     Forgot Password?
                 </button>
             </div>
@@ -275,7 +277,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
             <button 
                 type="submit" 
                 disabled={loading || googleLoading}
-                className="w-full bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:scale-100"
+                className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:scale-100"
             >
                 {loading ? <Loader2 className="animate-spin" /> : <>Log In <ArrowRight size={20} /></>}
             </button>
@@ -283,7 +285,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-[#757575] dark:text-slate-400">Don't have an account? <button onClick={onToggle} className="text-[#1CAE9E] font-bold hover:underline">Sign Up</button></p>
+          <p className="text-[#757575] dark:text-slate-400">Don't have an account? <button onClick={onToggle} className="text-[#00796B] font-bold hover:underline">Sign Up</button></p>
         </div>
         
         <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -375,7 +377,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                 className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
             >
                 {googleLoading ? (
-                     <Loader2 className="animate-spin text-[#1CAE9E]" />
+                     <Loader2 className="animate-spin text-[#00796B]" />
                 ) : (
                     <>
                         <GoogleIcon />
@@ -392,42 +394,45 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Full Name</label>
+                <label htmlFor="signup-name" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Full Name</label>
                 <div className="relative">
                 <User className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
+                    id="signup-name"
                     type="text" 
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#1CAE9E] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
                     placeholder="Jane Doe"
                     required
                 />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Email</label>
+                <label htmlFor="signup-email" className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Email</label>
                 <div className="relative">
                 <Mail className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
+                    id="signup-email"
                     type="email" 
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#1CAE9E] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
                     placeholder="chef@example.com"
                     required
                 />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
+                <label htmlFor="signup-password" class="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
                 <div className="relative">
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
+                    id="signup-password"
                     type="password" 
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#1CAE9E] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     placeholder="••••••••"
                     required
                 />
@@ -437,7 +442,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
             <button 
                 type="submit" 
                 disabled={loading || googleLoading}
-                className="w-full bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+                className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
             >
                 {loading ? <Loader2 className="animate-spin" /> : <>Create Account <CheckCircle size={20} /></>}
             </button>
@@ -445,7 +450,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-[#757575] dark:text-slate-400">Already have an account? <button onClick={onToggle} className="text-[#1CAE9E] font-bold hover:underline">Log In</button></p>
+          <p className="text-[#757575] dark:text-slate-400">Already have an account? <button onClick={onToggle} className="text-[#00796B] font-bold hover:underline">Log In</button></p>
         </div>
     </AuthLayout>
   );

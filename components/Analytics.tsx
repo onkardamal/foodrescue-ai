@@ -22,10 +22,10 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
   ];
 
   const categoryData = [
-    { name: 'Produce', value: 45, color: '#1CAE9E' },
-    { name: 'Dairy', value: 25, color: '#FFB300' },
-    { name: 'Bakery', value: 20, color: '#F44336' },
-    { name: 'Pantry', value: 10, color: '#2196F3' },
+    { name: 'Produce', value: 45, color: '#00796B' },
+    { name: 'Dairy', value: 25, color: '#F57C00' },
+    { name: 'Bakery', value: 20, color: '#D32F2F' },
+    { name: 'Pantry', value: 10, color: '#1976D2' },
   ];
 
   return (
@@ -35,6 +35,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         <button 
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Back"
         >
             <ArrowLeft size={24} className="text-[#212121] dark:text-white" />
         </button>
@@ -67,7 +68,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         </div>
 
         {/* CO2 Impact Card */}
-        <div className="bg-gradient-to-br from-[#1CAE9E] to-[#00796B] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#00796B] to-[#00695C] p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
             <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8"></div>
             <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-3 opacity-90">
@@ -84,7 +85,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         {/* Main Chart */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <h3 className="font-bold text-lg text-[#212121] dark:text-white mb-6">Meals Saved Trend</h3>
-            <div className="h-[250px] w-full">
+            <div className="h-[250px] w-full" aria-label="Bar chart showing meals saved over the last 6 months">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E0E0E0" opacity={0.3} />
@@ -104,7 +105,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
                             cursor={{fill: 'transparent'}}
                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: '#fff', color: '#333' }}
                         />
-                        <Bar dataKey="meals" fill="#1CAE9E" radius={[4, 4, 0, 0]} barSize={40} />
+                        <Bar dataKey="meals" fill="#00796B" radius={[4, 4, 0, 0]} barSize={40} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -114,7 +115,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <h3 className="font-bold text-lg text-[#212121] dark:text-white mb-4">Waste Saved by Category</h3>
             <div className="flex flex-col sm:flex-row items-center">
-                <div className="h-[220px] w-full sm:w-1/2">
+                <div className="h-[220px] w-full sm:w-1/2" aria-label="Pie chart showing waste saved percentage by category">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie

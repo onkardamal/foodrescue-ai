@@ -37,7 +37,15 @@ const RecipeCard: React.FC<{
   return (
     <div 
       onClick={onView}
-      className="group bg-white dark:bg-slate-800 rounded-[20px] p-[20px] mb-[16px] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-slate-700 cursor-pointer relative overflow-hidden"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onView();
+        }
+      }}
+      className="group bg-white dark:bg-slate-800 rounded-[20px] p-[20px] mb-[16px] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-slate-700 cursor-pointer relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#00796B]"
     >
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 dark:bg-orange-900/10 rounded-bl-[100px] -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
@@ -72,7 +80,7 @@ const RecipeCard: React.FC<{
             <span className="text-xs font-semibold text-[#212121] dark:text-slate-200">
                 Ingredients You Have
             </span>
-            <span className="text-xs font-bold text-[#1CAE9E]">
+            <span className="text-xs font-bold text-[#00796B]">
                 {matchCount} / {totalCount} ({percentage}%)
             </span>
         </div>
@@ -80,7 +88,7 @@ const RecipeCard: React.FC<{
         {/* Progress Bar */}
         <div className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden mb-2">
             <div 
-                className="h-full bg-[#1CAE9E] rounded-full transition-all duration-500 ease-out" 
+                className="h-full bg-[#00796B] rounded-full transition-all duration-500 ease-out" 
                 style={{ width: `${percentage}%` }}
             />
         </div>
@@ -88,7 +96,7 @@ const RecipeCard: React.FC<{
         {/* Matched items list (truncated) */}
         {recipe.savedItems.length > 0 && (
             <p className="text-xs text-[#757575] dark:text-slate-400 truncate">
-                <span className="text-[#1CAE9E] font-bold">✓</span> {recipe.savedItems.join(', ')}
+                <span className="text-[#00796B] font-bold">✓</span> {recipe.savedItems.join(', ')}
             </p>
         )}
       </div>
@@ -96,7 +104,7 @@ const RecipeCard: React.FC<{
       {/* Action */}
       <div className="relative z-10 flex items-center justify-between mt-2">
           <span className="text-xs text-[#757575] dark:text-slate-500 font-medium">Tap to view details</span>
-          <div className="w-8 h-8 rounded-full bg-[#1CAE9E] flex items-center justify-center text-white shadow-md shadow-teal-500/20 group-hover:scale-110 transition-transform">
+          <div className="w-8 h-8 rounded-full bg-[#00796B] flex items-center justify-center text-white shadow-md shadow-teal-500/20 group-hover:scale-110 transition-transform">
               <ArrowRight size={16} strokeWidth={3} />
           </div>
       </div>
@@ -173,7 +181,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
         <div className="space-y-8">
           <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <h3 className="font-bold text-[#212121] dark:text-white uppercase tracking-wider text-xs mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#1CAE9E]"></span> Ingredients
+                <span className="w-2 h-2 rounded-full bg-[#00796B]"></span> Ingredients
             </h3>
             <ul className="space-y-3">
               {selectedRecipe.ingredients.map((ing, i) => {
@@ -197,7 +205,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
              <ol className="space-y-6">
               {selectedRecipe.instructions.map((ins, i) => (
                   <li key={i} className="flex gap-4 text-[#757575] dark:text-slate-300 text-base leading-relaxed">
-                      <span className="font-bold text-[#1CAE9E] shrink-0 text-lg bg-teal-50 dark:bg-teal-900/20 w-8 h-8 rounded-full flex items-center justify-center -mt-1">{i+1}</span>
+                      <span className="font-bold text-[#00796B] shrink-0 text-lg bg-teal-50 dark:bg-teal-900/20 w-8 h-8 rounded-full flex items-center justify-center -mt-1">{i+1}</span>
                       {ins}
                   </li>
               ))}
@@ -206,7 +214,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
 
           <button 
             onClick={() => { onCookRecipe(selectedRecipe); setSelectedRecipe(null); }}
-            className="w-full bg-[#1CAE9E] text-white h-[56px] rounded-[16px] font-bold text-lg mt-4 shadow-xl shadow-teal-500/20 active:scale-[0.98] transition-all hover:bg-[#179c8d]"
+            className="w-full bg-[#00796B] text-white h-[56px] rounded-[16px] font-bold text-lg mt-4 shadow-xl shadow-teal-500/20 active:scale-[0.98] transition-all hover:bg-[#00695C]"
           >
             Mark as Cooked
           </button>
@@ -236,7 +244,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
       </header>
 
       {/* C. Featured Card */}
-      <section className="mx-[16px] mt-[4px] rounded-[16px] p-[20px] shadow-lg shadow-orange-500/20 bg-gradient-to-br from-[#FF9800] to-[#F57C00]">
+      <section className="mx-[16px] mt-[4px] rounded-[16px] p-[20px] shadow-lg shadow-orange-500/20 bg-gradient-to-br from-[#E65100] to-[#F57C00]">
         <div className="flex items-center gap-2 mb-[12px] text-white/90">
              <Sparkles size={16} />
              <h2 className="text-[14px] font-bold uppercase tracking-wide">Use These Soon</h2>
@@ -253,7 +261,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
       </section>
 
       {/* D. Search/Input */}
-      <div className="mx-[16px] mt-[24px] h-[52px] bg-[#F5F5F5] dark:bg-slate-900 rounded-[16px] flex items-center px-[16px] focus-within:ring-2 focus-within:ring-[#FF9800]/50 transition-shadow">
+      <div className="mx-[16px] mt-[24px] h-[52px] bg-[#F5F5F5] dark:bg-slate-900 rounded-[16px] flex items-center px-[16px] focus-within:ring-2 focus-within:ring-[#E65100]/50 transition-shadow">
         <Search size={22} className="text-[#757575] dark:text-slate-500" />
         <input 
           type="text"
@@ -264,7 +272,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
           aria-label="Search Ingredients"
         />
         {inputText && (
-          <button onClick={() => setInputText('')} className="w-[44px] h-[44px] flex items-center justify-center -mr-[12px]">
+          <button onClick={() => setInputText('')} className="w-[44px] h-[44px] flex items-center justify-center -mr-[12px]" aria-label="Clear Search">
             <X size={20} className="text-[#757575]" />
           </button>
         )}

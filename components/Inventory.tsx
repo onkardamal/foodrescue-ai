@@ -35,21 +35,21 @@ const getVisualDetails = (item: FoodItem) => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   let statusText = `${diffDays} days`;
-  let statusColor = "#1CAE9E"; // Teal (Normal)
+  let statusColor = "#00796B"; // Teal (Normal)
   let freshnessPercent = 100;
   
   // Calculate freshness (100 = Fresh, 0 = Expired)
   if (diffDays < 0) {
     statusText = "Expired";
-    statusColor = "#D93025"; // Red
+    statusColor = "#D32F2F"; // Red
     freshnessPercent = 0;
   } else if (diffDays <= 2) {
     statusText = `Expires soon`;
-    statusColor = "#D93025"; // Red
+    statusColor = "#D32F2F"; // Red
     freshnessPercent = 10 + (diffDays * 5); // 10% to 20%
   } else if (diffDays <= 4) {
     statusText = `${diffDays} days left`;
-    statusColor = "#D97706"; // Amber
+    statusColor = "#C2410C"; // Dark Orange
     freshnessPercent = 30 + (diffDays * 5); // 45% approx
   } else if (diffDays > 30) {
      const dateStr = expiry.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -61,8 +61,8 @@ const getVisualDetails = (item: FoodItem) => {
   }
 
   // Visual Overrides for demo consistency
-  if (item.condition === "Expired") { statusText = "Expired"; statusColor = "#D93025"; freshnessPercent=0; }
-  if (item.condition === "Expiring Soon") { statusColor = "#D97706"; freshnessPercent=25; }
+  if (item.condition === "Expired") { statusText = "Expired"; statusColor = "#D32F2F"; freshnessPercent=0; }
+  if (item.condition === "Expiring Soon") { statusColor = "#C2410C"; freshnessPercent=25; }
 
   // Clamp
   freshnessPercent = Math.max(0, Math.min(100, freshnessPercent));
@@ -79,7 +79,7 @@ const CircularItem = ({ emoji, percent, color }: { emoji: string, percent: numbe
     const strokeDashoffset = circumference - (percent / 100) * circumference;
   
     return (
-      <div className="relative w-[60px] h-[60px] flex items-center justify-center mr-[16px] shrink-0">
+      <div className="relative w-[60px] h-[60px] flex items-center justify-center mr-[16px] shrink-0" role="img" aria-label={`Freshness: ${Math.round(percent)}%`}>
          {/* Background Circle */}
         <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
            <circle
@@ -182,14 +182,16 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
       <div className="absolute inset-y-0 right-0 w-[120px] flex rounded-r-[12px]">
         <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); setOffset(0); }}
-            className="flex-1 bg-blue-500 text-white flex flex-col items-center justify-center active:bg-blue-600 transition-colors"
+            className="flex-1 bg-blue-600 text-white flex flex-col items-center justify-center active:bg-blue-700 transition-colors"
+            aria-label="Edit Item"
         >
             <Pencil size={18} />
             <span className="text-[10px] font-bold mt-1">Edit</span>
         </button>
         <button 
             onClick={(e) => { e.stopPropagation(); onDelete(); setOffset(0); }}
-            className="flex-1 bg-[#F44336] text-white flex flex-col items-center justify-center active:bg-red-600 transition-colors"
+            className="flex-1 bg-[#D32F2F] text-white flex flex-col items-center justify-center active:bg-red-700 transition-colors"
+            aria-label="Delete Item"
         >
             <Trash2 size={18} />
             <span className="text-[10px] font-bold mt-1">Delete</span>
@@ -243,6 +245,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
   // Manual Add Logic
   const [showManualAdd, setShowManualAdd] = useState(false);
+  const manualNameRef = useRef<HTMLInputElement>(null);
   const [manualForm, setManualForm] = useState({
     name: '',
     category: 'Produce',
@@ -387,54 +390,55 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
   return (
     <div className="bg-[#FFFFFF] dark:bg-slate-950 min-h-screen pb-24 md:pb-0 animate-in fade-in duration-300 transition-colors" onClick={() => { setActiveMenuId(null); setShowSortMenu(false); }}>
       
-      {/* 2) Header Area (Mobile Only) */}
-      <header className="flex md:hidden justify-between items-center h-[64px] px-4 pt-[16px] bg-white dark:bg-slate-900 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-            <div className="w-[48px] h-[48px] flex items-center justify-start">
-                <div className="w-[40px] h-[40px] bg-[#1CAE9E] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
-                    <Leaf size={20} color="white" fill="white" />
-                </div>
+      {/* 2) Header Area (Unified) */}
+      <header className="pt-[12px] px-[16px] pb-[4px] md:px-0 flex flex-col gap-[8px]">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-[4px]">
+                <button 
+                    onClick={() => navigate(-1)}
+                    className="w-[44px] h-[44px] flex items-center justify-center -ml-[12px] rounded-full active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
+                    aria-label="Back"
+                >
+                    <ChevronLeft size={28} className="text-[#212121] dark:text-white" />
+                </button>
+                <h1 className="text-[24px] md:text-[32px] font-[700] text-[#212121] dark:text-white leading-tight">
+                    {isSelectionMode ? "Select Ingredients" : "Food Inventory"}
+                </h1>
             </div>
-            <h1 className="text-[16px] font-[600] text-[#212121] dark:text-white">FoodSaver</h1>
-        </div>
-      </header>
 
-      {/* 3) Page Title Section */}
-      <div className="px-[16px] md:px-0 pt-[12px] flex justify-between items-start">
-        <div>
-            <h2 className="text-[28px] md:text-[36px] font-[700] text-[#212121] dark:text-white leading-[36px]">
-                {isSelectionMode ? "Select Ingredients" : "Food Inventory"}
-            </h2>
-            <p className="text-[14px] md:text-[16px] font-[400] text-[#757575] dark:text-slate-400 mt-[4px]">
-                {isSelectionMode ? `${selectedItemIds.size} items selected` : `${items.filter(i => i.status === 'active').length} items tracked`}
-            </p>
+            {/* Actions */}
+            {isSelectionMode ? (
+                 <button 
+                    onClick={() => { setIsSelectionMode(false); setSelectedItemIds(new Set()); }}
+                    className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 px-[16px] h-[40px] rounded-[12px] font-semibold text-sm"
+                 >
+                     Cancel
+                 </button>
+            ) : (
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-[#00796B] text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-[#00695C]"
+                        aria-label="Scan food item"
+                    >
+                        <Camera size={20} strokeWidth={2.5} />
+                        <span className="text-[14px] font-[600] hidden md:inline ml-2">Scan</span>
+                    </button>
+                    <button 
+                        onClick={() => { setShowManualAdd(true); setTimeout(() => manualNameRef.current?.focus(), 100); }}
+                        className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
+                        aria-label="Manually add food item"
+                    >
+                        <Plus size={20} strokeWidth={2.5} />
+                        <span className="text-[14px] font-[600] hidden md:inline ml-2">Add</span>
+                    </button>
+                </div>
+            )}
         </div>
         
-        {isSelectionMode ? (
-             <button 
-                onClick={() => { setIsSelectionMode(false); setSelectedItemIds(new Set()); }}
-                className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 px-[16px] h-[40px] rounded-[12px] font-semibold text-sm"
-             >
-                 Cancel
-             </button>
-        ) : (
-            <div className="flex gap-2">
-                <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-[#1CAE9E] text-white flex items-center gap-2 px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-[#179c8d]"
-                >
-                    <Camera size={18} strokeWidth={2.5} />
-                    <span className="text-[14px] font-[600] hidden md:inline">Scan</span>
-                </button>
-                <button 
-                    onClick={() => setShowManualAdd(true)}
-                    className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-95 transition-transform shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-                >
-                    <Plus size={18} strokeWidth={2.5} />
-                    <span className="text-[14px] font-[600] hidden md:inline ml-2">Add</span>
-                </button>
-            </div>
-        )}
+        <p className="text-[14px] md:text-[16px] font-[400] text-[#757575] dark:text-slate-400 pl-[4px] -mt-2">
+             {isSelectionMode ? `${selectedItemIds.size} items selected` : `${items.filter(i => i.status === 'active').length} items tracked`}
+        </p>
 
         <input 
             type="file" 
@@ -444,7 +448,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             ref={fileInputRef}
             onChange={handleImageUpload}
         />
-      </div>
+      </header>
 
       {/* 4) Search & Controls Row */}
       <div className="px-[16px] md:px-0 mt-[16px] flex gap-[12px] relative z-20">
@@ -456,7 +460,8 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                 placeholder="Search food items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-full bg-[#F5F5F5] dark:bg-slate-800 rounded-[12px] pl-[40px] pr-[12px] text-[14px] outline-none focus:ring-2 focus:ring-[#1CAE9E]/20 transition-all placeholder-[#757575] dark:placeholder-slate-500 text-[#212121] dark:text-white"
+                className="w-full h-full bg-[#F5F5F5] dark:bg-slate-800 rounded-[12px] pl-[40px] pr-[12px] text-[14px] outline-none focus:ring-2 focus:ring-[#00796B]/20 transition-all placeholder-[#757575] dark:placeholder-slate-500 text-[#212121] dark:text-white"
+                aria-label="Search food items"
             />
         </div>
 
@@ -465,8 +470,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             <div className="flex gap-2">
                  <button 
                     onClick={() => setIsSelectionMode(!isSelectionMode)}
-                    className={`h-[36px] w-[36px] md:w-auto md:px-3 rounded-[8px] flex items-center justify-center gap-2 border shadow-sm transition-all ${isSelectionMode ? 'bg-[#1CAE9E] border-[#1CAE9E] text-white' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#212121] dark:text-slate-200'}`}
+                    className={`h-[36px] w-[36px] md:w-auto md:px-3 rounded-[8px] flex items-center justify-center gap-2 border shadow-sm transition-all ${isSelectionMode ? 'bg-[#00796B] border-[#00796B] text-white' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#212121] dark:text-slate-200'}`}
                     title="Select Ingredients"
+                    aria-label={isSelectionMode ? "Exit Selection Mode" : "Enter Selection Mode"}
                  >
                      <CheckSquare size={16} />
                      <span className="hidden md:inline text-xs font-medium">Select</span>
@@ -475,6 +481,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                 <button 
                     onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
                     className="h-[36px] w-[90px] bg-white dark:bg-slate-800 border border-[#EEEEEE] dark:border-slate-700 rounded-[8px] flex items-center justify-center gap-2 text-[#212121] dark:text-slate-200 text-[12px] font-[500] shadow-sm active:bg-gray-50 dark:active:bg-slate-700"
+                    aria-expanded={showSortMenu}
+                    aria-haspopup="true"
+                    aria-label="Sort items"
                 >
                     <Filter size={14} /> {sortMode === 'expiry' ? 'Expiry' : 'Name'}
                 </button>
@@ -482,9 +491,9 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             
             {/* Sort Dropdown */}
             {showSortMenu && (
-                <div className="absolute top-[40px] right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200 z-30">
-                    <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'expiry' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}>Expiry Date</button>
-                    <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'name' ? 'bg-[#1CAE9E]/10 text-[#1CAE9E]' : 'text-[#757575] dark:text-slate-400'}`}>Name (A-Z)</button>
+                <div className="absolute top-[40px] right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200 z-30" role="menu">
+                    <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'expiry' ? 'bg-[#00796B]/10 text-[#00796B]' : 'text-[#757575] dark:text-slate-400'}`} role="menuitem">Expiry Date</button>
+                    <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2 text-sm rounded-lg ${sortMode === 'name' ? 'bg-[#00796B]/10 text-[#00796B]' : 'text-[#757575] dark:text-slate-400'}`} role="menuitem">Name (A-Z)</button>
                 </div>
             )}
         </div>
@@ -492,7 +501,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
       {/* 5) Category Filter Tabs */}
       <div className="relative mt-[16px] h-[40px] flex items-center">
-        <button onClick={() => scrollTabs('left')} className="absolute left-0 h-full pl-2 bg-gradient-to-r from-white via-white dark:from-slate-950 dark:via-slate-950 to-transparent z-10 flex items-center">
+        <button onClick={() => scrollTabs('left')} className="absolute left-0 h-full pl-2 bg-gradient-to-r from-white via-white dark:from-slate-950 dark:via-slate-950 to-transparent z-10 flex items-center" aria-label="Scroll Categories Left">
             <ChevronLeft size={16} className="text-[#757575] dark:text-slate-400" />
         </button>
         
@@ -514,7 +523,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                         className={`
                             whitespace-nowrap px-[16px] h-[36px] rounded-[20px] text-[12px] font-[600] transition-colors scroll-snap-align-start
                             ${isActive 
-                                ? 'bg-[#1CAE9E] text-white shadow-md shadow-teal-100 dark:shadow-teal-900/20' 
+                                ? 'bg-[#00796B] text-white shadow-md shadow-teal-100 dark:shadow-teal-900/20' 
                                 : 'bg-[#F5F5F5] dark:bg-slate-800 text-[#757575] dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}
                         `}
                     >
@@ -524,7 +533,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             })}
         </div>
 
-        <button onClick={() => scrollTabs('right')} className="absolute right-0 h-full pr-2 bg-gradient-to-l from-white via-white dark:from-slate-950 dark:via-slate-950 to-transparent z-10 flex items-center">
+        <button onClick={() => scrollTabs('right')} className="absolute right-0 h-full pr-2 bg-gradient-to-l from-white via-white dark:from-slate-950 dark:via-slate-950 to-transparent z-10 flex items-center" aria-label="Scroll Categories Right">
             <ChevronRight size={16} className="text-[#757575] dark:text-slate-400" />
         </button>
       </div>
@@ -553,10 +562,19 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                             onClick={() => {
                                 if (isSelectionMode) toggleSelection(item.id);
                             }}
+                            role={isSelectionMode ? "checkbox" : "listitem"}
+                            aria-checked={isSelectionMode ? isSelected : undefined}
+                            tabIndex={isSelectionMode ? 0 : -1}
+                            onKeyDown={(e) => {
+                                if (isSelectionMode && (e.key === 'Enter' || e.key === ' ')) {
+                                    e.preventDefault();
+                                    toggleSelection(item.id);
+                                }
+                            }}
                         >
                             {/* Selection Checkbox (Visible in Mode) */}
                             {isSelectionMode && (
-                                <div className={`mr-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-[#1CAE9E] bg-[#1CAE9E]' : 'border-slate-300 dark:border-slate-600'}`}>
+                                <div className={`mr-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-[#00796B] bg-[#00796B]' : 'border-slate-300 dark:border-slate-600'}`}>
                                     {isSelected && <CheckSquare size={14} className="text-white" />}
                                 </div>
                             )}
@@ -593,22 +611,27 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === item.id ? null : item.id); }}
                                         className="w-[44px] h-[44px] flex items-center justify-end -mr-[8px] active:scale-90 transition-transform"
+                                        aria-label="Item Options"
+                                        aria-haspopup="true"
+                                        aria-expanded={activeMenuId === item.id}
                                     >
                                         <MoreVertical size={20} className="text-[#757575] dark:text-slate-400" />
                                     </button>
                                     
                                     {/* Context Menu Popup */}
                                     {activeMenuId === item.id && (
-                                        <div className="absolute right-0 top-10 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+                                        <div className="absolute right-0 top-10 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-30 animate-in fade-in zoom-in-95 duration-150 overflow-hidden" role="menu">
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateStatus(item.id, 'consumed'); setActiveMenuId(null); }}
                                                 className="w-full text-left px-4 py-3 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2"
+                                                role="menuitem"
                                             >
                                                 <Utensils size={14} /> Eat
                                             </button>
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); setActiveMenuId(null); }}
                                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                                role="menuitem"
                                             >
                                                 <Trash2 size={14} /> Delete
                                             </button>
@@ -628,7 +651,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
           <div className="fixed bottom-24 md:bottom-8 right-6 z-40 animate-in zoom-in slide-in-from-bottom-4">
               <button 
                 onClick={handleCookSelected}
-                className="bg-[#1CAE9E] text-white px-6 py-4 rounded-2xl shadow-xl shadow-teal-500/30 flex items-center gap-3 font-bold text-lg hover:scale-105 active:scale-95 transition-all"
+                className="bg-[#00796B] text-white px-6 py-4 rounded-2xl shadow-xl shadow-teal-500/30 flex items-center gap-3 font-bold text-lg hover:scale-105 active:scale-95 transition-all"
               >
                   <Sparkles fill="white" size={24} />
                   <span>Cook {selectedItemIds.size} Items</span>
@@ -638,12 +661,12 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
        {/* Scan Loading Modal */}
        {isAdding && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200" role="alertdialog" aria-modal="true" aria-labelledby="scan-title">
              <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-200">
                  {isAnalyzing ? (
                      <div className="py-8">
-                         <Loader2 className="animate-spin mx-auto text-[#1CAE9E] mb-4" size={48} />
-                         <p className="text-[#212121] dark:text-white font-bold text-lg">Analyzing Food...</p>
+                         <Loader2 className="animate-spin mx-auto text-[#00796B] mb-4" size={48} />
+                         <p id="scan-title" className="text-[#212121] dark:text-white font-bold text-lg">Analyzing Food...</p>
                          <p className="text-[#757575] dark:text-slate-400">Identifying items & expiration</p>
                      </div>
                  ) : (
@@ -651,7 +674,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                         {scanError ? (
                             <div className="text-center py-6">
                                 <AlertTriangle className="mx-auto text-red-500 mb-2" size={32} />
-                                <p className="text-[#212121] dark:text-white font-bold mb-1">Scan Failed</p>
+                                <p id="scan-title" className="text-[#212121] dark:text-white font-bold mb-1">Scan Failed</p>
                                 <p className="text-[#757575] dark:text-slate-400 text-sm mb-4">{scanError}</p>
                                 <button onClick={() => setIsAdding(false)} className="w-full py-3 bg-[#F5F5F5] dark:bg-slate-800 rounded-xl font-bold text-[#757575] dark:text-slate-300">Close</button>
                             </div>
@@ -664,25 +687,28 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
        {/* Manual Add Modal */}
        {showManualAdd && (
-         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200">
+         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div className="bg-white dark:bg-slate-900 rounded-[24px] p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 relative">
                 <button 
                     onClick={() => setShowManualAdd(false)}
                     className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    aria-label="Close Modal"
                 >
                     <X size={20} className="text-slate-400" />
                 </button>
                 
-                <h3 className="text-xl font-bold text-[#212121] dark:text-white mb-6">Add Item Manually</h3>
+                <h3 id="modal-title" className="text-xl font-bold text-[#212121] dark:text-white mb-6">Add Item Manually</h3>
                 
                 <form onSubmit={handleManualSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Item Name</label>
+                        <label htmlFor="itemName" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Item Name</label>
                         <input 
+                            id="itemName"
+                            ref={manualNameRef}
                             type="text" 
                             value={manualForm.name}
                             onChange={(e) => setManualForm({...manualForm, name: e.target.value})}
-                            className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                            className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
                             placeholder="e.g. Bananas"
                             required
                         />
@@ -690,11 +716,12 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
                     <div className="grid grid-cols-2 gap-4">
                          <div>
-                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Category</label>
+                            <label htmlFor="category" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Category</label>
                             <select 
+                                id="category"
                                 value={manualForm.category}
                                 onChange={(e) => setManualForm({...manualForm, category: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium appearance-none"
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium appearance-none"
                             >
                                 {CATEGORIES.filter(c => c !== "All").map(c => (
                                     <option key={c} value={c}>{c}</option>
@@ -702,12 +729,13 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                             </select>
                         </div>
                          <div>
-                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Expiry Date</label>
+                            <label htmlFor="expiryDate" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Expiry Date</label>
                             <input 
+                                id="expiryDate"
                                 type="date"
                                 value={manualForm.expiryDate}
                                 onChange={(e) => setManualForm({...manualForm, expiryDate: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
                                 required
                             />
                         </div>
@@ -715,24 +743,26 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
 
                     <div className="grid grid-cols-2 gap-4">
                          <div>
-                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Quantity</label>
+                            <label htmlFor="quantity" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Quantity</label>
                             <input 
+                                id="quantity"
                                 type="number"
                                 min="0.1"
                                 step="any"
                                 value={manualForm.quantity}
                                 onChange={(e) => setManualForm({...manualForm, quantity: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
                                 required
                             />
                         </div>
                          <div>
-                            <label className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Unit</label>
+                            <label htmlFor="unit" className="block text-sm font-bold text-[#757575] dark:text-slate-400 mb-1">Unit</label>
                             <input 
+                                id="unit"
                                 type="text"
                                 value={manualForm.unit}
                                 onChange={(e) => setManualForm({...manualForm, unit: e.target.value})}
-                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#1CAE9E] outline-none font-medium"
+                                className="w-full bg-[#F5F5F5] dark:bg-slate-800 border-transparent rounded-xl px-4 py-3 text-[#212121] dark:text-white focus:ring-2 focus:ring-[#00796B] outline-none font-medium"
                                 placeholder="pcs, kg..."
                                 required
                             />
@@ -740,8 +770,8 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                     </div>
 
                     <button 
-                        type="submit"
-                        className="w-full bg-[#1CAE9E] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#179c8d] transition-colors mt-4 active:scale-95"
+                        type="submit" 
+                        className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-colors mt-4 active:scale-95"
                     >
                         Add Item
                     </button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Plus, Minus, Navigation, MapPin, Star, Crosshair, Loader2, Building2, Phone, User, CheckCircle, RefreshCw } from 'lucide-react';
+import { Search, X, Plus, Minus, Navigation, MapPin, Star, Crosshair, Loader2, Building2, Phone, User, CheckCircle, RefreshCw, Mail, Globe, HeartHandshake } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet.markercluster';
@@ -21,9 +21,9 @@ L.Marker.prototype.options.icon = DefaultIcon;
 // Generate realistic mock data around San Francisco (Initial Fallback)
 const generateNGOs = (): NGO[] => {
     const baseNGOs: NGO[] = [
-        { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", rating: 4.8, description: "Provides hot meals to homeless individuals and families in the downtown area.", lat: 37.7749, lng: -122.4194, needs: [] },
-        { id: '2', name: "City Food Bank", distance: "3.5 km", rating: 4.5, description: "Distributes grocery packages to low-income households weekly.", lat: 37.7849, lng: -122.4094, needs: [] },
-        { id: '3', name: "Green Earth Rescue", distance: "5.0 km", rating: 4.9, description: "Focuses on rescuing perishable produce from wholesalers.", lat: 37.7649, lng: -122.4294, needs: [] },
+        { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", rating: 4.8, description: "Provides hot meals to homeless individuals and families in the downtown area.", lat: 37.7749, lng: -122.4194, needs: [], phone: "+1 (555) 123-4567" },
+        { id: '2', name: "City Food Bank", distance: "3.5 km", rating: 4.5, description: "Distributes grocery packages to low-income households weekly.", lat: 37.7849, lng: -122.4094, needs: [], phone: "+1 (555) 987-6543" },
+        { id: '3', name: "Green Earth Rescue", distance: "5.0 km", rating: 4.9, description: "Focuses on rescuing perishable produce from wholesalers.", lat: 37.7649, lng: -122.4294, needs: [], phone: "+1 (555) 456-7890" },
     ];
     return baseNGOs;
 };
@@ -42,6 +42,7 @@ const NGOMap: React.FC = () => {
     const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
     const [isLoadingLoc, setIsLoadingLoc] = useState(false);
     const [isSearchingReal, setIsSearchingReal] = useState(false);
+    const [showContactInfo, setShowContactInfo] = useState(false);
 
     // Registration Modal State
     const [isRegistering, setIsRegistering] = useState(false);
@@ -103,6 +104,7 @@ const NGOMap: React.FC = () => {
             const marker = L.marker([ngo.lat, ngo.lng]);
             marker.on('click', () => {
                 setSelectedNGO(ngo);
+                setShowContactInfo(false);
                 mapRef.current?.panTo([ngo.lat, ngo.lng]);
             });
             markers.addLayer(marker);
@@ -144,7 +146,7 @@ const NGOMap: React.FC = () => {
                         // Add User Marker (Non-clustered)
                         const userMarker = L.circleMarker([latitude, longitude], {
                             radius: 8,
-                            fillColor: "#1CAE9E",
+                            fillColor: "#00796B",
                             color: "#fff",
                             weight: 3,
                             opacity: 1,
@@ -176,6 +178,12 @@ const NGOMap: React.FC = () => {
     const handleZoom = (delta: number) => {
         if (mapRef.current) {
             mapRef.current.setZoom(mapRef.current.getZoom() + delta);
+        }
+    };
+
+    const handleDonateToNGO = () => {
+        if (selectedNGO) {
+            navigate('/donate', { state: { preSelectedNgo: selectedNGO } });
         }
     };
 
@@ -246,9 +254,10 @@ const NGOMap: React.FC = () => {
                         onChange={(e) => setSearchText(e.target.value)}
                         placeholder="Search organizations..."
                         className="flex-1 h-full px-[8px] outline-none text-[14px] text-[#212121]"
+                        aria-label="Search NGOs"
                     />
                     {searchText && (
-                        <button onClick={() => setSearchText('')}>
+                        <button onClick={() => setSearchText('')} aria-label="Clear Search">
                             <X size={16} className="text-[#757575]" />
                         </button>
                     )}
@@ -274,11 +283,9 @@ const NGOMap: React.FC = () => {
             </div>
 
             <div className="absolute bottom-[100px] right-[16px] z-20 flex flex-col items-end gap-3">
-                 {/* Re-Search Area Button (Only if we have moved or something, but for simplicity just always show if we want, but better to keep it clean. Let's just put it near the locate button) */}
-                 
                 <button 
                     onClick={handleLocateMe}
-                    className="w-[44px] h-[44px] bg-white rounded-full shadow-lg flex items-center justify-center active:bg-gray-50 text-[#1CAE9E]"
+                    className="w-[44px] h-[44px] bg-white rounded-full shadow-lg flex items-center justify-center active:bg-gray-50 text-[#00796B]"
                     aria-label="Current Location"
                 >
                     {isLoadingLoc || isSearchingReal ? <Loader2 size={24} className="animate-spin" /> : <Crosshair size={24} />}
@@ -288,7 +295,7 @@ const NGOMap: React.FC = () => {
             {/* Search Overlay Indicator */}
             {isSearchingReal && (
                 <div className="absolute top-[120px] left-1/2 -translate-x-1/2 z-20 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-md flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-[#1CAE9E]" />
+                    <Loader2 size={16} className="animate-spin text-[#00796B]" />
                     <span className="text-sm font-medium text-slate-700">Searching nearby NGOs...</span>
                 </div>
             )}
@@ -298,7 +305,8 @@ const NGOMap: React.FC = () => {
                 className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[16px] shadow-[0_-4px_20px_rgba(0,0,0,0.15)] z-30 transition-transform duration-300 ease-out flex flex-col ${
                     selectedNGO ? 'translate-y-0 pb-[20px]' : 'translate-y-[120%]'
                 }`}
-                style={{ maxHeight: '60%' }}
+                style={{ maxHeight: '70%' }}
+                aria-hidden={!selectedNGO}
             >
                 {/* Drag Handle */}
                 <div className="w-full flex justify-center pt-[8px] pb-[4px]">
@@ -310,13 +318,13 @@ const NGOMap: React.FC = () => {
                     <div className="px-[20px] pt-[8px]">
                         <div className="flex justify-between items-start mb-[8px]">
                             <h2 className="text-[20px] font-[700] text-[#212121]">{selectedNGO.name}</h2>
-                            <button onClick={() => setSelectedNGO(null)} className="p-1 -mr-2 text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setSelectedNGO(null)} className="p-1 -mr-2 text-gray-400 hover:text-gray-600" aria-label="Close Details">
                                 <X size={20} />
                             </button>
                         </div>
                         
                         <div className="flex items-center gap-[12px] mb-[12px]">
-                            <span className="text-[14px] font-[500] text-[#1CAE9E]">{selectedNGO.distance} away</span>
+                            <span className="text-[14px] font-[500] text-[#00796B]">{selectedNGO.distance} away</span>
                             <div className="flex items-center gap-1 text-[13px] text-[#757575]">
                                 <Star size={12} fill="#FFC107" className="text-[#FFC107]" /> {selectedNGO.rating}
                             </div>
@@ -326,21 +334,39 @@ const NGOMap: React.FC = () => {
                             {selectedNGO.description}
                         </p>
                         
-                        {selectedNGO.address && (
-                            <p className="text-[12px] text-[#9E9E9E] mb-[12px] flex items-center gap-1">
-                                <MapPin size={12} /> {selectedNGO.address}
-                            </p>
-                        )}
+                        <div className="flex flex-col gap-2 mb-[20px]">
+                            {selectedNGO.address && (
+                                <p className="text-[12px] text-[#757575] flex items-center gap-2">
+                                    <MapPin size={14} /> {selectedNGO.address}
+                                </p>
+                            )}
+                            {showContactInfo && (
+                                <div className="animate-in fade-in slide-in-from-top-1 bg-slate-50 p-3 rounded-lg mt-2 space-y-2">
+                                    <p className="text-[13px] text-[#212121] flex items-center gap-2 font-medium">
+                                        <Phone size={14} className="text-[#00796B]" /> {selectedNGO.phone || 'No phone available'}
+                                    </p>
+                                    <p className="text-[13px] text-[#212121] flex items-center gap-2 font-medium">
+                                        <Mail size={14} className="text-[#00796B]" /> {selectedNGO.name.replace(/\s+/g, '').toLowerCase()}@org.com
+                                    </p>
+                                    <p className="text-[13px] text-[#212121] flex items-center gap-2 font-medium">
+                                        <Globe size={14} className="text-[#00796B]" /> www.{selectedNGO.name.replace(/\s+/g, '').toLowerCase()}.org
+                                    </p>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="flex gap-[12px]">
                             <button 
-                                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedNGO.lat},${selectedNGO.lng}`, '_blank')}
-                                className="flex-1 h-[44px] border border-[#1CAE9E] rounded-[8px] text-[#1CAE9E] font-[600] text-[14px] flex items-center justify-center active:bg-teal-50 hover:bg-teal-50 transition-colors"
+                                onClick={() => setShowContactInfo(!showContactInfo)}
+                                className="flex-1 h-[48px] border border-[#00796B] rounded-[12px] text-[#00796B] font-[700] text-[14px] flex items-center justify-center active:bg-teal-50 hover:bg-teal-50 transition-colors"
                             >
-                                <Navigation size={18} className="mr-2" /> Navigate
+                                <Phone size={18} className="mr-2" /> Contact
                             </button>
-                            <button className="flex-1 h-[44px] bg-[#1CAE9E] rounded-[8px] text-white font-[600] text-[14px] flex items-center justify-center active:bg-[#179c8d] hover:bg-[#179c8d] transition-colors">
-                                View Profile
+                            <button 
+                                onClick={handleDonateToNGO}
+                                className="flex-1 h-[48px] bg-[#00796B] rounded-[12px] text-white font-[700] text-[14px] flex items-center justify-center active:bg-[#00695C] hover:bg-[#00695C] transition-colors shadow-lg shadow-teal-500/30"
+                            >
+                                <HeartHandshake size={18} className="mr-2" /> Donate Here
                             </button>
                         </div>
                     </div>
@@ -351,26 +377,27 @@ const NGOMap: React.FC = () => {
 
             {/* --- Z-Layer 4: Registration Modal Overlay --- */}
             {isRegistering && (
-                <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="reg-title">
                     <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[20px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="bg-[#1CAE9E] px-6 py-4 flex justify-between items-center">
-                            <h2 className="text-white text-lg font-bold flex items-center gap-2">
+                        <div className="bg-[#00796B] px-6 py-4 flex justify-between items-center">
+                            <h2 id="reg-title" className="text-white text-lg font-bold flex items-center gap-2">
                                 <Building2 size={20} /> New NGO Partner
                             </h2>
-                            <button onClick={() => setIsRegistering(false)} className="text-white/80 hover:text-white transition-colors">
+                            <button onClick={() => setIsRegistering(false)} className="text-white/80 hover:text-white transition-colors" aria-label="Close Registration">
                                 <X size={24} />
                             </button>
                         </div>
                         
                         <form onSubmit={handleRegisterSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Organization Name</label>
+                                <label htmlFor="orgName" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Organization Name</label>
                                 <div className="relative">
                                     <Building2 className="absolute left-3 top-3.5 text-gray-400" size={18} />
                                     <input 
+                                        id="orgName"
                                         type="text" 
                                         required
-                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#1CAE9E] focus:ring-2 focus:ring-[#1CAE9E]/20 rounded-xl outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#00796B] focus:ring-2 focus:ring-[#00796B]/20 rounded-xl outline-none transition-all"
                                         placeholder="e.g. Downtown Food Rescue"
                                         value={regForm.name}
                                         onChange={e => setRegForm({...regForm, name: e.target.value})}
@@ -380,9 +407,10 @@ const NGOMap: React.FC = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                                    <label htmlFor="orgType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Type</label>
                                     <select 
-                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border-transparent rounded-xl outline-none focus:ring-2 focus:ring-[#1CAE9E]/20 appearance-none font-medium"
+                                        id="orgType"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border-transparent rounded-xl outline-none focus:ring-2 focus:ring-[#00796B]/20 appearance-none font-medium"
                                         value={regForm.type}
                                         onChange={e => setRegForm({...regForm, type: e.target.value})}
                                     >
@@ -393,12 +421,13 @@ const NGOMap: React.FC = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
+                                    <label htmlFor="orgPhone" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-3.5 text-gray-400" size={18} />
                                         <input 
+                                            id="orgPhone"
                                             type="tel" 
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#1CAE9E] focus:ring-2 focus:ring-[#1CAE9E]/20 rounded-xl outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#00796B] focus:ring-2 focus:ring-[#00796B]/20 rounded-xl outline-none transition-all"
                                             placeholder="(555) 000-0000"
                                             value={regForm.phone}
                                             onChange={e => setRegForm({...regForm, phone: e.target.value})}
@@ -408,13 +437,14 @@ const NGOMap: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                                <label htmlFor="orgAddress" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Address</label>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-3.5 text-gray-400" size={18} />
                                     <input 
+                                        id="orgAddress"
                                         type="text" 
                                         required
-                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#1CAE9E] focus:ring-2 focus:ring-[#1CAE9E]/20 rounded-xl outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#00796B] focus:ring-2 focus:ring-[#00796B]/20 rounded-xl outline-none transition-all"
                                         placeholder="123 Green Street, San Francisco, CA"
                                         value={regForm.address}
                                         onChange={e => setRegForm({...regForm, address: e.target.value})}

@@ -34,6 +34,7 @@ const Badges: React.FC<BadgesProps> = ({ stats }) => {
         <button 
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Back"
         >
             <ArrowLeft size={24} className="text-[#212121] dark:text-white" />
         </button>
@@ -42,7 +43,7 @@ const Badges: React.FC<BadgesProps> = ({ stats }) => {
 
       <div className="px-4 max-w-4xl mx-auto">
         {/* Level Card */}
-        <div className="bg-gradient-to-r from-[#1CAE9E] to-[#00796B] rounded-2xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#00796B] to-[#00695C] rounded-2xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
              <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8"></div>
              <div className="relative z-10 flex items-center gap-6">
                 <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30 text-3xl shadow-inner">
@@ -75,7 +76,7 @@ const Badges: React.FC<BadgesProps> = ({ stats }) => {
 
         {/* Badges Grid */}
         <h3 className="font-bold text-lg text-[#212121] dark:text-white mb-4 flex items-center gap-2">
-            <Star className="text-yellow-500" fill="currentColor" size={20} />
+            <Star className="text-yellow-600" fill="currentColor" size={20} />
             Badges ({stats.earnedBadges.length}/{ALL_BADGES.length})
         </h3>
         
@@ -106,7 +107,7 @@ const Badges: React.FC<BadgesProps> = ({ stats }) => {
                             {badge.description}
                         </p>
                         
-                        <div className={`text-[10px] font-bold px-2 py-1 rounded-full ${isUnlocked ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-500'}`}>
+                        <div className={`text-[10px] font-bold px-2 py-1 rounded-full ${isUnlocked ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-500'}`}>
                             {isUnlocked ? 'Unlocked' : badge.requirement}
                         </div>
                     </div>

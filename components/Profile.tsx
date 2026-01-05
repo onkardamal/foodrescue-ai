@@ -47,6 +47,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
             onClick={handleBack}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             type="button"
+            aria-label="Back"
         >
             <ArrowLeft size={24} className="text-[#212121] dark:text-white" />
         </button>
@@ -57,7 +58,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
         {/* User Card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center relative overflow-hidden">
              {/* Background Decoration */}
-             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-[#1CAE9E]/20 to-transparent"></div>
+             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-[#00796B]/20 to-transparent"></div>
              
              <div className="relative mb-4">
                 <img 
@@ -65,7 +66,10 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
                     alt={user.name}
                     className="w-24 h-24 rounded-full border-4 border-white dark:border-slate-900 shadow-lg bg-slate-200"
                 />
-                <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#1CAE9E] rounded-full flex items-center justify-center text-white border-2 border-white dark:border-slate-900 shadow-sm">
+                <button 
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-[#00796B] rounded-full flex items-center justify-center text-white border-2 border-white dark:border-slate-900 shadow-sm"
+                  aria-label="Edit Profile Picture"
+                >
                     <Settings size={14} />
                 </button>
              </div>
@@ -75,11 +79,11 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout }) => {
              
              <div className="flex gap-3">
                  <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center gap-2">
-                    <Award size={16} className="text-amber-500" />
+                    <Award size={16} className="text-amber-600" />
                     <span className="text-sm font-bold text-[#212121] dark:text-white">Lvl {stats.level}</span>
                  </div>
                  <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center gap-2">
-                    <Flame size={16} className="text-orange-500" />
+                    <Flame size={16} className="text-orange-600" />
                     <span className="text-sm font-bold text-[#212121] dark:text-white">{stats.streakDays} Day Streak</span>
                  </div>
              </div>
