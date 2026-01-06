@@ -1,17 +1,18 @@
+
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User } from '../types';
-import { AuthService } from './services/auth';
-import Dashboard from './components/Dashboard';
-import Inventory from './components/Inventory';
-import Recipes from './components/Recipes';
-import Donation from './components/Donation';
-import NGOMap from './components/NGOMap';
-import Analytics from './components/Analytics';
-import Badges from './components/Badges';
-import Profile from './components/Profile';
-import { Login, Signup } from './components/Auth';
+import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from '../types';
+import { AuthService } from '../services/auth';
+import Dashboard from './Dashboard';
+import Inventory from './Inventory';
+import Recipes from './Recipes';
+import Donation from './Donation';
+import NGOMap from './NGOMap';
+import Analytics from './Analytics';
+import Badges from './Badges';
+import Profile from './Profile';
+import { Login, Signup } from './Auth';
 
 // --- Theme Context ---
 export const ThemeContext = createContext<ThemeContextType>({
@@ -95,6 +96,19 @@ const INITIAL_INVENTORY: FoodItem[] = [
   }
 ];
 
+// Added missing INITIAL_HISTORY to satisfy UserStats requirements
+const INITIAL_HISTORY: DonationHistoryItem[] = [
+  {
+    id: 'h1',
+    foodName: 'Banquet Leftovers',
+    date: 'Oct 12, 2:00 PM',
+    ngoName: 'City Care',
+    status: 'completed',
+    points: 500,
+    review: { rating: 5, tags: ['Punctual ⏰', 'Polite 😊'] }
+  }
+];
+
 const INITIAL_STATS: UserStats = {
   mealsSaved: 124,
   co2Saved: 58,
@@ -102,7 +116,8 @@ const INITIAL_STATS: UserStats = {
   streakDays: 12,
   level: 5,
   xp: 850,
-  earnedBadges: ['b1', 'b2'] // Initial Mock Badges
+  earnedBadges: ['b1', 'b2'], // Initial Mock Badges
+  history: INITIAL_HISTORY // Fixed: added missing history property to satisfy UserStats interface
 };
 
 // Sidebar for Desktop
@@ -226,7 +241,7 @@ const BottomNav = () => {
   );
 };
 
-const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete }: any) => {
+const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete, handleUpdateStats }: any) => {
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
 
@@ -279,6 +294,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
                     user={auth.user} 
                     stats={stats} 
                     onLogout={handleLogout} 
+                    onUpdateStats={handleUpdateStats}
                  />
                } />
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -396,6 +412,11 @@ export default function App() {
     }));
   };
 
+  // Added handler to satisfy missing onUpdateStats prop requirement in Profile component
+  const handleUpdateStats = (newStats: UserStats) => {
+    setStats(newStats);
+  };
+
   if (!auth.isAuthenticated) {
     return isLoginView ? (
       <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
@@ -420,6 +441,7 @@ export default function App() {
           handleCookRecipe={handleCookRecipe}
           handleUpdateRecipes={setGeneratedRecipes}
           handleDonateComplete={handleDonateComplete}
+          handleUpdateStats={handleUpdateStats}
         />
       </HashRouter>
     </ThemeContext.Provider>

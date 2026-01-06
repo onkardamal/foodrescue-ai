@@ -1,5 +1,4 @@
 
-
 export enum FoodCategory {
   PRODUCE = 'Produce',
   DAIRY = 'Dairy',
@@ -56,6 +55,22 @@ export interface Badge {
   requirement: string;
 }
 
+export interface Review {
+  rating: number;
+  tags: string[];
+  comment?: string;
+}
+
+export interface DonationHistoryItem {
+  id: string;
+  foodName: string;
+  date: string;
+  ngoName: string;
+  status: 'completed' | 'pending';
+  points: number;
+  review?: Review;
+}
+
 export interface UserStats {
   mealsSaved: number;
   co2Saved: number; // in kg
@@ -64,6 +79,7 @@ export interface UserStats {
   level: number;
   xp: number;
   earnedBadges: string[]; // IDs of earned badges
+  history: DonationHistoryItem[];
 }
 
 export interface ScanResult {
