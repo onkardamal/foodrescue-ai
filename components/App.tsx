@@ -22,102 +22,21 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// Initial Mock Data
-const INITIAL_INVENTORY: FoodItem[] = [
-  { 
-    id: "1", 
-    name: "Ground Beef Patty", 
-    category: FoodCategory.MEAT, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() - 2 * 86400000).toISOString(), // Expired
-    status: 'active',
-    condition: 'Expired'
-  },
-  { 
-    id: "2", 
-    name: "Tomato Slice", 
-    category: FoodCategory.PRODUCE, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 4 * 86400000).toISOString(), // Expires in 4 days
-    status: 'active',
-    condition: 'Expiring Soon'
-  },
-  { 
-    id: "3", 
-    name: "Sesame Seed Bun", 
-    category: FoodCategory.BAKERY, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "4", 
-    name: "Cheddar Cheese Slice", 
-    category: FoodCategory.DAIRY, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "5", 
-    name: "Lettuce", 
-    category: FoodCategory.PRODUCE, 
-    quantity: 20, 
-    unit: "grams", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "6", 
-    name: "Mayonnaise", 
-    category: FoodCategory.OTHER, 
-    quantity: 10, 
-    unit: "grams", 
-    expiryDate: "2026-02-03T00:00:00.000Z", 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "7", 
-    name: "Ketchup", 
-    category: FoodCategory.OTHER, 
-    quantity: 10, 
-    unit: "grams", 
-    expiryDate: "2026-02-03T00:00:00.000Z", 
-    status: 'active',
-    condition: 'Good'
-  }
-];
+// Initial Mock Data - Cleared for fresh start
+const INITIAL_INVENTORY: FoodItem[] = [];
 
 // Added missing INITIAL_HISTORY to satisfy UserStats requirements
-const INITIAL_HISTORY: DonationHistoryItem[] = [
-  {
-    id: 'h1',
-    foodName: 'Banquet Leftovers',
-    date: 'Oct 12, 2:00 PM',
-    ngoName: 'City Care',
-    status: 'completed',
-    points: 500,
-    review: { rating: 5, tags: ['Punctual ⏰', 'Polite 😊'] }
-  }
-];
+const INITIAL_HISTORY: DonationHistoryItem[] = [];
 
 const INITIAL_STATS: UserStats = {
-  mealsSaved: 124,
-  co2Saved: 58,
-  moneySaved: 340,
-  streakDays: 12,
-  level: 5,
-  xp: 850,
-  earnedBadges: ['b1', 'b2'], // Initial Mock Badges
-  history: INITIAL_HISTORY // Fixed: added missing history property to satisfy UserStats interface
+  mealsSaved: 0,
+  co2Saved: 0,
+  moneySaved: 0,
+  streakDays: 0,
+  level: 1,
+  xp: 0,
+  earnedBadges: [],
+  history: INITIAL_HISTORY
 };
 
 // Sidebar for Desktop
