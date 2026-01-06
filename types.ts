@@ -1,4 +1,5 @@
 
+
 export enum FoodCategory {
   PRODUCE = 'Produce',
   DAIRY = 'Dairy',
@@ -74,7 +75,7 @@ export interface DonationHistoryItem {
 export interface UserStats {
   mealsSaved: number;
   co2Saved: number; // in kg
-  moneySaved: number; // in USD
+  moneySaved: number; // in Rupees
   streakDays: number;
   level: number;
   xp: number;
