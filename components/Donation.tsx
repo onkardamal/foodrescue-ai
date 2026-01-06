@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { FoodItem, NGO, FoodCategory } from '../types';
 import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Calendar, Truck, MessageSquare, Clock } from 'lucide-react';
@@ -252,6 +253,9 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
     }
   }, [currentStep, viewMode, ngos]);
 
+  // Validation helper for phone number
+  const isPhoneValid = logistics.contactPhone.replace(/\D/g, '').length === 10;
+
   // Step 1: Select Items
   const renderStep1 = () => (
     <>
@@ -332,7 +336,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                             className={`p-[16px] rounded-[12px] border transition-all cursor-pointer flex justify-between items-center ${
                                 selectedNgoId === ngo.id 
                                 ? 'bg-[#F0FFFB] dark:bg-[#00796B]/20 border-[#00796B]' 
-                                : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 hover:border-[#00796B]/50'
+                                : 'bg-white dark:bg-slate-900 border-[#EEEEEE] dark:border-slate-700 hover:border-[#00796B]/50'
                             }`}
                             tabIndex={0}
                             role="radio"
@@ -387,6 +391,9 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   // Step 3: Logistics & Contact
   const renderStep3 = () => {
       const selectedNgo = ngos.find(n => n.id === selectedNgoId);
+      const digits = logistics.contactPhone.replace(/\D/g, '');
+      const showError = logistics.contactPhone.length > 0 && !isPhoneValid;
+
       return (
         <div className="flex-1 overflow-y-auto px-[16px] pb-[100px]">
             <div className="mt-[24px] mb-[20px]">
@@ -422,9 +429,17 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                         type="tel" 
                         placeholder="(555) 000-0000"
                         value={logistics.contactPhone}
+                        maxLength={14}
                         onChange={(e) => setLogistics({...logistics, contactPhone: e.target.value})}
-                        className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#00796B] outline-none transition-all font-medium"
+                        className={`w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-2 outline-none transition-all font-medium ${
+                            showError ? 'border-red-500 focus:ring-red-500/20' : 'border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-[#00796B]/20 focus:border-[#00796B]'
+                        }`}
                     />
+                    {showError && (
+                        <p className="text-[11px] text-red-500 font-bold mt-1.5 ml-1 animate-in slide-in-from-top-1">
+                            Please enter exactly 10 digits (currently {digits.length})
+                        </p>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -547,7 +562,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                 disabled={
                     (currentStep === 1 && selectedItems.length === 0) ||
                     (currentStep === 2 && !selectedNgoId) ||
-                    (currentStep === 3 && (!logistics.contactPhone || !logistics.date || !logistics.time))
+                    (currentStep === 3 && (!logistics.contactPhone || !logistics.date || !logistics.time || !isPhoneValid))
                 }
                 className="w-full h-[52px] bg-[#00796B] rounded-[10px] flex items-center justify-center text-white text-[16px] font-[600] disabled:bg-[#BDBDBD] disabled:text-white/60 active:scale-[0.98] transition-all"
               >
