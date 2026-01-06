@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { FoodItem, Recipe, ScanResult, FoodCategory, NGO } from '../types';
 
@@ -148,34 +147,6 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
   } catch (error) {
     console.error("Gemini Recipe Error:", error);
     return [];
-  }
-};
-
-/**
- * Converts coordinates to a human-readable address.
- */
-export const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `What is the approximate human-readable postal address for coordinates: Lat ${lat}, Lng ${lng}? Return ONLY the address string, no other text.`,
-      config: {
-        tools: [{ googleMaps: {} }],
-        toolConfig: {
-          retrievalConfig: {
-            latLng: {
-              latitude: lat,
-              longitude: lng
-            }
-          }
-        }
-      }
-    });
-
-    return response.text.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-  } catch (error) {
-    console.error("Reverse Geocode Error:", error);
-    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
 };
 

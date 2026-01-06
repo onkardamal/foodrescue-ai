@@ -21,7 +21,6 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [reviewComment, setReviewComment] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -33,12 +32,8 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
     navigate('/');
   };
 
-  const handleCloseModal = () => {
-    setShowRateModal(null);
-    setRating(0);
-    setHoverRating(0);
-    setSelectedTags([]);
-    setReviewComment('');
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleReviewSubmit = (e: React.FormEvent) => {
@@ -51,8 +46,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
           ...item,
           review: {
             rating,
-            tags: selectedTags,
-            comment: reviewComment.trim() || undefined
+            tags: selectedTags
           }
         };
       }
@@ -64,7 +58,9 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
       history: updatedHistory
     });
 
-    handleCloseModal();
+    setShowRateModal(null);
+    setRating(0);
+    setSelectedTags([]);
     
     // Success feedback
     setShowConfetti(true);
@@ -206,26 +202,18 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                                 </div>
 
                                 {/* History Card */}
-                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 group hover:shadow-md transition-shadow">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex-1 min-w-0 pr-4">
-                                          <h4 className="font-bold text-lg text-[#212121] dark:text-white truncate">{item.foodName}</h4>
-                                          <div className="flex flex-col gap-0.5 mt-1">
-                                              <p className="text-xs text-slate-500 font-medium">{item.date}</p>
-                                              <p className="text-sm text-[#00796B] font-bold">Picked up by: {item.ngoName}</p>
-                                          </div>
-                                      </div>
-                                      <div className="bg-teal-50 dark:bg-teal-900/30 text-[#00796B] px-3 py-1.5 rounded-xl font-black text-xs shrink-0 flex flex-col items-center">
-                                          <Sparkles size={14} className="mb-0.5" />
-                                          +{item.points} XP
-                                      </div>
-                                    </div>
-
-                                    {/* Review Area */}
-                                    {isCompleted && (
-                                        <div className="mt-4">
-                                            {isRated ? (
-                                                <div className="space-y-3">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between group hover:shadow-md transition-shadow">
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        <h4 className="font-bold text-lg text-[#212121] dark:text-white truncate">{item.foodName}</h4>
+                                        <div className="flex flex-col gap-0.5 mt-1">
+                                            <p className="text-xs text-slate-500 font-medium">{item.date}</p>
+                                            <p className="text-sm text-[#00796B] font-bold">Picked up by: {item.ngoName}</p>
+                                        </div>
+                                        
+                                        {/* Review Area */}
+                                        {isCompleted && (
+                                            <div className="mt-4">
+                                                {isRated ? (
                                                     <div className="flex items-center gap-0.5 text-amber-400">
                                                         {[...Array(5)].map((_, i) => (
                                                             <Star 
@@ -236,25 +224,22 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                                                         ))}
                                                         <span className="text-xs font-bold text-slate-400 ml-2">Rating given</span>
                                                     </div>
-                                                    {item.review?.comment && (
-                                                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 relative overflow-hidden">
-                                                        <div className="absolute top-0 left-0 w-1 h-full bg-[#00796B]/20"></div>
-                                                        <p className="text-sm text-slate-600 dark:text-slate-400 italic font-medium leading-relaxed">
-                                                          "{item.review.comment}"
-                                                        </p>
-                                                      </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <button 
-                                                    onClick={() => setShowRateModal(item.id)}
-                                                    className="px-4 py-1.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 hover:border-[#00796B] hover:text-[#00796B] transition-all"
-                                                >
-                                                    Rate Experience
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => setShowRateModal(item.id)}
+                                                        className="px-4 py-1.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 hover:border-[#00796B] hover:text-[#00796B] transition-all"
+                                                    >
+                                                        Rate Experience
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-teal-50 dark:bg-teal-900/30 text-[#00796B] px-3 py-1.5 rounded-xl font-black text-xs shrink-0 flex flex-col items-center">
+                                        <Sparkles size={14} className="mb-0.5" />
+                                        +{item.points} XP
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -305,9 +290,9 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                 role="dialog"
                 aria-modal="true"
               >
-                  <div className="p-8 text-center max-h-[90vh] overflow-y-auto">
+                  <div className="p-8 text-center">
                       <div className="flex justify-end -mt-4 -mr-4 mb-2">
-                          <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:text-slate-600">
+                          <button onClick={() => setShowRateModal(null)} className="p-2 text-slate-400 hover:text-slate-600">
                               <X size={24} />
                           </button>
                       </div>
@@ -321,7 +306,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                       </h3>
 
                       {/* Interactive Stars */}
-                      <div className="flex justify-center gap-2 mb-6">
+                      <div className="flex justify-center gap-2 mb-8">
                           {[1, 2, 3, 4, 5].map((star) => (
                               <button
                                   key={star}
@@ -341,32 +326,20 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                       </div>
 
                       {/* Feedback Chips */}
-                      <div className="flex flex-wrap justify-center gap-2 mb-6">
+                      <div className="flex flex-wrap justify-center gap-2 mb-8">
                           {["Punctual ⏰", "Polite 😊", "Professional 👔"].map(tag => (
                               <button
                                   key={tag}
                                   onClick={() => toggleTag(tag)}
                                   className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${
                                       selectedTags.includes(tag)
-                                      ? 'bg-[#00796B] border-[#00796B] text-white shadow-sm'
+                                      ? 'bg-[#00796B] border-[#00796B] text-white'
                                       : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-300'
                                   }`}
                               >
                                   {tag}
                               </button>
                           ))}
-                      </div>
-
-                      {/* Review Text Area */}
-                      <div className="mb-8 text-left">
-                          <label htmlFor="review-comment" className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Write a Review (Optional)</label>
-                          <textarea 
-                              id="review-comment"
-                              value={reviewComment}
-                              onChange={(e) => setReviewComment(e.target.value)}
-                              className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-[#00796B] focus:bg-white dark:focus:bg-slate-900 outline-none text-sm text-[#212121] dark:text-white transition-all resize-none h-24 placeholder:text-slate-400"
-                              placeholder="Share your experience with the pickup..."
-                          />
                       </div>
 
                       <button 

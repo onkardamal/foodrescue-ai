@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UserStats } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -61,9 +60,9 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
                     <DollarSign size={18} />
                     <span className="text-sm font-medium">Money Saved</span>
                 </div>
-                <div className="text-3xl font-bold text-[#212121] dark:text-white">₹{stats.moneySaved}</div>
+                <div className="text-3xl font-bold text-[#212121] dark:text-white">${stats.moneySaved}</div>
                  <div className="text-xs text-green-600 dark:text-green-400 font-bold mt-1 flex items-center gap-1">
-                    <span>↑ ₹45</span> <span className="font-normal text-slate-400">this week</span>
+                    <span>↑ $45</span> <span className="font-normal text-slate-400">this week</span>
                 </div>
             </div>
         </div>

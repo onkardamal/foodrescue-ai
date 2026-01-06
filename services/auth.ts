@@ -58,29 +58,6 @@ export const AuthService = {
     return authState;
   },
 
-  googleLogin: async (userInfo: any): Promise<AuthState> => {
-    await delay(500);
-    
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-    let user = users.find((u: any) => u.email === userInfo.email);
-
-    if (!user) {
-        // Create new user if they don't exist (Signup via Google)
-        user = {
-            id: userInfo.sub || Math.random().toString(36).substr(2, 9),
-            name: userInfo.name,
-            email: userInfo.email,
-            avatar: userInfo.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo.name}`
-        };
-        users.push(user);
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    }
-
-    const authState = { user, token: 'google-token-' + Date.now(), isAuthenticated: true };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
-    return authState;
-  },
-
   logout: async () => {
     localStorage.removeItem(SESSION_KEY);
     return { user: null, token: null, isAuthenticated: false };

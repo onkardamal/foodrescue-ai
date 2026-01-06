@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserStats, FoodItem, User } from '../types';
-import { Leaf, IndianRupee, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun, Trophy, ChevronRight } from 'lucide-react';
+import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun, Trophy, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { ALL_BADGES } from './Badges'; // Import badge constants
@@ -205,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {/* Card 1: Meals Saved */}
         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div className="w-[48px] h-[48px] shrink-0 rounded-full bg-[#00796B] flex items-center justify-center">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
                 <Utensils size={24} color="white" strokeWidth={2} />
             </div>
             <div>
@@ -222,7 +221,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
         {/* Card 2: CO2 Prevented */}
         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div className="w-[48px] h-[48px] shrink-0 rounded-full bg-[#00796B] flex items-center justify-center">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
                 <Leaf size={24} color="white" strokeWidth={2} />
             </div>
             <div>
@@ -239,12 +238,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
          {/* Card 3: Money Saved */}
          <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div className="w-[48px] h-[48px] shrink-0 rounded-full bg-[#E65100] flex items-center justify-center">
-                <IndianRupee size={24} color="white" strokeWidth={2} />
+            <div className="w-[48px] h-[48px] rounded-full bg-[#E65100] flex items-center justify-center">
+                <DollarSign size={24} color="white" strokeWidth={2} />
             </div>
             <div>
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
-                    <AnimatedCounter value={stats.moneySaved} prefix="₹" />
+                    <AnimatedCounter value={stats.moneySaved} prefix="$" />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Money Saved</div>
                 <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
@@ -256,7 +255,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
          {/* Card 4: Food Rescued */}
          <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div className="w-[48px] h-[48px] shrink-0 rounded-full bg-[#1565C0] flex items-center justify-center">
+            <div className="w-[48px] h-[48px] rounded-full bg-[#1565C0] flex items-center justify-center">
                 <Share2 size={24} color="white" strokeWidth={2} />
             </div>
             <div>

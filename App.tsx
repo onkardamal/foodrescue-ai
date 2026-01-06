@@ -23,16 +23,116 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-const INITIAL_HISTORY: DonationHistoryItem[] = [];
+// Initial Mock Data
+const INITIAL_INVENTORY: FoodItem[] = [
+  { 
+    id: "1", 
+    name: "Ground Beef Patty", 
+    category: FoodCategory.MEAT, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() - 2 * 86400000).toISOString(), // Expired
+    status: 'active',
+    condition: 'Expired'
+  },
+  { 
+    id: "2", 
+    name: "Tomato Slice", 
+    category: FoodCategory.PRODUCE, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() + 4 * 86400000).toISOString(), // Expires in 4 days
+    status: 'active',
+    condition: 'Expiring Soon'
+  },
+  { 
+    id: "3", 
+    name: "Sesame Seed Bun", 
+    category: FoodCategory.BAKERY, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "4", 
+    name: "Cheddar Cheese Slice", 
+    category: FoodCategory.DAIRY, 
+    quantity: 1, 
+    unit: "pieces", 
+    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "5", 
+    name: "Lettuce", 
+    category: FoodCategory.PRODUCE, 
+    quantity: 20, 
+    unit: "grams", 
+    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "6", 
+    name: "Mayonnaise", 
+    category: FoodCategory.OTHER, 
+    quantity: 10, 
+    unit: "grams", 
+    expiryDate: "2026-02-03T00:00:00.000Z", 
+    status: 'active',
+    condition: 'Good'
+  },
+  { 
+    id: "7", 
+    name: "Ketchup", 
+    category: FoodCategory.OTHER, 
+    quantity: 10, 
+    unit: "grams", 
+    expiryDate: "2026-02-03T00:00:00.000Z", 
+    status: 'active',
+    condition: 'Good'
+  }
+];
+
+const INITIAL_HISTORY: DonationHistoryItem[] = [
+  {
+    id: 'h1',
+    foodName: 'Banquet Leftovers',
+    date: 'Oct 12, 2:00 PM',
+    ngoName: 'City Care',
+    status: 'completed',
+    points: 500,
+    review: { rating: 5, tags: ['Punctual ⏰', 'Polite 😊'] }
+  },
+  {
+    id: 'h2',
+    foodName: 'Organic Apples (Bulk)',
+    date: 'Oct 15, 10:30 AM',
+    ngoName: 'Helping Hands Shelter',
+    status: 'completed',
+    points: 350
+  },
+  {
+    id: 'h3',
+    foodName: 'Mixed Vegetables',
+    date: 'Oct 18, 4:45 PM',
+    ngoName: 'Green Earth Rescue',
+    status: 'pending',
+    points: 200
+  }
+];
 
 const INITIAL_STATS: UserStats = {
-  mealsSaved: 0,
-  co2Saved: 0,
-  moneySaved: 0,
-  streakDays: 0,
-  level: 1,
-  xp: 0,
-  earnedBadges: [],
+  mealsSaved: 124,
+  co2Saved: 58,
+  moneySaved: 340,
+  streakDays: 12,
+  level: 5,
+  xp: 1250,
+  earnedBadges: ['b1', 'b2'],
   history: INITIAL_HISTORY
 };
 
@@ -229,7 +329,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 export default function App() {
   const [auth, setAuth] = useState<AuthState>(AuthService.init());
   const [isLoginView, setIsLoginView] = useState(true);
-  const [inventory, setInventory] = useState<FoodItem[]>([]);
+  const [inventory, setInventory] = useState<FoodItem[]>(INITIAL_INVENTORY);
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
@@ -239,33 +339,18 @@ export default function App() {
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
-  // User-scoped data loading
   useEffect(() => {
-    if (auth.isAuthenticated && auth.user?.id) {
-        const key = `ecotable_data_${auth.user.id}`;
-        const storedData = localStorage.getItem(key);
-        if (storedData) {
-            const { inventory: inv, stats: st } = JSON.parse(storedData);
-            setInventory(inv || []);
-            setStats(st || INITIAL_STATS);
-        } else {
-            setInventory([]);
-            setStats(INITIAL_STATS);
-        }
-    } else {
-        // Reset state on logout
-        setInventory([]);
-        setStats(INITIAL_STATS);
-    }
-  }, [auth.isAuthenticated, auth.user?.id]);
+    // Load data from local storage if available to simulate DB
+    const storedInventory = localStorage.getItem('ecotable_inventory');
+    if (storedInventory) setInventory(JSON.parse(storedInventory));
+  }, []);
 
-  // User-scoped data saving
   useEffect(() => {
-    if (auth.isAuthenticated && auth.user?.id) {
-        const key = `ecotable_data_${auth.user.id}`;
-        localStorage.setItem(key, JSON.stringify({ inventory, stats }));
+    // Persist inventory updates
+    if (auth.isAuthenticated) {
+        localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
     }
-  }, [inventory, stats, auth.isAuthenticated, auth.user?.id]);
+  }, [inventory, auth.isAuthenticated]);
 
   // Theme Logic
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AuthService } from '../services/auth';
 import { AuthState } from '../types';
@@ -13,7 +12,7 @@ interface AuthProps {
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
 
 // Shared function to handle Google Auth Flow
-const performGoogleLogin = async (): Promise<any> => {
+const performGoogleLogin = async (): Promise<AuthState> => {
     return new Promise((resolve, reject) => {
         if (!window.google) {
             reject(new Error("Google Identity Services not loaded. Check your internet connection."));
@@ -42,7 +41,23 @@ const performGoogleLogin = async (): Promise<any> => {
                         }
 
                         const userInfo = await userInfoResponse.json();
-                        resolve(userInfo);
+
+                        // Construct Auth State
+                        const authState: AuthState = {
+                            user: {
+                                id: userInfo.sub,
+                                name: userInfo.name,
+                                email: userInfo.email,
+                                avatar: userInfo.picture
+                            },
+                            token: tokenResponse.access_token,
+                            isAuthenticated: true
+                        };
+                        
+                        // Persist session to mock local storage (to maintain consistency with AuthService)
+                        localStorage.setItem('ecotable_session', JSON.stringify(authState));
+
+                        resolve(authState);
                     } catch (err) {
                         reject(err);
                     }
@@ -161,23 +176,25 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
             // Fallback mock if Client ID is not configured by user
             console.warn("Google Client ID not set. Falling back to mock login.");
             setTimeout(() => {
-                const mockUserInfo = {
-                    sub: 'google-user-mock',
-                    name: 'Alex Google (Mock)',
-                    email: 'alex.mock@gmail.com',
-                    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
+                const mockState = {
+                    user: {
+                        id: 'google-user-mock',
+                        name: 'Alex Google (Mock)',
+                        email: 'alex.mock@gmail.com',
+                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
+                    },
+                    token: 'mock-token',
+                    isAuthenticated: true
                 };
-                AuthService.googleLogin(mockUserInfo).then(state => {
-                    onLogin(state);
-                    setGoogleLoading(false);
-                });
+                localStorage.setItem('ecotable_session', JSON.stringify(mockState));
+                onLogin(mockState);
+                setGoogleLoading(false);
             }, 1000);
             return;
         }
 
-        const userInfo = await performGoogleLogin();
-        const state = await AuthService.googleLogin(userInfo);
-        onLogin(state);
+        const authState = await performGoogleLogin();
+        onLogin(authState);
     } catch (err: any) {
         console.error(err);
         setError("Google Login failed. " + (err.message || ""));
@@ -315,23 +332,25 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
         if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
             console.warn("Google Client ID not set. Falling back to mock login.");
             setTimeout(() => {
-                const mockUserInfo = {
-                    sub: 'google-user-mock',
-                    name: 'Alex Google (Mock)',
-                    email: 'alex.mock@gmail.com',
-                    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
+                const mockState = {
+                    user: {
+                        id: 'google-user-mock',
+                        name: 'Alex Google (Mock)',
+                        email: 'alex.mock@gmail.com',
+                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AlexGoogle'
+                    },
+                    token: 'mock-token',
+                    isAuthenticated: true
                 };
-                AuthService.googleLogin(mockUserInfo).then(state => {
-                    onLogin(state);
-                    setGoogleLoading(false);
-                });
+                localStorage.setItem('ecotable_session', JSON.stringify(mockState));
+                onLogin(mockState);
+                setGoogleLoading(false);
             }, 1000);
             return;
         }
 
-        const userInfo = await performGoogleLogin();
-        const state = await AuthService.googleLogin(userInfo);
-        onLogin(state);
+        const authState = await performGoogleLogin();
+        onLogin(authState);
     } catch (err: any) {
         console.error(err);
         setError("Google Signup failed. " + (err.message || ""));
