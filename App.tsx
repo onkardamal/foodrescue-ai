@@ -23,9 +23,6 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// Initial Mock Data - Cleared for a fresh start
-const INITIAL_INVENTORY: FoodItem[] = [];
-
 const INITIAL_HISTORY: DonationHistoryItem[] = [];
 
 const INITIAL_STATS: UserStats = {
@@ -232,7 +229,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 export default function App() {
   const [auth, setAuth] = useState<AuthState>(AuthService.init());
   const [isLoginView, setIsLoginView] = useState(true);
-  const [inventory, setInventory] = useState<FoodItem[]>(INITIAL_INVENTORY);
+  const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
@@ -242,18 +239,33 @@ export default function App() {
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
+  // User-scoped data loading
   useEffect(() => {
-    // Load data from local storage if available to simulate DB
-    const storedInventory = localStorage.getItem('ecotable_inventory');
-    if (storedInventory) setInventory(JSON.parse(storedInventory));
-  }, []);
-
-  useEffect(() => {
-    // Persist inventory updates
-    if (auth.isAuthenticated) {
-        localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
+    if (auth.isAuthenticated && auth.user?.id) {
+        const key = `ecotable_data_${auth.user.id}`;
+        const storedData = localStorage.getItem(key);
+        if (storedData) {
+            const { inventory: inv, stats: st } = JSON.parse(storedData);
+            setInventory(inv || []);
+            setStats(st || INITIAL_STATS);
+        } else {
+            setInventory([]);
+            setStats(INITIAL_STATS);
+        }
+    } else {
+        // Reset state on logout
+        setInventory([]);
+        setStats(INITIAL_STATS);
     }
-  }, [inventory, auth.isAuthenticated]);
+  }, [auth.isAuthenticated, auth.user?.id]);
+
+  // User-scoped data saving
+  useEffect(() => {
+    if (auth.isAuthenticated && auth.user?.id) {
+        const key = `ecotable_data_${auth.user.id}`;
+        localStorage.setItem(key, JSON.stringify({ inventory, stats }));
+    }
+  }, [inventory, stats, auth.isAuthenticated, auth.user?.id]);
 
   // Theme Logic
   useEffect(() => {
