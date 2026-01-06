@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FoodItem, NGO, FoodCategory } from '../types';
-import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Calendar, Truck, MessageSquare, Clock } from 'lucide-react';
+import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Calendar, Truck, MessageSquare, Clock, MapPinned } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
-import { searchNearbyNGOs } from '../services/geminiService';
+import { searchNearbyNGOs, reverseGeocode } from '../services/geminiService';
 
 // Fix Leaflet's default icon path issues
 const DefaultIcon = L.icon({
@@ -137,12 +137,14 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   const mapRef = useRef<L.Map | null>(null);
 
   // Step 3 State (Logistics)
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [logistics, setLogistics] = useState({
       mode: 'dropoff' as 'dropoff' | 'pickup',
       contactPhone: '',
       notes: '',
       date: new Date().toISOString().split('T')[0],
-      time: '12:00'
+      time: '12:00',
+      pickupLocation: ''
   });
 
   const donatableItems = inventory.filter(i => i.status === 'active');
@@ -183,6 +185,53 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
           // Finish (Step 3 -> 4 happens via state, not navigation)
           onDonateComplete(selectedItems, selectedItems.length * 10);
           setCurrentStep(4); // Show Success Screen
+      }
+  };
+
+  const fetchPickupLocation = () => {
+    setIsFetchingLocation(true);
+    setLogistics(prev => ({ ...prev, mode: 'pickup', pickupLocation: 'Locating address...' }));
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    const address = await reverseGeocode(latitude, longitude);
+                    setLogistics(prev => ({
+                        ...prev,
+                        pickupLocation: address
+                    }));
+                } catch (error) {
+                    setLogistics(prev => ({
+                        ...prev,
+                        pickupLocation: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+                    }));
+                } finally {
+                    setIsFetchingLocation(false);
+                }
+            },
+            (error) => {
+                console.error("Location error", error);
+                setLogistics(prev => ({
+                    ...prev,
+                    pickupLocation: "Location access denied. Please type address."
+                }));
+                setIsFetchingLocation(false);
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        );
+    } else {
+        setLogistics(prev => ({ ...prev, pickupLocation: "Geolocation not supported." }));
+        setIsFetchingLocation(false);
+    }
+  };
+
+  const handleModeChange = (mode: 'dropoff' | 'pickup') => {
+      if (mode === 'pickup') {
+          fetchPickupLocation();
+      } else {
+          setLogistics(prev => ({ ...prev, mode, pickupLocation: '' }));
       }
   };
 
@@ -254,7 +303,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
   }, [currentStep, viewMode, ngos]);
 
   // Validation helper for phone number
-  const isPhoneValid = logistics.contactPhone.replace(/\D/g, '').length === 10;
+  const isPhoneValid = logistics.contactPhone.length === 10;
 
   // Step 1: Select Items
   const renderStep1 = () => (
@@ -404,18 +453,24 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             {/* Mode Selection */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 <button
-                    onClick={() => setLogistics({...logistics, mode: 'dropoff'})}
+                    onClick={() => handleModeChange('dropoff')}
                     className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'dropoff' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#757575]'}`}
                 >
                     <MapPin size={24} />
                     <span className="font-bold text-sm">I'll Drop Off</span>
                 </button>
                 <button
-                    onClick={() => setLogistics({...logistics, mode: 'pickup'})}
-                    className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'pickup' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#757575]'}`}
+                    onClick={() => handleModeChange('pickup')}
+                    disabled={isFetchingLocation}
+                    className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all relative ${logistics.mode === 'pickup' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#757575]'}`}
                 >
-                    <Truck size={24} />
+                    {isFetchingLocation ? <Loader2 size={24} className="animate-spin" /> : <Truck size={24} />}
                     <span className="font-bold text-sm">Request Pickup</span>
+                    {logistics.mode === 'pickup' && !isFetchingLocation && (
+                        <div className="absolute top-1 right-1">
+                            <Check size={12} className="text-white" />
+                        </div>
+                    )}
                 </button>
             </div>
 
@@ -423,14 +478,17 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm font-bold text-[#212121] dark:text-white mb-2 flex items-center gap-2">
-                        <Phone size={16} /> Your Contact Phone
+                        <Phone size={16} /> Contact Phone (10 digits)
                     </label>
                     <input 
                         type="tel" 
-                        placeholder="(555) 000-0000"
+                        placeholder="e.g. 5550123456"
                         value={logistics.contactPhone}
-                        maxLength={14}
-                        onChange={(e) => setLogistics({...logistics, contactPhone: e.target.value})}
+                        maxLength={10}
+                        onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setLogistics({...logistics, contactPhone: val});
+                        }}
                         className={`w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-2 outline-none transition-all font-medium ${
                             showError ? 'border-red-500 focus:ring-red-500/20' : 'border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-[#00796B]/20 focus:border-[#00796B]'
                         }`}
@@ -441,6 +499,29 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                         </p>
                     )}
                 </div>
+
+                {logistics.mode === 'pickup' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label className="block text-sm font-bold text-[#212121] dark:text-white mb-2 flex items-center gap-2">
+                            <MapPinned size={16} /> Pickup Address
+                        </label>
+                        <div className="relative">
+                            <input 
+                                type="text"
+                                value={logistics.pickupLocation}
+                                onChange={(e) => setLogistics({...logistics, pickupLocation: e.target.value})}
+                                placeholder="Auto-fetching location..."
+                                className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#00796B] outline-none transition-all font-medium"
+                            />
+                            {isFetchingLocation && <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-[#00796B]" />}
+                        </div>
+                        {logistics.pickupLocation && !isFetchingLocation && (
+                            <p className="text-[10px] text-slate-400 mt-1 ml-1">
+                                Detected address via AI geolocation. You can edit this if needed.
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -562,7 +643,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                 disabled={
                     (currentStep === 1 && selectedItems.length === 0) ||
                     (currentStep === 2 && !selectedNgoId) ||
-                    (currentStep === 3 && (!logistics.contactPhone || !logistics.date || !logistics.time || !isPhoneValid))
+                    (currentStep === 3 && (!logistics.contactPhone || !logistics.date || !logistics.time || !isPhoneValid || (logistics.mode === 'pickup' && !logistics.pickupLocation) || isFetchingLocation))
                 }
                 className="w-full h-[52px] bg-[#00796B] rounded-[10px] flex items-center justify-center text-white text-[16px] font-[600] disabled:bg-[#BDBDBD] disabled:text-white/60 active:scale-[0.98] transition-all"
               >
