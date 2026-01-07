@@ -55,7 +55,7 @@ const performGoogleLogin = async (): Promise<AuthState> => {
                         };
                         
                         // Persist session to mock local storage (to maintain consistency with AuthService)
-                        localStorage.setItem('ecotable_session', JSON.stringify(authState));
+                        localStorage.setItem('savebite_session', JSON.stringify(authState));
 
                         resolve(authState);
                     } catch (err) {
@@ -92,7 +92,10 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
             <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-200 dark:shadow-teal-900/30">
               <Leaf size={20} fill="white" />
             </div>
-            <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-white">FoodSaver</h1>
+            <div>
+                <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-white leading-tight">SaveBite</h1>
+                <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tight">The right choice before waste</p>
+            </div>
           </div>
 
           <div className="mb-8">
@@ -121,8 +124,9 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
         {/* Content Overlay */}
         <div className="relative z-10 p-12 text-white max-w-lg">
           <div className="mb-6 w-16 h-1 bg-[#00796B] rounded-full"></div>
-          <h2 className="text-4xl font-bold leading-tight mb-6">
-            Turn your excess food into meals, not waste.
+          <h2 className="text-5xl font-black leading-tight mb-4 flex flex-col">
+            SaveBite
+            <span className="text-xl font-bold text-teal-400 mt-2">The right choice before waste</span>
           </h2>
           <p className="text-lg text-white/90 leading-relaxed mb-8">
             Join thousands of wholesalers and retailers making a difference. Track inventory, donate to NGOs, and save the planet—one meal at a time.
@@ -186,7 +190,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                     token: 'mock-token',
                     isAuthenticated: true
                 };
-                localStorage.setItem('ecotable_session', JSON.stringify(mockState));
+                localStorage.setItem('savebite_session', JSON.stringify(mockState));
                 onLogin(mockState);
                 setGoogleLoading(false);
             }, 1000);
@@ -342,7 +346,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
                     token: 'mock-token',
                     isAuthenticated: true
                 };
-                localStorage.setItem('ecotable_session', JSON.stringify(mockState));
+                localStorage.setItem('savebite_session', JSON.stringify(mockState));
                 onLogin(mockState);
                 setGoogleLoading(false);
             }, 1000);

@@ -99,7 +99,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             <div className="w-[48px] h-[48px] bg-[#00796B] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
                 <Leaf size={24} color="white" fill="white" />
             </div>
-            <h1 className="font-semibold text-[20px] text-[#212121] dark:text-white">FoodSaver</h1>
+            <div>
+              <h1 className="font-bold text-[20px] text-[#212121] dark:text-white leading-tight">SaveBite</h1>
+              <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tight">The right choice before waste</p>
+            </div>
         </div>
         <div className="flex items-center gap-[12px]">
              {/* Interactive Notification Bell */}

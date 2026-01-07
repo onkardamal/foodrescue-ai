@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('EcoTable End-to-End Tests', () => {
+test.describe('SaveBite End-to-End Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     // Navigate to the app root
