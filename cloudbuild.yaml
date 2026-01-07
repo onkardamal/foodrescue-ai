@@ -13,8 +13,5 @@ steps:
 
 substitutions:
   _FIREBASE_TOKEN: ''
-
-logsBucket: 'gs://${PROJECT_ID}_cloudbuild'
-
 options:
   machineType:  'E2_HIGHCPU_8'
