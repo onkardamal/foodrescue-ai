@@ -96,7 +96,6 @@ const INITIAL_INVENTORY: FoodItem[] = [
   }
 ];
 
-// Added missing INITIAL_HISTORY to satisfy UserStats requirements
 const INITIAL_HISTORY: DonationHistoryItem[] = [
   {
     id: 'h1',
@@ -113,11 +112,12 @@ const INITIAL_STATS: UserStats = {
   mealsSaved: 124,
   co2Saved: 58,
   moneySaved: 340,
+  donationsCompleted: 15,
   streakDays: 12,
   level: 5,
   xp: 850,
-  earnedBadges: ['b1', 'b2'], // Initial Mock Badges
-  history: INITIAL_HISTORY // Fixed: added missing history property to satisfy UserStats interface
+  earnedBadges: ['b1', 'b2'],
+  history: INITIAL_HISTORY
 };
 
 // Sidebar for Desktop
@@ -245,7 +245,6 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
 
-  // Reset scroll position on route change
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTo(0, 0);
@@ -254,55 +253,23 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
-      {/* Desktop Sidebar */}
       <Sidebar user={auth.user} />
-
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
         <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
           <div className="w-full max-w-[1200px] mx-auto md:p-8">
             <Routes>
               <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
-              <Route path="/inventory" element={
-                 <Inventory 
-                    items={inventory} 
-                    onAddItem={handleAddItem} 
-                    onUpdateStatus={handleUpdateStatus}
-                    onDeleteItem={handleDeleteItem}
-                    onEditItem={handleEditItem}
-                  />
-              } />
-              <Route path="/recipes" element={
-                  <Recipes 
-                    inventory={inventory} 
-                    recipes={recipes}
-                    onUpdateRecipes={handleUpdateRecipes}
-                    onCookRecipe={handleCookRecipe} 
-                  />
-              } />
-              <Route path="/donate" element={
-                  <Donation 
-                      inventory={inventory} 
-                      onDonateComplete={handleDonateComplete} 
-                  />
-              } />
-               <Route path="/ngos" element={<NGOMap />} />
-               <Route path="/analytics" element={<Analytics stats={stats} />} />
-               <Route path="/badges" element={<Badges stats={stats} />} />
-               <Route path="/profile" element={
-                 <Profile 
-                    user={auth.user} 
-                    stats={stats} 
-                    onLogout={handleLogout} 
-                    onUpdateStats={handleUpdateStats}
-                 />
-               } />
+              <Route path="/inventory" element={<Inventory items={inventory} onAddItem={handleAddItem} onUpdateStatus={handleUpdateStatus} onDeleteItem={handleDeleteItem} onEditItem={handleEditItem} />} />
+              <Route path="/recipes" element={<Recipes inventory={inventory} recipes={recipes} onUpdateRecipes={handleUpdateRecipes} onCookRecipe={handleCookRecipe} />} />
+              <Route path="/donate" element={<Donation inventory={inventory} onDonateComplete={handleDonateComplete} />} />
+              <Route path="/ngos" element={<NGOMap />} />
+              <Route path="/analytics" element={<Analytics stats={stats} />} />
+              <Route path="/badges" element={<Badges stats={stats} />} />
+              <Route path="/profile" element={<Profile user={auth.user} stats={stats} onLogout={handleLogout} onUpdateStats={handleUpdateStats} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
         </main>
-        
-        {/* Mobile Nav */}
         <BottomNav />
       </div>
     </div>
@@ -316,26 +283,22 @@ export default function App() {
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
-  // Theme State
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
   useEffect(() => {
-    // Load data from local storage if available to simulate DB
     const storedInventory = localStorage.getItem('ecotable_inventory');
     if (storedInventory) setInventory(JSON.parse(storedInventory));
   }, []);
 
   useEffect(() => {
-    // Persist inventory updates
     if (auth.isAuthenticated) {
         localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
     }
   }, [inventory, auth.isAuthenticated]);
 
-  // Theme Logic
   useEffect(() => {
     localStorage.setItem('theme', theme);
     if (theme === 'dark') {
@@ -357,7 +320,6 @@ export default function App() {
     AuthService.logout().then(setAuth);
   };
 
-  // Handlers
   const handleAddItem = (item: FoodItem) => {
     setInventory(prev => [item, ...prev]);
   };
@@ -373,11 +335,11 @@ export default function App() {
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     
-    // Update Stats
     if (status === 'donated') {
       setStats(prev => ({
         ...prev,
         mealsSaved: prev.mealsSaved + 1,
+        donationsCompleted: (prev.donationsCompleted || 0) + 1,
         co2Saved: parseFloat((prev.co2Saved + 0.5).toFixed(1)),
         moneySaved: prev.moneySaved + 5,
         xp: prev.xp + 50
@@ -386,7 +348,6 @@ export default function App() {
   };
 
   const handleCookRecipe = (recipe: Recipe) => {
-    // Mark items as consumed
     setInventory(prev => prev.map(item => {
       const isUsed = recipe.ingredients.some(ing => ing.toLowerCase().includes(item.name.toLowerCase()));
       return isUsed && item.status === 'active' ? { ...item, status: 'consumed' } : item;
@@ -406,13 +367,13 @@ export default function App() {
     setStats(prev => ({
         ...prev,
         mealsSaved: prev.mealsSaved + itemIds.length,
+        donationsCompleted: (prev.donationsCompleted || 0) + 1,
         moneySaved: prev.moneySaved + amount,
         co2Saved: parseFloat((prev.co2Saved + (itemIds.length * 0.5)).toFixed(1)),
         xp: prev.xp + (itemIds.length * 50)
     }));
   };
 
-  // Added handler to satisfy missing onUpdateStats prop requirement in Profile component
   const handleUpdateStats = (newStats: UserStats) => {
     setStats(newStats);
   };

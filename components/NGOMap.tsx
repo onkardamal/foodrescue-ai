@@ -21,9 +21,9 @@ L.Marker.prototype.options.icon = DefaultIcon;
 // Generate realistic mock data around San Francisco (Initial Fallback)
 const generateNGOs = (): NGO[] => {
     const baseNGOs: NGO[] = [
-        { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", rating: 4.8, description: "Provides hot meals to homeless individuals and families in the downtown area.", lat: 37.7749, lng: -122.4194, needs: [], phone: "+1 (555) 123-4567" },
-        { id: '2', name: "City Food Bank", distance: "3.5 km", rating: 4.5, description: "Distributes grocery packages to low-income households weekly.", lat: 37.7849, lng: -122.4094, needs: [], phone: "+1 (555) 987-6543" },
-        { id: '3', name: "Green Earth Rescue", distance: "5.0 km", rating: 4.9, description: "Focuses on rescuing perishable produce from wholesalers.", lat: 37.7649, lng: -122.4294, needs: [], phone: "+1 (555) 456-7890" },
+        { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", rating: 4.8, description: "Provides hot meals to homeless individuals and families in the downtown area.", lat: 37.7749, lng: -122.4194, needs: [], phone: "5551234567" },
+        { id: '2', name: "City Food Bank", distance: "3.5 km", rating: 4.5, description: "Distributes grocery packages to low-income households weekly.", lat: 37.7849, lng: -122.4094, needs: [], phone: "5559876543" },
+        { id: '3', name: "Green Earth Rescue", distance: "5.0 km", rating: 4.9, description: "Focuses on rescuing perishable produce from wholesalers.", lat: 37.7649, lng: -122.4294, needs: [], phone: "5554567890" },
     ];
     return baseNGOs;
 };
@@ -187,9 +187,19 @@ const NGOMap: React.FC = () => {
         }
     };
 
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+        setRegForm({ ...regForm, phone: val });
+    };
+
     const handleRegisterSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        if (regForm.phone.length !== 10) {
+            alert("Please enter a valid 10-digit phone number.");
+            return;
+        }
+
         // Mock Geocoding: Place the new NGO slightly offset from the map center
         const center = mapRef.current?.getCenter() || { lat: 37.7749, lng: -122.4194 };
         const latOffset = (Math.random() - 0.5) * 0.01;
@@ -218,6 +228,8 @@ const NGOMap: React.FC = () => {
             mapRef.current?.flyTo([newNgo.lat, newNgo.lng], 16);
         }, 300);
     };
+
+    const isRegFormValid = regForm.name.length > 2 && regForm.address.length > 5 && regForm.phone.length === 10;
 
     return (
         <div className="relative w-full h-screen bg-[#F5F1E8] overflow-hidden flex flex-col">
@@ -421,16 +433,21 @@ const NGOMap: React.FC = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="orgPhone" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
+                                    <label htmlFor="orgPhone" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex justify-between">
+                                      <span>Contact Phone</span>
+                                      <span className={`text-[10px] font-bold ${regForm.phone.length === 10 ? 'text-green-600' : 'text-slate-400'}`}>
+                                        {regForm.phone.length}/10
+                                      </span>
+                                    </label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-3.5 text-gray-400" size={18} />
                                         <input 
                                             id="orgPhone"
                                             type="tel" 
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#00796B] focus:ring-2 focus:ring-[#00796B]/20 rounded-xl outline-none transition-all"
-                                            placeholder="(555) 000-0000"
+                                            className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border-2 rounded-xl outline-none transition-all ${regForm.phone.length > 0 && regForm.phone.length < 10 ? 'border-orange-200' : 'border-transparent focus:border-[#00796B]'}`}
+                                            placeholder="10 digit number"
                                             value={regForm.phone}
-                                            onChange={e => setRegForm({...regForm, phone: e.target.value})}
+                                            onChange={handlePhoneChange}
                                         />
                                     </div>
                                 </div>
@@ -458,10 +475,11 @@ const NGOMap: React.FC = () => {
                             <div className="pt-2">
                                 <button 
                                     type="submit" 
-                                    className="w-full py-3.5 bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-xl font-bold shadow-lg shadow-black/10 hover:shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                    disabled={!isRegFormValid}
+                                    className="w-full py-3.5 bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-xl font-bold shadow-lg shadow-black/10 hover:shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     <CheckCircle size={20} />
-                                    Complete Registration
+                                    {isRegFormValid ? 'Complete Registration' : 'Enter Valid Details'}
                                 </button>
                             </div>
                         </form>

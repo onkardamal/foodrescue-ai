@@ -74,7 +74,8 @@ export interface DonationHistoryItem {
 export interface UserStats {
   mealsSaved: number;
   co2Saved: number; // in kg
-  moneySaved: number; // in USD
+  moneySaved: number; // in USD (displayed in Rupees)
+  donationsCompleted: number; // total count of donation events
   streakDays: number;
   level: number;
   xp: number;
