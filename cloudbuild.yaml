@@ -4,6 +4,10 @@ steps:
   
   - name: 'gcr.io/cloud-builders/npm'
     args: ['run', 'build']
+    env:
+      - 'GEMINI_API_KEY=${_GEMINI_API_KEY}'
+      - 'GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID}'
+      - 'FIREBASE_CONFIG=${_FIREBASE_CONFIG}'
   
   - name: 'gcr.io/cloud-builders/npm'
     args: ['install', '-g', 'firebase-tools']
@@ -15,6 +19,9 @@ steps:
 
 substitutions:
   _FIREBASE_TOKEN: ''
+  _GEMINI_API_KEY: ''
+  _GOOGLE_CLIENT_ID: ''
+  _FIREBASE_CONFIG: ''
 
 options:
   logging: CLOUD_LOGGING_ONLY
