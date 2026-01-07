@@ -1,9 +1,12 @@
-
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from '../types';
-import { AuthService } from '../services/auth';
+import { Home, Package, ChefHat, Heart, MapPin, Leaf, Moon, Sun, User as UserIcon, Loader2 } from 'lucide-react';
+import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User } from '../types';
+import { AuthService, mapFirebaseUser } from '../services/auth';
+import { auth, db } from '../services/firebase';
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, doc, onSnapshot, setDoc, deleteDoc, updateDoc, query, writeBatch } from "firebase/firestore";
+
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
 import Recipes from './Recipes';
@@ -11,6 +14,7 @@ import Donation from './Donation';
 import NGOMap from './NGOMap';
 import Analytics from './Analytics';
 import Badges from './Badges';
+import Leaderboard from './Leaderboard';
 import Profile from './Profile';
 import { Login, Signup } from './Auth';
 
@@ -22,102 +26,16 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// Initial Mock Data
-const INITIAL_INVENTORY: FoodItem[] = [
-  { 
-    id: "1", 
-    name: "Ground Beef Patty", 
-    category: FoodCategory.MEAT, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() - 2 * 86400000).toISOString(), // Expired
-    status: 'active',
-    condition: 'Expired'
-  },
-  { 
-    id: "2", 
-    name: "Tomato Slice", 
-    category: FoodCategory.PRODUCE, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 4 * 86400000).toISOString(), // Expires in 4 days
-    status: 'active',
-    condition: 'Expiring Soon'
-  },
-  { 
-    id: "3", 
-    name: "Sesame Seed Bun", 
-    category: FoodCategory.BAKERY, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "4", 
-    name: "Cheddar Cheese Slice", 
-    category: FoodCategory.DAIRY, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "5", 
-    name: "Lettuce", 
-    category: FoodCategory.PRODUCE, 
-    quantity: 20, 
-    unit: "grams", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "6", 
-    name: "Mayonnaise", 
-    category: FoodCategory.OTHER, 
-    quantity: 10, 
-    unit: "grams", 
-    expiryDate: "2026-02-03T00:00:00.000Z", 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "7", 
-    name: "Ketchup", 
-    category: FoodCategory.OTHER, 
-    quantity: 10, 
-    unit: "grams", 
-    expiryDate: "2026-02-03T00:00:00.000Z", 
-    status: 'active',
-    condition: 'Good'
-  }
-];
-
-const INITIAL_HISTORY: DonationHistoryItem[] = [
-  {
-    id: 'h1',
-    foodName: 'Banquet Leftovers',
-    date: 'Oct 12, 2:00 PM',
-    ngoName: 'City Care',
-    status: 'completed',
-    points: 500,
-    review: { rating: 5, tags: ['Punctual ⏰', 'Polite 😊'] }
-  }
-];
-
 const INITIAL_STATS: UserStats = {
-  mealsSaved: 124,
-  co2Saved: 58,
-  moneySaved: 340,
-  donationsCompleted: 15,
-  streakDays: 12,
-  level: 5,
-  xp: 850,
-  earnedBadges: ['b1', 'b2'],
-  history: INITIAL_HISTORY
+  mealsSaved: 0,
+  co2Saved: 0,
+  moneySaved: 0,
+  donationsCompleted: 0,
+  streakDays: 0,
+  level: 1,
+  xp: 0,
+  earnedBadges: [],
+  history: []
 };
 
 // Sidebar for Desktop
@@ -139,7 +57,10 @@ const Sidebar = ({ user }: { user: User | null }) => {
         <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20">
            <Leaf size={20} fill="white" />
         </div>
-        <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100">FoodSaver</h1>
+        <div>
+          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100">SaveBite</h1>
+          <p className="text-[10px] text-[#757575] dark:text-slate-500 font-medium leading-tight">The right choice before waste</p>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-2">
@@ -259,13 +180,41 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
           <div className="w-full max-w-[1200px] mx-auto md:p-8">
             <Routes>
               <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
-              <Route path="/inventory" element={<Inventory items={inventory} onAddItem={handleAddItem} onUpdateStatus={handleUpdateStatus} onDeleteItem={handleDeleteItem} onEditItem={handleEditItem} />} />
-              <Route path="/recipes" element={<Recipes inventory={inventory} recipes={recipes} onUpdateRecipes={handleUpdateRecipes} onCookRecipe={handleCookRecipe} />} />
-              <Route path="/donate" element={<Donation inventory={inventory} onDonateComplete={handleDonateComplete} />} />
-              <Route path="/ngos" element={<NGOMap />} />
-              <Route path="/analytics" element={<Analytics stats={stats} />} />
-              <Route path="/badges" element={<Badges stats={stats} />} />
-              <Route path="/profile" element={<Profile user={auth.user} stats={stats} onLogout={handleLogout} onUpdateStats={handleUpdateStats} />} />
+              <Route path="/inventory" element={
+                 <Inventory 
+                    items={inventory} 
+                    onAddItem={handleAddItem} 
+                    onUpdateStatus={handleUpdateStatus}
+                    onDeleteItem={handleDeleteItem}
+                    onEditItem={handleEditItem}
+                  />
+              } />
+              <Route path="/recipes" element={
+                  <Recipes 
+                    inventory={inventory} 
+                    recipes={recipes}
+                    onUpdateRecipes={handleUpdateRecipes}
+                    onCookRecipe={handleCookRecipe} 
+                  />
+              } />
+              <Route path="/donate" element={
+                  <Donation 
+                      inventory={inventory} 
+                      onDonateComplete={handleDonateComplete} 
+                  />
+              } />
+               <Route path="/ngos" element={<NGOMap />} />
+               <Route path="/analytics" element={<Analytics stats={stats} />} />
+               <Route path="/badges" element={<Badges stats={stats} />} />
+               <Route path="/leaderboard" element={<Leaderboard user={auth.user} stats={stats} />} />
+               <Route path="/profile" element={
+                 <Profile 
+                    user={auth.user} 
+                    stats={stats} 
+                    onLogout={handleLogout} 
+                    onUpdateStats={handleUpdateStats}
+                 />
+               } />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
@@ -277,9 +226,11 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 };
 
 export default function App() {
-  const [auth, setAuth] = useState<AuthState>(AuthService.init());
+  const [authState, setAuthState] = useState<AuthState>({ user: null, token: null, isAuthenticated: false });
   const [isLoginView, setIsLoginView] = useState(true);
-  const [inventory, setInventory] = useState<FoodItem[]>(INITIAL_INVENTORY);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  
+  const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
@@ -288,17 +239,57 @@ export default function App() {
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
+  // --- 1. Firebase Auth Listener ---
   useEffect(() => {
-    const storedInventory = localStorage.getItem('ecotable_inventory');
-    if (storedInventory) setInventory(JSON.parse(storedInventory));
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthState({
+          user: mapFirebaseUser(user),
+          token: 'firebase-token', // We don't need actual token for this simple logic
+          isAuthenticated: true
+        });
+      } else {
+        setAuthState({ user: null, token: null, isAuthenticated: false });
+        setInventory([]);
+        setStats(INITIAL_STATS);
+      }
+      setIsLoadingAuth(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
+  // --- 2. Firestore Data Listeners (Inventory & Stats) ---
   useEffect(() => {
-    if (auth.isAuthenticated) {
-        localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
-    }
-  }, [inventory, auth.isAuthenticated]);
+    if (!authState.user) return;
 
+    // A. Stats Listener
+    const statsUnsub = onSnapshot(doc(db, 'users', authState.user.id), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().stats) {
+        setStats(docSnap.data().stats as UserStats);
+      } else {
+        // Doc might not exist yet if simple signup, wait or set defaults
+        setStats(INITIAL_STATS);
+      }
+    });
+
+    // B. Inventory Listener (Subcollection)
+    const inventoryQuery = query(collection(db, 'users', authState.user.id, 'inventory'));
+    const inventoryUnsub = onSnapshot(inventoryQuery, (querySnap) => {
+      const items: FoodItem[] = [];
+      querySnap.forEach((d) => {
+        items.push(d.data() as FoodItem);
+      });
+      setInventory(items);
+    });
+
+    return () => {
+      statsUnsub();
+      inventoryUnsub();
+    };
+  }, [authState.user]);
+
+  // --- Theme Logic ---
   useEffect(() => {
     localStorage.setItem('theme', theme);
     if (theme === 'dark') {
@@ -312,77 +303,117 @@ export default function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const handleLogin = (state: AuthState) => {
-    setAuth(state);
+  const handleLogout = async () => {
+    await AuthService.logout();
+    window.location.reload();
   };
 
-  const handleLogout = () => {
-    AuthService.logout().then(setAuth);
+  // --- Firestore Action Handlers ---
+
+  const handleAddItem = async (item: FoodItem) => {
+    if (!authState.user) return;
+    await setDoc(doc(db, 'users', authState.user.id, 'inventory', item.id), item);
   };
 
-  const handleAddItem = (item: FoodItem) => {
-    setInventory(prev => [item, ...prev]);
+  const handleDeleteItem = async (id: string) => {
+    if (!authState.user) return;
+    await deleteDoc(doc(db, 'users', authState.user.id, 'inventory', id));
   };
 
-  const handleDeleteItem = (id: string) => {
-      setInventory(prev => prev.filter(i => i.id !== id));
+  const handleEditItem = async (updatedItem: FoodItem) => {
+    if (!authState.user) return;
+    await setDoc(doc(db, 'users', authState.user.id, 'inventory', updatedItem.id), updatedItem, { merge: true });
   };
 
-  const handleEditItem = (updatedItem: FoodItem) => {
-    setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-  };
-
-  const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
-    setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+  const handleUpdateStatus = async (id: string, status: 'donated' | 'wasted' | 'consumed') => {
+    if (!authState.user) return;
     
+    // 1. Update Inventory Item
+    await updateDoc(doc(db, 'users', authState.user.id, 'inventory', id), { status });
+    
+    // 2. Update Stats (only for donated case here, similar logic for others if needed)
     if (status === 'donated') {
-      setStats(prev => ({
-        ...prev,
-        mealsSaved: prev.mealsSaved + 1,
-        donationsCompleted: (prev.donationsCompleted || 0) + 1,
-        co2Saved: parseFloat((prev.co2Saved + 0.5).toFixed(1)),
-        moneySaved: prev.moneySaved + 5,
-        xp: prev.xp + 50
-      }));
+        const newStats = {
+            ...stats,
+            mealsSaved: stats.mealsSaved + 1,
+            co2Saved: parseFloat((stats.co2Saved + 0.5).toFixed(1)),
+            moneySaved: stats.moneySaved + 5,
+            xp: stats.xp + 50
+        };
+        await updateDoc(doc(db, 'users', authState.user.id), { stats: newStats });
     }
   };
 
-  const handleCookRecipe = (recipe: Recipe) => {
-    setInventory(prev => prev.map(item => {
-      const isUsed = recipe.ingredients.some(ing => ing.toLowerCase().includes(item.name.toLowerCase()));
-      return isUsed && item.status === 'active' ? { ...item, status: 'consumed' } : item;
-    }));
+  const handleCookRecipe = async (recipe: Recipe) => {
+     if (!authState.user) return;
+     
+     const batch = writeBatch(db);
+     
+     // 1. Mark items consumed
+     inventory.forEach(item => {
+        const isUsed = recipe.ingredients.some(ing => ing.toLowerCase().includes(item.name.toLowerCase()));
+        if (isUsed && item.status === 'active') {
+             const ref = doc(db, 'users', authState.user.id, 'inventory', item.id);
+             batch.update(ref, { status: 'consumed' });
+        }
+     });
 
-    setStats(prev => ({
-      ...prev,
-      mealsSaved: prev.mealsSaved + 1,
-      co2Saved: parseFloat((prev.co2Saved + 0.8).toFixed(1)),
-      moneySaved: prev.moneySaved + 10,
-      xp: prev.xp + 100
-    }));
+     // 2. Update Stats
+     const newStats = {
+         ...stats,
+         mealsSaved: stats.mealsSaved + 1,
+         co2Saved: parseFloat((stats.co2Saved + 0.8).toFixed(1)),
+         moneySaved: stats.moneySaved + 10,
+         xp: stats.xp + 100
+     };
+     const userRef = doc(db, 'users', authState.user.id);
+     batch.update(userRef, { stats: newStats });
+
+     await batch.commit();
   };
 
-  const handleDonateComplete = (itemIds: string[], amount: number) => {
-    setInventory(prev => prev.map(item => itemIds.includes(item.id) ? { ...item, status: 'donated' } : item));
-    setStats(prev => ({
-        ...prev,
-        mealsSaved: prev.mealsSaved + itemIds.length,
-        donationsCompleted: (prev.donationsCompleted || 0) + 1,
-        moneySaved: prev.moneySaved + amount,
-        co2Saved: parseFloat((prev.co2Saved + (itemIds.length * 0.5)).toFixed(1)),
-        xp: prev.xp + (itemIds.length * 50)
-    }));
+  const handleDonateComplete = async (itemIds: string[], amount: number) => {
+    if (!authState.user) return;
+    const batch = writeBatch(db);
+
+    // 1. Update items
+    itemIds.forEach(id => {
+        const ref = doc(db, 'users', authState.user.id, 'inventory', id);
+        batch.update(ref, { status: 'donated' });
+    });
+
+    // 2. Update Stats
+    const newStats = {
+        ...stats,
+        mealsSaved: stats.mealsSaved + itemIds.length,
+        moneySaved: stats.moneySaved + amount,
+        co2Saved: parseFloat((stats.co2Saved + (itemIds.length * 0.5)).toFixed(1)),
+        xp: stats.xp + (itemIds.length * 50)
+    };
+    const userRef = doc(db, 'users', authState.user.id);
+    batch.update(userRef, { stats: newStats });
+
+    await batch.commit();
   };
 
-  const handleUpdateStats = (newStats: UserStats) => {
-    setStats(newStats);
+  const handleUpdateStats = async (newStats: UserStats) => {
+      if (!authState.user) return;
+      await updateDoc(doc(db, 'users', authState.user.id), { stats: newStats });
   };
 
-  if (!auth.isAuthenticated) {
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#00796B]" size={40} />
+      </div>
+    );
+  }
+
+  if (!authState.isAuthenticated) {
     return isLoginView ? (
-      <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
+      <Login onLogin={() => {}} onToggle={() => setIsLoginView(false)} />
     ) : (
-      <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
+      <Signup onLogin={() => {}} onToggle={() => setIsLoginView(true)} />
     );
   }
 
@@ -390,7 +421,7 @@ export default function App() {
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       <HashRouter>
         <AppContent 
-          auth={auth}
+          auth={authState}
           stats={stats}
           inventory={inventory}
           recipes={generatedRecipes}

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { User, UserStats, DonationHistoryItem, Review } from '../types';
 import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2 } from 'lucide-react';
@@ -76,8 +75,9 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-        await AuthService.deleteAccount(user.id);
-        onLogout(); // This will reset App states and redirect to Login
+        await AuthService.deleteAccount();
+        // onLogout is technically not needed here as App.tsx listens to auth state change,
+        // but can be called to ensure UI resets immediately.
     } catch (err) {
         console.error("Failed to delete account", err);
         setIsDeleting(false);
