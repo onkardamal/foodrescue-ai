@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
-import { AuthService } from './services/auth';
+import { AuthService, mapFirebaseUser } from './services/auth';
+import { auth as firebaseAuth } from './services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
@@ -168,7 +169,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 };
 
 export default function App() {
-  const [auth, setAuth] = useState<AuthState>(AuthService.init());
+  const [auth, setAuth] = useState<AuthState>({ user: null, token: null, isAuthenticated: false });
   const [isLoginView, setIsLoginView] = useState(true);
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS);
@@ -178,6 +179,22 @@ export default function App() {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
+
+  // Listen for Firebase Auth changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+        if (user) {
+            setAuth({
+                user: mapFirebaseUser(user),
+                token: 'firebase-token',
+                isAuthenticated: true
+            });
+        } else {
+            setAuth({ user: null, token: null, isAuthenticated: false });
+        }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Handle initialization of profile specific data
   useEffect(() => {
@@ -230,10 +247,17 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  const handleLogin = (state: AuthState) => setAuth(state);
-  const handleLogout = () => {
-    AuthService.logout().then(setAuth);
-    // Force a clean state reset
+  
+  // This is used for passing to Login component, but state update happens via onAuthStateChanged
+  const handleLogin = (state: AuthState) => {
+     // Intentionally empty or just log, as listener handles state
+     console.log('Login triggered');
+  };
+
+  const handleLogout = async () => {
+    await AuthService.logout();
+    // Reset local state immediately
+    setAuth({ user: null, token: null, isAuthenticated: false });
     setInventory([]);
     setStats(EMPTY_STATS);
     setGeneratedRecipes([]);

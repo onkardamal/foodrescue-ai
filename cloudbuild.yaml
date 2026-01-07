@@ -1,4 +1,0 @@
-steps:
-  # Deploy to Firebase Hosting
-  - name: 'gcr.io/cloud-builders/firebase'
-    args: ['deploy', '--only', 'hosting', '--project=gen-lang-client-0558617691']
