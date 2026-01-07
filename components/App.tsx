@@ -1,13 +1,9 @@
 
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin, Leaf, Moon, Sun, User as UserIcon, Loader2 } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User } from '../types';
-import { AuthService, mapFirebaseUser } from '../services/auth';
-import { auth, db } from '../services/firebase';
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, doc, onSnapshot, setDoc, deleteDoc, updateDoc, query, writeBatch } from "firebase/firestore";
-
+import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
+import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from '../types';
+import { AuthService } from '../services/auth';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
 import Recipes from './Recipes';
@@ -298,35 +294,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!authState.user) return;
+    if (auth.isAuthenticated) {
+        localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
+    }
+  }, [inventory, auth.isAuthenticated]);
 
-    // A. Stats Listener
-    const statsUnsub = onSnapshot(doc(db, 'users', authState.user.id), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().stats) {
-        setStats(docSnap.data().stats as UserStats);
-      } else {
-        // Doc might not exist yet if simple signup, wait or set defaults
-        setStats(INITIAL_STATS);
-      }
-    });
-
-    // B. Inventory Listener (Subcollection)
-    const inventoryQuery = query(collection(db, 'users', authState.user.id, 'inventory'));
-    const inventoryUnsub = onSnapshot(inventoryQuery, (querySnap) => {
-      const items: FoodItem[] = [];
-      querySnap.forEach((d) => {
-        items.push(d.data() as FoodItem);
-      });
-      setInventory(items);
-    });
-
-    return () => {
-      statsUnsub();
-      inventoryUnsub();
-    };
-  }, [authState.user]);
-
-  // --- Theme Logic ---
   useEffect(() => {
     localStorage.setItem('theme', theme);
     if (theme === 'dark') {
@@ -340,9 +312,12 @@ export default function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const handleLogout = async () => {
-    await AuthService.logout();
-    window.location.reload();
+  const handleLogin = (state: AuthState) => {
+    setAuth(state);
+  };
+
+  const handleLogout = () => {
+    AuthService.logout().then(setAuth);
   };
 
   const handleAddItem = (item: FoodItem) => {
@@ -357,13 +332,9 @@ export default function App() {
     setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
   };
 
-  const handleUpdateStatus = async (id: string, status: 'donated' | 'wasted' | 'consumed') => {
-    if (!authState.user) return;
+  const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
+    setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     
-    // 1. Update Inventory Item
-    await updateDoc(doc(db, 'users', authState.user.id, 'inventory', id), { status });
-    
-    // 2. Update Stats (only for donated case here, similar logic for others if needed)
     if (status === 'donated') {
       setStats(prev => ({
         ...prev,

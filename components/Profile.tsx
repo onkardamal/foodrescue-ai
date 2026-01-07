@@ -298,6 +298,41 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
               </div>
           </div>
       )}
+
+      {/* Rating Modal */}
+      {showRateModal && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" role="dialog" aria-modal="true">
+                  <div className="p-8">
+                      <div className="flex justify-between items-center mb-6">
+                          <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center shadow-inner"><Star size={24} className="text-[#00796B]" fill="currentColor" /></div>
+                          <button onClick={() => setShowRateModal(null)} className="p-2 text-slate-400 hover:text-slate-600 transition-colors"><X size={24} /></button>
+                      </div>
+                      <div className="text-center mb-6">
+                          <h3 className="text-xl font-black text-[#212121] dark:text-white leading-tight mb-2">Rate the Handover</h3>
+                          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{stats.history.find(h => h.id === showRateModal)?.ngoName}</p>
+                      </div>
+                      <div className="flex justify-center gap-2 mb-6">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                              <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(star)} className="transition-transform active:scale-90 hover:scale-110" type="button">
+                                  <Star size={32} className={`${(hoverRating || rating) >= star ? 'text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} fill={(hoverRating || rating) >= star ? "currentColor" : "none"} strokeWidth={2.5} />
+                              </button>
+                          ))}
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-2 mb-6">
+                          {["Punctual ⏰", "Polite 😊", "Professional 👔", "Helpful 🆘"].map(tag => (
+                              <button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border-2 transition-all ${selectedTags.includes(tag) ? 'bg-[#00796B] border-[#00796B] text-white shadow-sm' : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'}`} type="button">{tag}</button>
+                          ))}
+                      </div>
+                      <div className="mb-8">
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Write a short comment</label>
+                          <div className="relative"><textarea value={comment} onChange={(e) => setComment(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-[#00796B] focus:bg-white dark:focus:bg-slate-800 text-sm outline-none transition-all font-medium resize-none" placeholder="Tell us more about the handover..." rows={3} /><MessageSquare className="absolute bottom-3 right-3 text-slate-300" size={16} /></div>
+                      </div>
+                      <button onClick={handleReviewSubmit} disabled={rating === 0} className="w-full py-4 bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-2xl font-black text-lg shadow-xl shadow-black/10 hover:bg-black dark:hover:bg-slate-100 disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2">Complete Review</button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
