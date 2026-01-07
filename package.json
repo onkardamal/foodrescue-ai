@@ -17,8 +17,7 @@
     "recharts": "^3.6.0",
     "leaflet": "1.9.4",
     "leaflet.markercluster": "1.5.3",
-    "@playwright/test": "^1.57.0",
-    "firebase": "^12.7.0"
+    "@playwright/test": "^1.57.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
