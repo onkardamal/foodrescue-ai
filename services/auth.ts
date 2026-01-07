@@ -1,24 +1,41 @@
-
 import { User, AuthState } from '../types';
 
 // Mock Backend Delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const USERS_KEY = 'ecotable_users';
-const SESSION_KEY = 'ecotable_session';
+const USERS_KEY = 'savebite_users';
+const SESSION_KEY = 'savebite_session';
+
+type AuthCallback = (state: AuthState) => void;
+const subscribers = new Set<AuthCallback>();
+
+const notifySubscribers = (state: AuthState) => {
+  subscribers.forEach(callback => callback(state));
+};
 
 export const AuthService = {
   // Initialize from storage
   init: (): AuthState => {
     const session = localStorage.getItem(SESSION_KEY);
     if (session) {
-      return JSON.parse(session);
+      try {
+        return JSON.parse(session);
+      } catch (e) {
+        localStorage.removeItem(SESSION_KEY);
+      }
     }
     return { user: null, token: null, isAuthenticated: false };
   },
 
+  subscribe: (callback: AuthCallback) => {
+    subscribers.add(callback);
+    return () => {
+      subscribers.delete(callback);
+    };
+  },
+
   signup: async (name: string, email: string, password: string): Promise<AuthState> => {
-    await delay(800); // Simulate network request
+    await delay(800);
     
     const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
     if (users.find((u: any) => u.email === email)) {
@@ -32,18 +49,33 @@ export const AuthService = {
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
     };
 
-    users.push({ ...newUser, password }); // In real app, hash password!
+    users.push({ ...newUser, password });
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
     const authState = { user: newUser, token: 'mock-jwt-token-' + Date.now(), isAuthenticated: true };
     localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
     
+    notifySubscribers(authState);
     return authState;
   },
 
   login: async (email: string, password: string): Promise<AuthState> => {
     await delay(800);
     
+    // Demo account logic
+    if (email === 'demo@ecotable.dev' && password === 'password123') {
+        const demoUser: User = {
+            id: 'demo-user-id',
+            name: 'Eco Chef',
+            email: 'demo@ecotable.dev',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=EcoChef'
+        };
+        const authState = { user: demoUser, token: 'demo-token', isAuthenticated: true };
+        localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
+        notifySubscribers(authState);
+        return authState;
+    }
+
     const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
     const user = users.find((u: any) => u.email === email && u.password === password);
 
@@ -55,11 +87,14 @@ export const AuthService = {
     const authState = { user: safeUser, token: 'mock-jwt-token-' + Date.now(), isAuthenticated: true };
     localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
 
+    notifySubscribers(authState);
     return authState;
   },
 
   logout: async () => {
     localStorage.removeItem(SESSION_KEY);
-    return { user: null, token: null, isAuthenticated: false };
+    const authState = { user: null, token: null, isAuthenticated: false };
+    notifySubscribers(authState);
+    return authState;
   }
 };

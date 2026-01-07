@@ -1,5 +1,5 @@
 {
-  "name": "savebite---the-right-choice-before-waste",
+  "name": "ecotable---zero-waste-platform",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -17,8 +17,7 @@
     "recharts": "^3.6.0",
     "leaflet": "1.9.4",
     "leaflet.markercluster": "1.5.3",
-    "@playwright/test": "^1.57.0",
-    "qrcode": "1.5.4"
+    "@playwright/test": "^1.57.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

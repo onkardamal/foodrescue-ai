@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserStats, FoodItem, User } from '../types';
-import { Leaf, DollarSign, Share2, Utensils, Bell, Menu, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, Moon, Sun, Trophy, ChevronRight } from 'lucide-react';
+import { Leaf, DollarSign, Share2, Utensils, Bell, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
-import { ALL_BADGES } from './Badges'; // Import badge constants
-import { MOCK_LEADERBOARD_DATA } from './Leaderboard'; // Import mock data for widget calculation
+import { ALL_BADGES } from './Badges';
+import { MOCK_LEADERBOARD_DATA } from './Leaderboard';
 
 interface DashboardProps {
   user: User | null;
@@ -18,13 +18,11 @@ const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { va
   useEffect(() => {
     let startTime: number;
     let animationFrame: number;
-    const duration = 1500; // 1.5 seconds animation
+    const duration = 1500;
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
-      
-      // Ease out cubic
       const easeOutCubic = (x: number): number => 1 - Math.pow(1 - x, 3);
       
       if (progress < duration) {
@@ -49,7 +47,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   const { theme, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // Get Expiring Items (Real Data)
   const expiringItems = inventory
     .filter(item => item.status === 'active')
     .map(item => {
@@ -58,31 +55,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
     })
     .filter(item => item.daysLeft <= 4)
     .sort((a, b) => a.daysLeft - b.daysLeft)
-    .slice(0, 3); // Show top 3
+    .slice(0, 3);
     
-  // Get Earned Badge Objects
   const earnedBadgeObjects = ALL_BADGES.filter(b => stats.earnedBadges.includes(b.id));
 
-  // Dynamic Leaderboard Calculation for Widget
   const leaderboardWidgetData = useMemo(() => {
     const currentUserEntry = {
         id: 'current-user',
         name: user?.name || 'You',
         meals: stats.mealsSaved,
         xp: stats.xp,
-        avatar: user?.avatar,
+        avatar: user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`,
         isCurrentUser: true,
         rank: 0
     };
-    
-    // Combine and Sort
     const all = [...MOCK_LEADERBOARD_DATA, currentUserEntry].sort((a, b) => b.xp - a.xp);
-    
-    // Assign Ranks
     const ranked = all.map((u, i) => ({ ...u, rank: i + 1 }));
-    
-    // Determine display list: Top 3
-    // Note: In a real app we might show "around me", but for a dashboard widget, Top 3 is standard motivation.
     return ranked.slice(0, 3);
   }, [user, stats]);
 
@@ -93,26 +81,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   return (
     <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500 relative">
       
-      {/* 2) Header and Welcome Area */}
       <header className="flex md:hidden justify-between items-center relative z-50">
         <div className="flex items-center gap-[12px]">
             <div className="w-[48px] h-[48px] bg-[#00796B] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20">
                 <Leaf size={24} color="white" fill="white" />
             </div>
             <div>
-              <h1 className="font-bold text-[20px] text-[#212121] dark:text-white leading-tight">SaveBite</h1>
-              <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tight">The right choice before waste</p>
+              <h1 className="font-bold text-[20px] text-[#212121] dark:text-white leading-none">SaveBite</h1>
+              <p className="text-[8px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1">The right choice before waste</p>
             </div>
         </div>
         <div className="flex items-center gap-[12px]">
-             {/* Interactive Notification Bell */}
             <div className="relative">
                 <button 
                     onClick={() => setShowNotifications(!showNotifications)}
                     className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all relative outline-none"
                     aria-label="Notifications"
-                    aria-expanded={showNotifications}
-                    aria-haspopup="true"
                 >
                     <Bell size={24} className="text-[#757575] dark:text-slate-400" />
                     {expiringItems.length > 0 && (
@@ -122,19 +106,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                     )}
                 </button>
 
-                {/* Notification Dropdown */}
                 {showNotifications && (
                     <>
                         <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowNotifications(false)} />
-                        <div 
-                            className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-label="Notifications"
-                        >
+                        <div className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                              <div className="p-3 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                                 <h3 className="font-bold text-[#212121] dark:text-white text-xs uppercase tracking-wider">Notifications</h3>
-                                {expiringItems.length > 0 && <span className="text-[10px] bg-[#00796B] text-white px-2 py-0.5 rounded-full font-bold">{expiringItems.length} new</span>}
                             </div>
                             <div className="max-h-[320px] overflow-y-auto">
                                 {expiringItems.length > 0 ? (
@@ -144,7 +121,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                             onClick={() => navigate('/inventory')}
                                             className="w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors flex gap-3 group"
                                         >
-                                            <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                            <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
                                                 <span className="text-lg">⚠️</span>
                                             </div>
                                             <div>
@@ -155,26 +132,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                     ))
                                 ) : (
                                     <div className="p-8 text-center text-[#757575] dark:text-slate-400">
-                                        <Bell size={32} className="mx-auto mb-2 opacity-20" />
                                         <p className="text-sm">You're all caught up!</p>
                                     </div>
                                 )}
                             </div>
-                            {expiringItems.length > 0 && (
-                                <div className="p-2 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-center">
-                                    <button onClick={() => navigate('/inventory')} className="text-xs font-bold text-[#00796B] hover:underline">View Inventory</button>
-                                </div>
-                            )}
                         </div>
                     </>
                 )}
             </div>
             
-            {/* User Profile Link */}
             <button 
                 onClick={() => navigate('/profile')}
-                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-transparent hover:border-slate-300 dark:hover:border-slate-600 transition-all"
-                aria-label="View Profile"
+                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-transparent"
             >
                 <img 
                     src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
@@ -196,110 +165,78 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           </div>
           <button 
             onClick={() => handleQuickAction('/inventory', { action: 'add' })}
-            className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-[24px] py-[14px] rounded-[20px] shadow-lg shadow-teal-500/20 dark:shadow-teal-900/40 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all min-h-[48px]"
-            aria-label="Add food to inventory"
+            className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-[24px] py-[14px] rounded-[20px] shadow-lg active:scale-95 transition-all min-h-[48px]"
           >
             Add Food
           </button>
       </div>
 
-      {/* 3) Key Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
-        {/* Card 1: Meals Saved */}
-        <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
-                <Utensils size={24} color="white" strokeWidth={2} />
+                <Utensils size={24} color="white" />
             </div>
             <div>
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
                     <AnimatedCounter value={stats.mealsSaved} />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Meals Saved</div>
-                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
-                    <ArrowUp size={12} strokeWidth={2} />
-                    <span>+12% this week</span>
-                </div>
             </div>
         </div>
 
-        {/* Card 2: CO2 Prevented */}
-        <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#00796B] flex items-center justify-center">
-                <Leaf size={24} color="white" strokeWidth={2} />
+                <Leaf size={24} color="white" />
             </div>
             <div>
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
                     <AnimatedCounter value={stats.co2Saved} suffix=" kg" decimals={1} />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">CO₂ Prevented</div>
-                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
-                    <ArrowUp size={12} strokeWidth={2} />
-                    <span>+12% this week</span>
-                </div>
             </div>
         </div>
 
-         {/* Card 3: Money Saved */}
-         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#E65100] flex items-center justify-center">
-                <DollarSign size={24} color="white" strokeWidth={2} />
+                <DollarSign size={24} color="white" />
             </div>
             <div>
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
                     <AnimatedCounter value={stats.moneySaved} prefix="$" />
                 </div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Money Saved</div>
-                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
-                    <ArrowUp size={12} strokeWidth={2} />
-                    <span>+12% this week</span>
-                </div>
             </div>
         </div>
 
-         {/* Card 4: Food Rescued */}
-         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+         <div className="bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-lg transition-all duration-300">
             <div className="w-[48px] h-[48px] rounded-full bg-[#1565C0] flex items-center justify-center">
-                <Share2 size={24} color="white" strokeWidth={2} />
+                <Share2 size={24} color="white" />
             </div>
             <div>
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">0 kg</div>
                 <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400">Food Rescued</div>
-                <div className="flex items-center gap-1 mt-1 text-[#00796B] text-[12px]">
-                    <ArrowUp size={12} strokeWidth={2} />
-                    <span>+12% this week</span>
-                </div>
             </div>
         </div>
       </div>
 
-      {/* 4) Quick Actions */}
       <div>
         <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[16px]">Quick Actions</h3>
-        
-        {/* Responsive Grid Layout for Actions */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-[12px]">
             {[
-                { icon: Plus, color: '#00796B', darkColor: '#80CBC4', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', title: 'Add Item', path: '/inventory', state: { action: 'add' } },
-                { icon: Camera, color: '#0288D1', darkColor: '#81D4FA', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', title: 'Scan Food', path: '/inventory', state: { action: 'scan' } },
-                { icon: Heart, color: '#D32F2F', darkColor: '#EF9A9A', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', title: 'Donate', path: '/donate' },
-                { icon: BookOpen, color: '#E65100', darkColor: '#FFCC80', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', title: 'Recipes', path: '/recipes' },
-                { icon: MapPin, color: '#7B1FA2', darkColor: '#CE93D8', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', title: 'Find NGOs', path: '/ngos' },
-                { icon: BarChart3, color: '#455A64', darkColor: '#B0BEC5', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', title: 'Analytics', path: '/analytics' }
+                { icon: Plus, color: '#00796B', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', title: 'Add Item', path: '/inventory', state: { action: 'add' } },
+                { icon: Camera, color: '#0288D1', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', title: 'Scan Food', path: '/inventory', state: { action: 'scan' } },
+                { icon: Heart, color: '#D32F2F', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', title: 'Donate', path: '/donate' },
+                { icon: BookOpen, color: '#E65100', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', title: 'Recipes', path: '/recipes' },
+                { icon: MapPin, color: '#7B1FA2', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', title: 'Find NGOs', path: '/ngos' },
+                { icon: BarChart3, color: '#455A64', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', title: 'Analytics', path: '/analytics' }
             ].map((action, i) => (
                 <button 
                     key={i}
                     onClick={() => handleQuickAction(action.path, action.state)}
-                    className={`
-                        ${action.bg} ${action.border} relative h-[110px] rounded-[24px] flex flex-col items-center justify-center p-2
-                        transition-all duration-200 hover:shadow-lg hover:-translate-y-1 active:scale-95 active:translate-y-0
-                        group border
-                    `}
+                    className={`${action.bg} ${action.border} relative h-[110px] rounded-[24px] flex flex-col items-center justify-center p-2 transition-all hover:shadow-lg active:scale-95 group border`}
                 >
-                    <div 
-                        className="w-[48px] h-[48px] rounded-[18px] bg-white dark:bg-slate-950 shadow-sm flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform duration-300"
-                    >
-                        <action.icon size={24} strokeWidth={2.5} className="dark:hidden" style={{ color: action.color }} />
-                        <action.icon size={24} strokeWidth={2.5} className="hidden dark:block" style={{ color: action.darkColor }} />
+                    <div className="w-[48px] h-[48px] rounded-[18px] bg-white dark:bg-slate-950 shadow-sm flex items-center justify-center mb-2.5">
+                        <action.icon size={24} strokeWidth={2.5} style={{ color: action.color }} />
                     </div>
                     <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
                         {action.title}
@@ -309,22 +246,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
       </div>
 
-      {/* 5) Layout Split for Desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Expiring Soon */}
           <div>
             <div className="flex justify-between items-baseline mb-[12px]">
                 <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Expiring Soon</h3>
-                <button onClick={() => navigate('/inventory')} className="text-[#00796B] text-[14px] font-medium hover:text-[#00695C] hover:underline active:opacity-70 transition-colors">View all</button>
+                <button onClick={() => navigate('/inventory')} className="text-[#00796B] text-[14px] font-medium hover:underline">View all</button>
             </div>
             <div className="flex flex-col gap-[12px]">
                 {expiringItems.length === 0 ? (
                     <div className="bg-white dark:bg-slate-800 rounded-[12px] p-8 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
-                        <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-2">
-                            <Leaf className="text-green-600" size={24} />
-                        </div>
                         <p className="font-semibold text-slate-800 dark:text-slate-200">No expiring items!</p>
-                        <p className="text-xs text-slate-400">Great job managing your food.</p>
                     </div>
                 ) : (
                     expiringItems.map(item => {
@@ -332,7 +263,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                         return (
                             <button
                                 key={item.id}
-                                className="w-full text-left bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:shadow-md active:scale-[0.99] active:bg-slate-100 dark:active:bg-slate-700 transition-all cursor-pointer" 
+                                className="w-full text-left bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer" 
                                 onClick={() => navigate('/inventory')}
                             >
                                 <div className={`w-[48px] h-[48px] rounded-[8px] mr-[12px] flex items-center justify-center text-2xl ${isExpired ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>
@@ -340,15 +271,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-semibold text-[16px] text-[#212121] dark:text-slate-100">{item.name}</div>
-                                    <div className="flex gap-2">
-                                        <span className={`${isExpired ? 'text-[#D32F2F]' : 'text-[#C2410C]'} text-[12px] font-medium`}>
-                                            {isExpired ? 'Expired!' : `Expires in ${item.daysLeft} days`}
-                                        </span>
-                                        <span className="text-[#757575] dark:text-slate-500 text-[12px]"> • {item.quantity} {item.unit}</span>
-                                    </div>
-                                </div>
-                                <div className={`${isExpired ? 'bg-[#D32F2F]' : 'bg-[#FFC107]'} text-${isExpired ? 'white' : '[#212121]'} text-[12px] font-medium px-[8px] py-[6px] rounded-[12px]`}>
-                                    {isExpired ? 'Critical' : 'Soon'}
+                                    <span className={`${isExpired ? 'text-[#D32F2F]' : 'text-[#C2410C]'} text-[12px] font-medium`}>
+                                        {isExpired ? 'Expired!' : `Expires in ${item.daysLeft} days`}
+                                    </span>
                                 </div>
                             </button>
                         );
@@ -357,18 +282,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             </div>
           </div>
 
-          {/* Leaderboard & Badges Stack */}
           <div className="flex flex-col gap-6">
-              {/* Your Badges */}
               <div>
                 <div className="flex justify-between items-baseline mb-[12px]">
                     <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Your Badges</h3>
-                    <button 
-                        onClick={() => navigate('/badges')}
-                        className="text-[#00796B] text-[14px] font-medium hover:text-[#00695C] hover:underline active:opacity-70 transition-colors"
-                    >
-                        View all
-                    </button>
                 </div>
                 <button 
                     onClick={() => navigate('/badges')}
@@ -380,63 +297,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                 {badge.icon}
                             </div>
                         ))}
-                        {earnedBadgeObjects.length === 0 && (
-                            <p className="text-center font-normal text-[14px] text-[#757575] dark:text-slate-400 w-full">Start your journey to earn badges!</p>
-                        )}
-                        {earnedBadgeObjects.length > 3 && (
-                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-300">
-                                +{earnedBadgeObjects.length - 3}
-                            </div>
-                        )}
                     </div>
-                    
-                    <p className="font-semibold text-[14px] text-[#212121] dark:text-slate-100 mt-[12px]">Level {stats.level} - {stats.xp} pts</p>
                     <div className="w-full h-[8px] bg-[#F0F4F3] dark:bg-slate-700 rounded-[8px] mt-[8px] overflow-hidden">
-                        <div className="h-full bg-[#00796B] rounded-[8px] transition-all duration-1000" style={{ width: `${(stats.xp % 1000 / 1000) * 100}%` }}></div>
+                        <div className="h-full bg-[#00796B] rounded-[8px]" style={{ width: `${(stats.xp % 1000 / 1000) * 100}%` }}></div>
                     </div>
-                    <p className="text-[10px] text-[#757575] dark:text-slate-500 mt-2 text-right">
-                        {1000 - (stats.xp % 1000)} pts to next level
-                    </p>
+                    <p className="text-[10px] text-[#757575] dark:text-slate-500 mt-2 text-right">Level {stats.level} • {stats.xp} pts</p>
                 </button>
               </div>
 
-              {/* Community Leaders (Updated to be Dynamic) */}
               <div>
                 <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Community Leaders</h3>
-                <p className="font-normal text-[13px] text-[#757575] dark:text-slate-400 mb-[16px]">This month's top contributors</p>
-                
-                <div className="flex flex-col gap-[12px]">
+                <div className="flex flex-col gap-[12px] mt-4">
                     {leaderboardWidgetData.map((leader, i) => (
-                        <div 
-                            key={i} 
-                            onClick={() => navigate('/leaderboard')}
-                            className={`flex items-center p-2 rounded-xl -mx-2 transition-all cursor-pointer ${leader.isCurrentUser ? 'bg-[#00796B]/10 border border-[#00796B]/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'}`} 
-                        >
-                            <div className="w-[24px] font-bold text-[16px] text-[#212121] dark:text-slate-300 text-center">{leader.rank}</div>
-                            <div className="relative w-[40px] h-[40px] rounded-full mx-[12px] shadow-sm overflow-hidden bg-slate-200">
-                                <img src={leader.avatar} alt={leader.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                                <div className={`font-bold text-[14px] ${leader.isCurrentUser ? 'text-[#00796B]' : 'text-[#212121] dark:text-slate-100'}`}>
-                                    {leader.name} {leader.isCurrentUser && '(You)'}
-                                </div>
-                                <div className="font-normal text-[12px] text-[#757575] dark:text-slate-400">{leader.meals} meals saved</div>
-                            </div>
-                            <div className="font-bold text-[14px] text-[#00796B] text-right">{leader.xp.toLocaleString()}</div>
+                        <div key={i} className={`flex items-center p-2 rounded-xl transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 ${leader.isCurrentUser ? 'bg-[#00796B]/10' : ''}`}>
+                            <div className="w-[24px] font-bold text-[14px] text-[#757575] text-center">{leader.rank}</div>
+                            <img src={leader.avatar} alt={leader.name} className="w-[32px] h-[32px] rounded-full mx-[8px] bg-slate-200" />
+                            <div className="flex-1 font-bold text-[14px] dark:text-white">{leader.name}</div>
+                            <div className="font-bold text-[14px] text-[#00796B]">{leader.xp.toLocaleString()}</div>
                         </div>
                     ))}
-                    
-                    <button 
-                        onClick={() => navigate('/leaderboard')}
-                        className="w-full py-2 text-center text-sm font-bold text-[#00796B] hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center justify-center gap-1"
-                    >
-                        View Full Ranking <ChevronRight size={16} />
-                    </button>
+                    <button onClick={() => navigate('/leaderboard')} className="text-center text-sm font-bold text-[#00796B] mt-2 flex items-center justify-center gap-1">View Ranking <ChevronRight size={16} /></button>
                 </div>
               </div>
           </div>
       </div>
-
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
+import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
 import { AuthService } from './services/auth';
 import Dashboard from './components/Dashboard';
@@ -22,75 +22,65 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// Initial Mock Data (Preserved exactly as provided)
+// --- RELOADED MOCK DATA: BURGER INGREDIENTS ---
 const INITIAL_INVENTORY: FoodItem[] = [
   { 
-    id: "1", 
+    id: "m1", 
     name: "Ground Beef Patty", 
     category: FoodCategory.MEAT, 
     quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() - 2 * 86400000).toISOString(), // Expired
+    unit: "pcs", 
+    expiryDate: new Date(Date.now() - 1 * 86400000).toISOString(), // Expired
     status: 'active',
     condition: 'Expired'
   },
   { 
-    id: "2", 
+    id: "m2", 
     name: "Tomato Slice", 
     category: FoodCategory.PRODUCE, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 4 * 86400000).toISOString(), // Expires in 4 days
+    quantity: 4, 
+    unit: "pcs", 
+    expiryDate: new Date(Date.now() + 1 * 86400000).toISOString(), // Expires soon
     status: 'active',
-    condition: 'Expiring Soon'
+    condition: 'Ripe'
   },
   { 
-    id: "3", 
-    name: "Sesame Seed Bun", 
+    id: "m3", 
+    name: "Sesame Seed Buns", 
     category: FoodCategory.BAKERY, 
-    quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    quantity: 2, 
+    unit: "pcs", 
+    expiryDate: new Date(Date.now() + 3 * 86400000).toISOString(), 
     status: 'active',
     condition: 'Good'
   },
   { 
-    id: "4", 
-    name: "Cheddar Cheese Slice", 
+    id: "m4", 
+    name: "Cheddar Cheese", 
     category: FoodCategory.DAIRY, 
     quantity: 1, 
-    unit: "pieces", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    unit: "pack", 
+    expiryDate: new Date(Date.now() + 10 * 86400000).toISOString(), 
     status: 'active',
     condition: 'Good'
   },
   { 
-    id: "5", 
-    name: "Lettuce", 
+    id: "m5", 
+    name: "Iceberg Lettuce", 
     category: FoodCategory.PRODUCE, 
-    quantity: 20, 
-    unit: "grams", 
-    expiryDate: new Date(Date.now() + 6 * 86400000).toISOString(), 
+    quantity: 1, 
+    unit: "head", 
+    expiryDate: new Date(Date.now() + 2 * 86400000).toISOString(), 
     status: 'active',
-    condition: 'Good'
+    condition: 'Fresh'
   },
   { 
-    id: "6", 
+    id: "m6", 
     name: "Mayonnaise", 
     category: FoodCategory.OTHER, 
-    quantity: 10, 
-    unit: "grams", 
-    expiryDate: "2026-02-03T00:00:00.000Z", 
-    status: 'active',
-    condition: 'Good'
-  },
-  { 
-    id: "7", 
-    name: "Ketchup", 
-    category: FoodCategory.OTHER, 
-    quantity: 10, 
-    unit: "grams", 
-    expiryDate: "2026-02-03T00:00:00.000Z", 
+    quantity: 1, 
+    unit: "jar", 
+    expiryDate: new Date(Date.now() + 60 * 86400000).toISOString(), 
     status: 'active',
     condition: 'Good'
   }
@@ -99,7 +89,7 @@ const INITIAL_INVENTORY: FoodItem[] = [
 const INITIAL_HISTORY: DonationHistoryItem[] = [
   {
     id: 'h1',
-    foodName: 'Banquet Leftovers',
+    foodName: 'Ground Beef (Bulk)',
     date: 'Oct 12, 2:00 PM',
     ngoName: 'City Care',
     status: 'completed',
@@ -108,30 +98,22 @@ const INITIAL_HISTORY: DonationHistoryItem[] = [
   },
   {
     id: 'h2',
-    foodName: 'Organic Apples (Bulk)',
+    foodName: 'Organic Tomato (5kg)',
     date: 'Oct 15, 10:30 AM',
     ngoName: 'Helping Hands Shelter',
     status: 'completed',
     points: 350
-  },
-  {
-    id: 'h3',
-    foodName: 'Mixed Vegetables',
-    date: 'Oct 18, 4:45 PM',
-    ngoName: 'Green Earth Rescue',
-    status: 'pending',
-    points: 200
   }
 ];
 
 const INITIAL_STATS: UserStats = {
-  mealsSaved: 124,
-  co2Saved: 58,
-  moneySaved: 340,
+  mealsSaved: 145,
+  co2Saved: 320.5,
+  moneySaved: 4500,
   streakDays: 12,
-  level: 5,
-  xp: 1250,
-  earnedBadges: ['b1', 'b2'],
+  level: 8,
+  xp: 8450,
+  earnedBadges: ['b1', 'b2', 'b3', 'b4'],
   history: INITIAL_HISTORY
 };
 
@@ -155,8 +137,8 @@ const Sidebar = ({ user }: { user: User | null }) => {
            <Leaf size={20} fill="white" />
         </div>
         <div>
-          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-tight">SaveBite</h1>
-          <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tight">The right choice before waste</p>
+          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-none">SaveBite</h1>
+          <p className="text-[9px] text-[#757575] dark:text-slate-400 font-medium mt-1 uppercase tracking-tighter leading-none">The right choice before waste</p>
         </div>
       </div>
 
@@ -263,7 +245,6 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
 
-  // Reset scroll position on route change
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTo(0, 0);
@@ -272,10 +253,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
-      {/* Desktop Sidebar */}
       <Sidebar user={auth.user} />
-
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
         <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
           <div className="w-full max-w-[1200px] mx-auto md:p-8">
@@ -320,8 +298,6 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
             </Routes>
           </div>
         </main>
-        
-        {/* Mobile Nav */}
         <BottomNav />
       </div>
     </div>
@@ -335,26 +311,30 @@ export default function App() {
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
-  // Theme State
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
   useEffect(() => {
-    // Load data from local storage if available to simulate DB
     const storedInventory = localStorage.getItem('savebite_inventory');
-    if (storedInventory) setInventory(JSON.parse(storedInventory));
+    if (storedInventory) {
+      setInventory(JSON.parse(storedInventory));
+    } else {
+      setInventory(INITIAL_INVENTORY);
+    }
+    
+    const storedStats = localStorage.getItem('savebite_stats');
+    if (storedStats) setStats(JSON.parse(storedStats));
   }, []);
 
   useEffect(() => {
-    // Persist inventory updates
     if (auth.isAuthenticated) {
         localStorage.setItem('savebite_inventory', JSON.stringify(inventory));
+        localStorage.setItem('savebite_stats', JSON.stringify(stats));
     }
-  }, [inventory, auth.isAuthenticated]);
+  }, [inventory, stats, auth.isAuthenticated]);
 
-  // Theme Logic
   useEffect(() => {
     localStorage.setItem('theme', theme);
     if (theme === 'dark') {
@@ -364,35 +344,17 @@ export default function App() {
     }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
-  const handleLogin = (state: AuthState) => {
-    setAuth(state);
-  };
-
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const handleLogin = (state: AuthState) => setAuth(state);
   const handleLogout = () => {
     AuthService.logout().then(setAuth);
   };
 
-  // Handlers
-  const handleAddItem = (item: FoodItem) => {
-    setInventory(prev => [item, ...prev]);
-  };
-
-  const handleDeleteItem = (id: string) => {
-      setInventory(prev => prev.filter(i => i.id !== id));
-  };
-
-  const handleEditItem = (updatedItem: FoodItem) => {
-    setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-  };
-
+  const handleAddItem = (item: FoodItem) => setInventory(prev => [item, ...prev]);
+  const handleDeleteItem = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
+  const handleEditItem = (updatedItem: FoodItem) => setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
-    
-    // Update Stats
     if (status === 'donated') {
       setStats(prev => ({
         ...prev,
@@ -405,7 +367,6 @@ export default function App() {
   };
 
   const handleCookRecipe = (recipe: Recipe) => {
-    // Mark items as consumed
     setInventory(prev => prev.map(item => {
       const isUsed = recipe.ingredients.some(ing => ing.toLowerCase().includes(item.name.toLowerCase()));
       return isUsed && item.status === 'active' ? { ...item, status: 'consumed' } : item;
@@ -431,9 +392,7 @@ export default function App() {
     }));
   };
 
-  const handleUpdateStats = (newStats: UserStats) => {
-    setStats(newStats);
-  };
+  const handleUpdateStats = (newStats: UserStats) => setStats(newStats);
 
   if (!auth.isAuthenticated) {
     return isLoginView ? (

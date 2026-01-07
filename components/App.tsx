@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Menu, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
@@ -21,7 +22,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// Initial Mock Data (Preserved exactly as provided)
+// Initial Mock Data
 const INITIAL_INVENTORY: FoodItem[] = [
   { 
     id: "1", 
@@ -95,6 +96,7 @@ const INITIAL_INVENTORY: FoodItem[] = [
   }
 ];
 
+// Added missing INITIAL_HISTORY to satisfy UserStats requirements
 const INITIAL_HISTORY: DonationHistoryItem[] = [
   {
     id: 'h1',
@@ -114,8 +116,8 @@ const INITIAL_STATS: UserStats = {
   streakDays: 12,
   level: 5,
   xp: 850,
-  earnedBadges: ['b1', 'b2'],
-  history: INITIAL_HISTORY
+  earnedBadges: ['b1', 'b2'], // Initial Mock Badges
+  history: INITIAL_HISTORY // Fixed: added missing history property to satisfy UserStats interface
 };
 
 // Sidebar for Desktop
@@ -137,10 +139,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
         <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20">
            <Leaf size={20} fill="white" />
         </div>
-        <div>
-          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-tight">SaveBite</h1>
-          <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tight">The right choice before waste</p>
-        </div>
+        <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100">FoodSaver</h1>
       </div>
 
       <nav className="flex-1 px-4 space-y-2">
@@ -325,14 +324,14 @@ export default function App() {
 
   useEffect(() => {
     // Load data from local storage if available to simulate DB
-    const storedInventory = localStorage.getItem('savebite_inventory');
+    const storedInventory = localStorage.getItem('ecotable_inventory');
     if (storedInventory) setInventory(JSON.parse(storedInventory));
   }, []);
 
   useEffect(() => {
     // Persist inventory updates
     if (auth.isAuthenticated) {
-        localStorage.setItem('savebite_inventory', JSON.stringify(inventory));
+        localStorage.setItem('ecotable_inventory', JSON.stringify(inventory));
     }
   }, [inventory, auth.isAuthenticated]);
 
