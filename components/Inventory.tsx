@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { FoodItem, FoodCategory } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
@@ -414,7 +413,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      setIsAnalyzing(true); setIsAdding(true); setScanError(null);
+      setIsAnalyzing(true); setScanError(null);
       try {
           const base64 = await compressImage(file);
           const analysis = await analyzeFoodImage(base64);
@@ -424,10 +423,10 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
               quantity: analysis.quantityEstimation.toString(), unit: analysis.unitEstimation,
               expiryDate: analysis.expiryEstimation
           });
-          setTimeout(() => { setIsAdding(false); setIsAnalyzing(false); setShowManualAdd(true); }, 500);
+          setTimeout(() => { setIsAnalyzing(false); setShowManualAdd(true); }, 500);
       } catch (err: any) {
-          if (err.message === "NOT_FOOD") setScanError("No food detected.");
-          else setScanError("Could not identify food.");
+          if (err.message === "NOT_FOOD") setScanError("No food detected. Please take a clearer photo of the item.");
+          else setScanError("Could not identify food. Try a manual entry.");
           setIsAnalyzing(false);
       } finally { if (fileInputRef.current) fileInputRef.current.value = ''; }
     };
@@ -449,6 +448,16 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
   return (
     <div className="bg-[#FFFFFF] dark:bg-slate-950 min-h-screen pb-24 md:pb-0 animate-in fade-in duration-300 transition-colors" onClick={() => setShowSortMenu(false)}>
       
+      {/* Hidden File Input for Scanning */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleImageUpload} 
+        accept="image/*" 
+        className="hidden" 
+        aria-hidden="true"
+      />
+
       {/* Header Area */}
       <header className="pt-[12px] px-[16px] pb-[4px] md:px-0 flex flex-col gap-[8px]">
         <div className="flex items-center justify-between">
@@ -628,6 +637,117 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             );
         })}
       </div>
+      
+      {/* AI Analysis Overlay */}
+      {isAnalyzing && (
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+              <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300 mx-4">
+                  <div className="relative mb-6">
+                      <div className="w-24 h-24 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center animate-pulse">
+                          <Sparkles size={48} className="text-[#00796B]" fill="currentColor" />
+                      </div>
+                      <Loader2 size={100} className="absolute -inset-1 text-[#00796B] animate-spin opacity-20" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Analyzing Food</h3>
+                  <div className="space-y-1 mb-6">
+                      <p className="text-[#00796B] font-bold text-sm animate-pulse">AI is identifying ingredients...</p>
+                      <p className="text-xs text-slate-500">Estimating condition and shelf life</p>
+                  </div>
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div className="bg-[#00796B] h-full rounded-full animate-progress-indeterminate"></div>
+                  </div>
+                  <style>{`
+                    @keyframes progress-indeterminate {
+                        0% { transform: translateX(-100%) scaleX(0.2); }
+                        50% { transform: translateX(0%) scaleX(0.5); }
+                        100% { transform: translateX(100%) scaleX(0.2); }
+                    }
+                    .animate-progress-indeterminate {
+                        animation: progress-indeterminate 1.5s infinite linear;
+                        transform-origin: left;
+                    }
+                  `}</style>
+                  <p className="mt-8 text-[11px] text-slate-400 font-medium italic">"Did you know? Every apple saved prevents the waste of 70 liters of water."</p>
+              </div>
+          </div>
+      )}
+
+      {/* Manual Add / Scan Result Modal */}
+      {showManualAdd && (
+          <div className="fixed inset-0 z-[1500] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                  <div className="p-6">
+                      <div className="flex justify-between items-center mb-6">
+                          <h3 className="text-xl font-bold dark:text-white">{editingItem ? 'Edit Item' : isFromScan ? 'Confirm Scan Results' : 'Add New Item'}</h3>
+                          <button onClick={() => setShowManualAdd(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                      </div>
+
+                      <form onSubmit={handleManualSubmit} className="space-y-4">
+                          <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Item Name</label>
+                              <input 
+                                ref={manualNameRef}
+                                type="text" required placeholder="e.g., Organic Bananas"
+                                value={manualForm.name} onChange={e => setManualForm({...manualForm, name: e.target.value})}
+                                className="w-full h-[52px] px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-[#00796B] outline-none transition-all dark:text-white"
+                              />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Quantity</label>
+                                  <input type="number" step="any" required
+                                      value={manualForm.quantity} onChange={e => setManualForm({...manualForm, quantity: e.target.value})}
+                                      className="w-full h-[52px] px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-[#00796B] outline-none transition-all dark:text-white"
+                                  />
+                              </div>
+                              <div className="space-y-1.5">
+                                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Unit</label>
+                                  <select value={manualForm.unit} onChange={e => setManualForm({...manualForm, unit: e.target.value})}
+                                      className="w-full h-[52px] px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-[#00796B] outline-none transition-all dark:text-white"
+                                  >
+                                      {["pcs", "kg", "grams", "pack", "jar", "liter", "ml", "head"].map(u => <option key={u} value={u}>{u}</option>)}
+                                  </select>
+                              </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Category</label>
+                              <div className="grid grid-cols-4 gap-2">
+                                  {GRID_CATEGORIES.map(cat => (
+                                      <button key={cat} type="button" onClick={() => setManualForm({...manualForm, category: cat})}
+                                          className={`py-2 rounded-lg text-[10px] font-bold border transition-all ${manualForm.category === cat ? 'bg-[#00796B] border-[#00796B] text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'}`}
+                                      >
+                                          {cat}
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Expiry Date</label>
+                              <input type="date" required value={manualForm.expiryDate} onChange={e => setManualForm({...manualForm, expiryDate: e.target.value})}
+                                  className="w-full h-[52px] px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-[#00796B] outline-none transition-all dark:text-white"
+                              />
+                          </div>
+
+                          <button type="submit" className="w-full h-[56px] bg-[#00796B] text-white rounded-xl font-bold text-lg shadow-lg hover:bg-[#00695C] transition-all active:scale-95 mt-4">
+                              {editingItem ? 'Save Changes' : isFromScan ? 'Confirm Results' : 'Add to Inventory'}
+                          </button>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Error Toasts */}
+      {scanError && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2100] bg-red-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300">
+              <AlertOctagon size={20} />
+              <span className="font-bold text-sm">{scanError}</span>
+              <button onClick={() => setScanError(null)} className="ml-2 bg-white/20 p-1 rounded-full"><X size={14} /></button>
+          </div>
+      )}
       
       {/* Item Detail Modal */}
       {detailItem && (
