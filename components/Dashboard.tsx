@@ -235,9 +235,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {[
           { icon: Utensils, label: 'Meals Saved', value: stats.mealsSaved, color: 'bg-[#00796B]', prefix: '', suffix: '', decimals: 0 },
-          { icon: Leaf, label: 'CO₂ Prevented', value: stats.co2Saved, color: 'bg-[#00796B]', prefix: '', suffix: ' kg', decimals: 1 },
-          { icon: DollarSign, label: 'Money Saved', value: stats.moneySaved, color: 'bg-[#E65100]', prefix: '₹', suffix: '', decimals: 0 },
-          { icon: HeartHandshake, label: 'Donations Made', value: stats.donationsCompleted, color: 'bg-pink-500', prefix: '', suffix: '', decimals: 0, isRescue: true }
+          { icon: Leaf, label: 'CO₂ Prevented', value: stats.co2Saved, color: 'bg-[#43A047]', prefix: '', suffix: ' kg', decimals: 1 },
+          { icon: DollarSign, label: 'Money Saved', value: stats.moneySaved, color: 'bg-[#EF6C00]', prefix: '₹', suffix: '', decimals: 0 },
+          { icon: HeartHandshake, label: 'Donations Made', value: stats.donationsCompleted, color: 'bg-[#D81B60]', prefix: '', suffix: '', decimals: 0 }
         ].map((stat, i) => (
           <button 
             key={i} 
@@ -251,22 +251,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
                     <AnimatedCounter value={stat.value} prefix={stat.prefix} suffix={stat.suffix} decimals={stat.decimals} />
                 </div>
-                {stat.isRescue ? (
-                  <div className="relative min-h-[22px] mt-1 overflow-hidden">
-                    {/* Normal Label */}
-                    <div className="transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-4">
-                      <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400 truncate">{stat.label}</div>
-                    </div>
-                    {/* Appreciation Msg on Hover Tooltip inside card */}
-                    <div className="absolute inset-0 transition-all duration-300 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 flex items-center">
-                      <div className="text-[10px] sm:text-[11px] text-pink-600 dark:text-pink-400 font-bold leading-tight line-clamp-1 w-full">
-                        You're making a difference! ❤️
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400 mt-1">{stat.label}</div>
-                )}
+                <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400 mt-1">{stat.label}</div>
             </div>
           </button>
         ))}
