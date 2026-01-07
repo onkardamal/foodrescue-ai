@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserStats, FoodItem, User } from '../types';
 import { Leaf, DollarSign, Share2, Utensils, Bell, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, ChevronRight, HeartHandshake, Sparkles } from 'lucide-react';
@@ -12,6 +11,19 @@ interface DashboardProps {
   stats: UserStats;
   inventory: FoodItem[];
 }
+
+const MOTIVATIONAL_QUOTES = [
+  "Every meal saved is a win for the planet. 🌍",
+  "Small steps lead to big environmental changes. 🌱",
+  "Food rescue: The easiest way to fight climate change. 🥗",
+  "Your table, zero waste, infinite impact. ✨",
+  "Love food, hate waste. 💚",
+  "Sustainability starts in your kitchen. 🏠",
+  "Reduce, reuse, and rescue. 🔄",
+  "Waste-free living looks great on you! 😎",
+  "You are making a real difference today. 🌟",
+  "Nature thanks you for every bite saved. 🌲"
+];
 
 const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { value: number, prefix?: string, suffix?: string, decimals?: number }) => {
   const [count, setCount] = useState(0);
@@ -77,9 +89,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   const { theme, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // States for interactive feedback
+  // States for interactive feedback and motivation
   const [appreciationMsg, setAppreciationMsg] = useState<string | null>(null);
+  const [msgStyles, setMsgStyles] = useState({ 
+    text: 'text-[#00796B]', 
+    bg: 'bg-teal-50 dark:bg-teal-900/30', 
+    border: 'border-teal-100 dark:border-teal-800',
+    headerText: 'text-[#00796B] dark:text-teal-400' // Quote color
+  });
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Motivational Quote State
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [quoteFade, setQuoteFade] = useState(true);
+
+  // Interval for motivational quotes (Every 10 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteFade(false);
+      setTimeout(() => {
+        setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_QUOTES.length);
+        setQuoteFade(true);
+      }, 500); // Small delay for transition
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const expiringItems = inventory
     .filter(item => item.status === 'active')
@@ -120,10 +155,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       'Donations Made': "Heart of Gold! Your generosity is changing lives every single day. ❤️"
     };
 
+    const styles: Record<string, any> = {
+      'Meals Saved': { text: 'text-[#00796B]', bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-100 dark:border-teal-800', headerText: 'text-[#00796B]' },
+      'CO₂ Prevented': { text: 'text-[#43A047]', bg: 'bg-green-50 dark:bg-green-900/30', border: 'border-green-100 dark:border-green-800', headerText: 'text-[#43A047]' },
+      'Money Saved': { text: 'text-[#EF6C00]', bg: 'bg-orange-50 dark:bg-orange-900/30', border: 'border-orange-100 dark:border-orange-800', headerText: 'text-[#EF6C00]' },
+      'Donations Made': { text: 'text-[#D81B60]', bg: 'bg-pink-50 dark:bg-pink-900/30', border: 'border-pink-100 dark:border-pink-800', headerText: 'text-[#D81B60]' }
+    };
+
     setAppreciationMsg(messages[label]);
+    setMsgStyles(styles[label]);
     setShowConfetti(true);
 
-    // Auto-clear after 5 seconds
     setTimeout(() => {
       setAppreciationMsg(null);
       setShowConfetti(false);
@@ -134,91 +176,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
     <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500 relative">
       {showConfetti && <ConfettiRain />}
 
-      <header className="flex md:hidden justify-between items-center relative z-50">
-        <div className="flex items-center gap-[12px]">
-            <div className="w-[48px] h-[48px] bg-[#00796B] rounded-full flex items-center justify-center shadow-md shadow-teal-100 dark:shadow-teal-900/20 hover:scale-110 transition-transform cursor-pointer">
-                <Leaf size={24} color="white" fill="white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-[20px] text-[#212121] dark:text-white leading-none">SaveBite</h1>
-              <p className="text-[8px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1">The right choice before waste</p>
-            </div>
-        </div>
-        <div className="flex items-center gap-[12px]">
-            <div className="relative">
-                <button 
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all relative outline-none group"
-                    aria-label="Notifications"
-                >
-                    <Bell size={24} className="text-[#757575] dark:text-slate-400 group-hover:rotate-12 transition-transform" />
-                    {expiringItems.length > 0 && (
-                        <div className="absolute top-[2px] right-[2px] w-[16px] h-[16px] bg-[#D32F2F] rounded-full border-[2px] border-white dark:border-slate-900 flex items-center justify-center">
-                            <span className="text-white text-[9px] font-bold">{expiringItems.length}</span>
-                        </div>
-                    )}
-                </button>
-
-                {showNotifications && (
-                    <>
-                        <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowNotifications(false)} />
-                        <div className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-900 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                             <div className="p-3 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                                <h3 className="font-bold text-[#212121] dark:text-white text-xs uppercase tracking-wider">Notifications</h3>
-                            </div>
-                            <div className="max-h-[320px] overflow-y-auto">
-                                {expiringItems.length > 0 ? (
-                                    expiringItems.map(item => (
-                                         <button 
-                                            key={item.id}
-                                            onClick={() => navigate('/inventory')}
-                                            className="w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800/50 last:border-0 transition-colors flex gap-3 group"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                                <span className="text-lg">⚠️</span>
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-sm text-[#212121] dark:text-white leading-tight">{item.name}</p>
-                                                <p className="text-xs text-[#757575] dark:text-slate-400 mt-1">Expiring in <span className="text-[#C2410C] font-bold">{item.daysLeft} days</span></p>
-                                            </div>
-                                         </button>
-                                    ))
-                                ) : (
-                                    <div className="p-8 text-center text-[#757575] dark:text-slate-400">
-                                        <p className="text-sm">You're all caught up!</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                )}
-            </div>
-            
-            <button 
-                onClick={() => navigate('/profile')}
-                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-transparent hover:scale-105 active:scale-95 transition-all"
-            >
-                <img 
-                    src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
-                />
-            </button>
-        </div>
-      </header>
-
-      <div className="flex flex-wrap justify-between items-end gap-4 mt-2">
-          <div className="flex-1 min-w-[200px]">
+      {/* Header Summary Section */}
+      <div className="flex flex-wrap justify-between items-start gap-4 mt-2">
+          <div className="flex-1 min-w-[280px]">
             <h2 className="font-bold text-[32px] md:text-[40px] text-[#212121] dark:text-white leading-[1.2] mb-[8px]">
                 Welcome back,<br />{user?.name.split(' ')[0] || 'Chef'} 👋
             </h2>
-            <p className="font-normal text-[13px] md:text-[16px] text-[#757575] dark:text-slate-400">
-                You've saved <AnimatedCounter value={stats.mealsSaved} /> meals this month!
-            </p>
             
-            {/* Animated Appreciation Message */}
-            <div className={`h-8 mt-2 transition-all duration-500 transform overflow-hidden ${appreciationMsg ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}`}>
-               <div className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-900/30 text-[#00796B] dark:text-teal-300 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm border border-teal-100 dark:border-teal-800">
+            {/* Constant Motivational Green Text (Cycles every 10s) - Increased Size */}
+            <div className={`flex items-center gap-3 font-bold transition-all duration-500 transform ${quoteFade ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'} ${msgStyles.headerText} text-[16px] md:text-[22px] leading-snug`}>
+               <Sparkles size={24} fill="currentColor" className="animate-pulse shrink-0" />
+               <span>{MOTIVATIONAL_QUOTES[quoteIndex]}</span>
+            </div>
+            
+            {/* Interactive Appreciation Bubble */}
+            <div className={`h-10 mt-4 transition-all duration-500 transform overflow-hidden ${appreciationMsg ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}`}>
+               <div className={`inline-flex items-center gap-2 ${msgStyles.bg} ${msgStyles.text} px-4 py-2 rounded-2xl text-xs font-bold shadow-sm border ${msgStyles.border}`}>
                   <Sparkles size={14} className="animate-pulse" />
                   {appreciationMsg}
                </div>
@@ -232,6 +205,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           </button>
       </div>
 
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {[
           { icon: Utensils, label: 'Meals Saved', value: stats.mealsSaved, color: 'bg-[#00796B]', prefix: '', suffix: '', decimals: 0 },
@@ -284,7 +258,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 md:pb-8">
           <div>
             <div className="flex justify-between items-baseline mb-[12px]">
                 <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Expiring Soon</h3>
@@ -323,43 +297,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
           <div className="flex flex-col gap-6">
               <div>
-                <div className="flex justify-between items-baseline mb-[12px]">
-                    <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Your Badges</h3>
-                </div>
-                <button 
-                    onClick={() => navigate('/badges')}
-                    className="w-full text-left bg-white dark:bg-slate-800 rounded-[16px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.99]"
-                >
-                    <div className="flex items-center gap-4 mb-3">
-                        {earnedBadgeObjects.slice(0, 3).map(badge => (
-                            <div key={badge.id} className="w-10 h-10 rounded-full flex items-center justify-center text-lg group-hover:scale-110 transition-transform shadow-inner" style={{ backgroundColor: `${badge.color}20` }}>
-                                {badge.icon}
-                            </div>
-                        ))}
-                        {earnedBadgeObjects.length > 3 && <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500">+{earnedBadgeObjects.length - 3}</div>}
-                    </div>
-                    <div className="w-full h-[8px] bg-[#F0F4F3] dark:bg-slate-700 rounded-[8px] mt-[8px] overflow-hidden">
-                        <div className="h-full bg-[#00796B] rounded-[8px] group-hover:opacity-80 transition-opacity" style={{ width: `${(stats.xp % 1000 / 1000) * 100}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-[#757575] dark:text-slate-500 mt-2 text-right">Level {stats.level} • {stats.xp} pts</p>
-                </button>
-              </div>
-
-              <div>
-                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Community Leaders</h3>
-                <div className="flex flex-col gap-[12px] mt-4">
+                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-3">Community Leaderboard</h3>
+                <div className="flex flex-col gap-[12px]">
                     {leaderboardWidgetData.map((leader, i) => (
-                        <div key={i} className={`flex items-center p-2 rounded-xl transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:scale-[1.02] group ${leader.isCurrentUser ? 'bg-[#00796B]/10 border border-[#00796B]/20' : ''}`}>
-                            <div className="w-[24px] font-bold text-[14px] text-[#757575] text-center">{leader.rank}</div>
-                            <div className="relative group-hover:scale-110 transition-transform">
-                              <img src={leader.avatar} alt={leader.name} className="w-[32px] h-[32px] rounded-full mx-[8px] bg-slate-200 border border-slate-100 dark:border-slate-700" />
-                              {leader.rank === 1 && <div className="absolute -top-1 -right-1 text-[10px]">👑</div>}
-                            </div>
-                            <div className="flex-1 font-bold text-[14px] dark:text-white group-hover:text-[#00796B] transition-colors">{leader.name}</div>
-                            <div className="font-bold text-[14px] text-[#00796B]">{leader.xp.toLocaleString()}</div>
+                        <div key={i} className={`flex items-center p-3 rounded-xl transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md group ${leader.isCurrentUser ? 'bg-[#00796B]/10 border border-[#00796B]/20 shadow-sm' : ''}`}>
+                            <div className="w-[24px] font-black text-[14px] text-[#757575] text-center">{leader.rank}</div>
+                            <img src={leader.avatar} alt={leader.name} className="w-[36px] h-[36px] rounded-full mx-[12px] bg-slate-200 border border-slate-100 dark:border-slate-700 shadow-sm" />
+                            <div className="flex-1 font-bold text-[14px] dark:text-white group-hover:text-[#00796B] transition-colors">{leader.name} {leader.isCurrentUser && '(You)'}</div>
+                            <div className="font-black text-[14px] text-[#00796B]">{leader.xp.toLocaleString()}</div>
                         </div>
                     ))}
-                    <button onClick={() => navigate('/leaderboard')} className="text-center text-sm font-bold text-[#00796B] mt-2 flex items-center justify-center gap-1 hover:gap-3 transition-all hover:underline active:scale-95">View Ranking <ChevronRight size={16} /></button>
+                    <button onClick={() => navigate('/leaderboard')} className="text-center text-sm font-bold text-[#00796B] mt-2 flex items-center justify-center gap-1 hover:gap-3 transition-all hover:underline active:scale-95">Full Community Ranking <ChevronRight size={16} /></button>
                 </div>
               </div>
           </div>
