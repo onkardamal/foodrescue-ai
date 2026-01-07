@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { User, UserStats, DonationHistoryItem, Review } from '../types';
-import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import Analytics from './Analytics';
@@ -21,6 +20,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [comment, setComment] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -30,10 +30,6 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
 
   const handleBack = () => {
     navigate('/');
-  };
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
   };
 
   const handleReviewSubmit = (e: React.FormEvent) => {
@@ -46,7 +42,8 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
           ...item,
           review: {
             rating,
-            tags: selectedTags
+            tags: selectedTags,
+            comment: comment.trim() || undefined
           }
         };
       }
@@ -61,10 +58,11 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
     setShowRateModal(null);
     setRating(0);
     setSelectedTags([]);
+    setComment('');
     
     // Success feedback
     setShowConfetti(true);
-    setToast("Review Submitted! Trust Score Updated.");
+    setToast("Review Submitted! XP Multiplier increased.");
     setTimeout(() => {
         setShowConfetti(false);
         setToast(null);
@@ -125,7 +123,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
         >
             <ArrowLeft size={24} className="text-[#212121] dark:text-white" />
         </button>
-        <h1 className="text-xl font-bold text-[#212121] dark:text-white">My Impact</h1>
+        <h1 className="text-xl font-bold text-[#212121] dark:text-white">My Impact Profile</h1>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 space-y-6">
@@ -152,16 +150,16 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                     {stats.xp.toLocaleString()} <span className="text-[#00796B]">XP</span>
                     <Sparkles className="text-amber-500" size={24} fill="currentColor" />
                  </h2>
-                 <p className="text-lg font-bold text-amber-600 uppercase tracking-widest">Food Saver Lvl {stats.level}</p>
+                 <p className="text-lg font-bold text-amber-600 uppercase tracking-widest">{user.name} • Lvl {stats.level}</p>
              </div>
 
              <div className="w-full max-w-[280px] h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
                 <div 
                     className="h-full bg-gradient-to-r from-[#00796B] to-amber-400 transition-all duration-1000 ease-out" 
-                    style={{ width: '65%' }}
+                    style={{ width: `${(stats.xp % 1000) / 10}%` }}
                 ></div>
              </div>
-             <p className="text-xs font-bold text-slate-400 uppercase">350 XP to next tier</p>
+             <p className="text-xs font-bold text-slate-400 uppercase">{1000 - (stats.xp % 1000)} XP to next tier</p>
         </div>
 
         {/* Tabs */}
@@ -170,13 +168,13 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                 onClick={() => setActiveTab('stats')}
                 className={`flex-1 py-3 rounded-xl font-bold transition-all ${activeTab === 'stats' ? 'bg-white dark:bg-slate-800 text-[#00796B] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-                Stats
+                My Analytics
             </button>
             <button 
                 onClick={() => setActiveTab('history')}
                 className={`flex-1 py-3 rounded-xl font-bold transition-all ${activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-[#00796B] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-                History
+                Rescue History
             </button>
         </div>
 
@@ -185,7 +183,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
             <Analytics stats={stats} />
         ) : (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <h3 className="font-black text-[#212121] dark:text-white uppercase tracking-wider text-sm pl-2">Recent Timeline</h3>
+                <h3 className="font-black text-[#212121] dark:text-white uppercase tracking-wider text-sm pl-2">Donation Timeline</h3>
                 
                 <div className="relative pl-8 space-y-6 before:content-[''] before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-slate-800">
                     {stats.history.map((item) => {
@@ -202,18 +200,28 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                                 </div>
 
                                 {/* History Card */}
-                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between group hover:shadow-md transition-shadow">
-                                    <div className="flex-1 min-w-0 pr-4">
-                                        <h4 className="font-bold text-lg text-[#212121] dark:text-white truncate">{item.foodName}</h4>
-                                        <div className="flex flex-col gap-0.5 mt-1">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col group hover:shadow-md transition-shadow">
+                                    <div className="flex items-center justify-between w-full mb-3">
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <h4 className="font-bold text-lg text-[#212121] dark:text-white truncate">{item.foodName}</h4>
                                             <p className="text-xs text-slate-500 font-medium">{item.date}</p>
-                                            <p className="text-sm text-[#00796B] font-bold">Picked up by: {item.ngoName}</p>
                                         </div>
-                                        
-                                        {/* Review Area */}
-                                        {isCompleted && (
-                                            <div className="mt-4">
-                                                {isRated ? (
+                                        <div className="bg-teal-50 dark:bg-teal-900/30 text-[#00796B] px-3 py-1.5 rounded-xl font-black text-xs shrink-0 flex flex-col items-center">
+                                            <Sparkles size={14} className="mb-0.5" />
+                                            +{item.points} XP
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px]">🏢</div>
+                                        <p className="text-sm text-[#00796B] font-bold">Partner: {item.ngoName}</p>
+                                    </div>
+
+                                    {/* Review Display Area */}
+                                    {isCompleted && (
+                                        <div className="pt-4 border-t border-slate-50 dark:border-slate-800">
+                                            {isRated ? (
+                                                <div className="space-y-3">
                                                     <div className="flex items-center gap-0.5 text-amber-400">
                                                         {[...Array(5)].map((_, i) => (
                                                             <Star 
@@ -222,24 +230,38 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                                                                 fill={i < (item.review?.rating || 0) ? "currentColor" : "none"} 
                                                             />
                                                         ))}
-                                                        <span className="text-xs font-bold text-slate-400 ml-2">Rating given</span>
+                                                        <span className="text-xs font-bold text-slate-400 ml-2">Rating Given</span>
                                                     </div>
-                                                ) : (
-                                                    <button 
-                                                        onClick={() => setShowRateModal(item.id)}
-                                                        className="px-4 py-1.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 hover:border-[#00796B] hover:text-[#00796B] transition-all"
-                                                    >
-                                                        Rate Experience
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+                                                    
+                                                    {item.review?.comment && (
+                                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl relative">
+                                                            <MessageSquare className="absolute -top-2 -left-2 text-teal-400" size={16} fill="currentColor" />
+                                                            <p className="text-xs italic text-slate-600 dark:text-slate-300 leading-relaxed pl-2">
+                                                                "{item.review.comment}"
+                                                            </p>
+                                                        </div>
+                                                    )}
 
-                                    <div className="bg-teal-50 dark:bg-teal-900/30 text-[#00796B] px-3 py-1.5 rounded-xl font-black text-xs shrink-0 flex flex-col items-center">
-                                        <Sparkles size={14} className="mb-0.5" />
-                                        +{item.points} XP
-                                    </div>
+                                                    {item.review?.tags && item.review.tags.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {item.review.tags.map(tag => (
+                                                                <span key={tag} className="text-[9px] font-bold uppercase tracking-wider bg-teal-50 dark:bg-teal-900/20 text-[#00796B] px-2 py-0.5 rounded">
+                                                                    {tag}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => setShowRateModal(item.id)}
+                                                    className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 hover:border-[#00796B] hover:text-[#00796B] transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <Star size={14} /> Rate & Comment this Handover
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -250,7 +272,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
 
         {/* Action List Section (Settings & Logout) */}
         <div className="pt-8 space-y-4">
-            <h3 className="font-black text-[#212121] dark:text-white uppercase tracking-wider text-sm pl-2">Account Settings</h3>
+            <h3 className="font-black text-[#212121] dark:text-white uppercase tracking-wider text-sm pl-2">Preferences</h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
                 <button 
                     onClick={toggleTheme}
@@ -260,10 +282,13 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                         <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
                             {theme === 'light' ? <Sun size={20} className="text-slate-400" /> : <Moon size={20} className="text-slate-400" />}
                         </div>
-                        <span className="font-medium text-[#212121] dark:text-white">Dark Mode</span>
+                        <span className="font-medium text-[#212121] dark:text-white">Appearance</span>
                     </div>
-                    <div className={`w-11 h-6 rounded-full p-1 transition-colors ${theme === 'dark' ? 'bg-[#00796B]' : 'bg-slate-300'}`}>
-                        <div className={`bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase">{theme} Mode</span>
+                        <div className={`w-11 h-6 rounded-full p-1 transition-colors ${theme === 'dark' ? 'bg-[#00796B]' : 'bg-slate-300'}`}>
+                            <div className={`bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </div>
                     </div>
                 </button>
                 <button 
@@ -290,23 +315,27 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                 role="dialog"
                 aria-modal="true"
               >
-                  <div className="p-8 text-center">
-                      <div className="flex justify-end -mt-4 -mr-4 mb-2">
-                          <button onClick={() => setShowRateModal(null)} className="p-2 text-slate-400 hover:text-slate-600">
+                  <div className="p-8">
+                      <div className="flex justify-between items-center mb-6">
+                          <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center shadow-inner">
+                              <Star size={24} className="text-[#00796B]" fill="currentColor" />
+                          </div>
+                          <button onClick={() => setShowRateModal(null)} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
                               <X size={24} />
                           </button>
                       </div>
 
-                      <div className="w-20 h-20 bg-teal-50 dark:bg-teal-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
-                          <HeartHandshake size={40} className="text-[#00796B]" />
+                      <div className="text-center mb-6">
+                          <h3 className="text-xl font-black text-[#212121] dark:text-white leading-tight mb-2">
+                              Rate the Handover
+                          </h3>
+                          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                            {stats.history.find(h => h.id === showRateModal)?.ngoName}
+                          </p>
                       </div>
 
-                      <h3 className="text-xl font-black text-[#212121] dark:text-white leading-tight mb-4">
-                          How was your experience with {stats.history.find(h => h.id === showRateModal)?.ngoName}?
-                      </h3>
-
                       {/* Interactive Stars */}
-                      <div className="flex justify-center gap-2 mb-8">
+                      <div className="flex justify-center gap-2 mb-6">
                           {[1, 2, 3, 4, 5].map((star) => (
                               <button
                                   key={star}
@@ -314,9 +343,10 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                                   onMouseLeave={() => setHoverRating(0)}
                                   onClick={() => setRating(star)}
                                   className="transition-transform active:scale-90 hover:scale-110"
+                                  type="button"
                               >
                                   <Star 
-                                      size={36} 
+                                      size={32} 
                                       className={`${(hoverRating || rating) >= star ? 'text-amber-400' : 'text-slate-200 dark:text-slate-700'}`}
                                       fill={(hoverRating || rating) >= star ? "currentColor" : "none"}
                                       strokeWidth={2.5}
@@ -326,28 +356,44 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                       </div>
 
                       {/* Feedback Chips */}
-                      <div className="flex flex-wrap justify-center gap-2 mb-8">
-                          {["Punctual ⏰", "Polite 😊", "Professional 👔"].map(tag => (
+                      <div className="flex flex-wrap justify-center gap-2 mb-6">
+                          {["Punctual ⏰", "Polite 😊", "Professional 👔", "Helpful 🆘"].map(tag => (
                               <button
                                   key={tag}
                                   onClick={() => toggleTag(tag)}
-                                  className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${
+                                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold border-2 transition-all ${
                                       selectedTags.includes(tag)
-                                      ? 'bg-[#00796B] border-[#00796B] text-white'
-                                      : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-300'
+                                      ? 'bg-[#00796B] border-[#00796B] text-white shadow-sm'
+                                      : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                   }`}
+                                  type="button"
                               >
                                   {tag}
                               </button>
                           ))}
                       </div>
 
+                      {/* Comment Input */}
+                      <div className="mb-8">
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Write a short comment</label>
+                          <div className="relative">
+                            <textarea 
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-[#00796B] focus:bg-white dark:focus:bg-slate-800 text-sm outline-none transition-all font-medium resize-none"
+                                placeholder="Tell us more about the handover..."
+                                rows={3}
+                            />
+                            <MessageSquare className="absolute bottom-3 right-3 text-slate-300" size={16} />
+                          </div>
+                      </div>
+
                       <button 
                         onClick={handleReviewSubmit}
                         disabled={rating === 0}
-                        className="w-full py-4 bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-2xl font-black text-lg shadow-xl hover:bg-black dark:hover:bg-slate-200 disabled:opacity-30 disabled:hover:scale-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-2xl font-black text-lg shadow-xl shadow-black/10 hover:bg-black dark:hover:bg-slate-100 disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2"
                       >
-                          Submit Review
+                          Complete Review
                       </button>
                   </div>
               </div>

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { UserStats, User } from '../types';
 import { ArrowLeft, Trophy, Medal, Crown, Shield, Flame, Search } from 'lucide-react';
@@ -9,17 +10,18 @@ interface LeaderboardProps {
 }
 
 // Simulated Community Data
+// Added isCurrentUser: false to each entry to match the type of the current user entry
 export const MOCK_LEADERBOARD_DATA = [
-    { id: 'c1', name: 'Sarah Jenkins', meals: 234, xp: 12450, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah' },
-    { id: 'c2', name: 'Green Grocers', meals: 198, xp: 11200, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Green' },
-    { id: 'c3', name: 'Mike Chen', meals: 167, xp: 9800, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike' },
-    { id: 'c4', name: 'Bistro 54', meals: 145, xp: 8900, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bistro' },
-    { id: 'c5', name: 'Annie P.', meals: 120, xp: 7500, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Annie' },
-    { id: 'c6', name: 'Community Fridge', meals: 98, xp: 6200, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fridge' },
-    { id: 'c7', name: 'Tom H.', meals: 85, xp: 5400, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tom' },
-    { id: 'c8', name: 'Fresh Market', meals: 64, xp: 4100, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fresh' },
-    { id: 'c9', name: 'Julia R.', meals: 42, xp: 2800, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Julia' },
-    { id: 'c10', name: 'The Local Bakery', meals: 30, xp: 1900, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bakery' },
+    { id: 'c1', name: 'Sarah Jenkins', meals: 234, xp: 12450, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', isCurrentUser: false },
+    { id: 'c2', name: 'Green Grocers', meals: 198, xp: 11200, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Green', isCurrentUser: false },
+    { id: 'c3', name: 'Mike Chen', meals: 167, xp: 9800, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike', isCurrentUser: false },
+    { id: 'c4', name: 'Bistro 54', meals: 145, xp: 8900, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bistro', isCurrentUser: false },
+    { id: 'c5', name: 'Annie P.', meals: 120, xp: 7500, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Annie', isCurrentUser: false },
+    { id: 'c6', name: 'Community Fridge', meals: 98, xp: 6200, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fridge', isCurrentUser: false },
+    { id: 'c7', name: 'Tom H.', meals: 85, xp: 5400, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tom', isCurrentUser: false },
+    { id: 'c8', name: 'Fresh Market', meals: 64, xp: 4100, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fresh', isCurrentUser: false },
+    { id: 'c9', name: 'Julia R.', meals: 42, xp: 2800, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Julia', isCurrentUser: false },
+    { id: 'c10', name: 'The Local Bakery', meals: 30, xp: 1900, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bakery', isCurrentUser: false },
 ];
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ user, stats }) => {

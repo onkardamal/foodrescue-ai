@@ -22,7 +22,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// --- ICONIC MOCK DATA: BURGER INGREDIENTS ---
+// --- RE-ADDED MOCK DATA: THE ICONIC BURGER INGREDIENTS ---
 const INITIAL_INVENTORY: FoodItem[] = [
   { 
     id: "m1", 
@@ -76,7 +76,7 @@ const INITIAL_INVENTORY: FoodItem[] = [
   },
   { 
     id: "m6", 
-    name: "Mayonnaise", 
+    name: "Mayonnaise Jar", 
     category: FoodCategory.OTHER, 
     quantity: 1, 
     unit: "jar", 
@@ -89,17 +89,21 @@ const INITIAL_INVENTORY: FoodItem[] = [
 const INITIAL_HISTORY: DonationHistoryItem[] = [
   {
     id: 'h1',
-    foodName: 'Ground Beef (Bulk)',
-    date: 'Oct 12, 2:00 PM',
-    ngoName: 'City Care',
+    foodName: 'Bulk Potato Sacks (10kg)',
+    date: 'Jan 15, 2:00 PM',
+    ngoName: 'City Care Food Bank',
     status: 'completed',
     points: 500,
-    review: { rating: 5, tags: ['Punctual ⏰', 'Polite 😊'] }
+    review: { 
+      rating: 5, 
+      tags: ['Punctual ⏰', 'Polite 😊'], 
+      comment: "Super smooth pickup. The volunteer was very helpful!" 
+    }
   },
   {
     id: 'h2',
-    foodName: 'Organic Tomato (5kg)',
-    date: 'Oct 15, 10:30 AM',
+    foodName: 'Organic Tomato Crate',
+    date: 'Jan 22, 10:30 AM',
     ngoName: 'Helping Hands Shelter',
     status: 'completed',
     points: 350
@@ -117,7 +121,7 @@ const INITIAL_STATS: UserStats = {
   history: INITIAL_HISTORY
 };
 
-// Sidebar for Desktop
+// Sidebar Component
 const Sidebar = ({ user }: { user: User | null }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
@@ -307,41 +311,50 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 export default function App() {
   const [auth, setAuth] = useState<AuthState>(AuthService.init());
   const [isLoginView, setIsLoginView] = useState(true);
-  const [inventory, setInventory] = useState<FoodItem[]>(INITIAL_INVENTORY);
+  const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(INITIAL_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
   
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
+  // Handle initialization of profile specific data
   useEffect(() => {
-    // Attempt to load profile-specific data if available
-    const key = `savebite_data_${auth.user?.id || 'guest'}`;
-    const storedData = localStorage.getItem(key);
-    
-    if (storedData) {
-        try {
-            const parsed = JSON.parse(storedData);
-            setInventory(parsed.inventory || INITIAL_INVENTORY);
-            setStats(parsed.stats || INITIAL_STATS);
-        } catch (e) {
-            setInventory(INITIAL_INVENTORY);
-            setStats(INITIAL_STATS);
+    if (auth.isAuthenticated && auth.user?.id) {
+        const key = `savebite_data_${auth.user.id}`;
+        const storedData = localStorage.getItem(key);
+        
+        if (auth.user.email === 'demo@ecotable.dev' && !storedData) {
+             // For the specific demo user, if no fresh data exists, provide the iconic burger mock data
+             setInventory(INITIAL_INVENTORY);
+             setStats(INITIAL_STATS);
+        } else if (storedData) {
+             try {
+                 const parsed = JSON.parse(storedData);
+                 setInventory(parsed.inventory || INITIAL_INVENTORY);
+                 setStats(parsed.stats || INITIAL_STATS);
+             } catch (e) {
+                 setInventory(INITIAL_INVENTORY);
+                 setStats(INITIAL_STATS);
+             }
+        } else {
+             setInventory(INITIAL_INVENTORY);
+             setStats(INITIAL_STATS);
         }
-    } else {
-        setInventory(INITIAL_INVENTORY);
-        setStats(INITIAL_STATS);
+        setIsDataInitialized(true);
     }
   }, [auth.isAuthenticated, auth.user?.id]);
 
+  // Persist data on changes
   useEffect(() => {
-    if (auth.isAuthenticated) {
-        const key = `savebite_data_${auth.user?.id || 'guest'}`;
+    if (isDataInitialized && auth.isAuthenticated && auth.user?.id) {
+        const key = `savebite_data_${auth.user.id}`;
         localStorage.setItem(key, JSON.stringify({ inventory, stats }));
     }
-  }, [inventory, stats, auth.isAuthenticated, auth.user?.id]);
+  }, [inventory, stats, auth.isAuthenticated, auth.user?.id, isDataInitialized]);
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -356,7 +369,6 @@ export default function App() {
   const handleLogin = (state: AuthState) => setAuth(state);
   const handleLogout = () => {
     AuthService.logout().then(setAuth);
-    // Hard refresh to reset app state completely on logout
     window.location.hash = '#/';
     window.location.reload(); 
   };
@@ -364,6 +376,7 @@ export default function App() {
   const handleAddItem = (item: FoodItem) => setInventory(prev => [item, ...prev]);
   const handleDeleteItem = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
   const handleEditItem = (updatedItem: FoodItem) => setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     if (status === 'donated') {
@@ -382,7 +395,6 @@ export default function App() {
       const isUsed = recipe.ingredients.some(ing => ing.toLowerCase().includes(item.name.toLowerCase()));
       return isUsed && item.status === 'active' ? { ...item, status: 'consumed' } : item;
     }));
-
     setStats(prev => ({
       ...prev,
       mealsSaved: prev.mealsSaved + 1,
