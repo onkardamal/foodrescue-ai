@@ -22,7 +22,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// --- RELOADED MOCK DATA: BURGER INGREDIENTS ---
+// --- ICONIC MOCK DATA: BURGER INGREDIENTS ---
 const INITIAL_INVENTORY: FoodItem[] = [
   { 
     id: "m1", 
@@ -138,7 +138,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
         </div>
         <div>
           <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-none">SaveBite</h1>
-          <p className="text-[9px] text-[#757575] dark:text-slate-400 font-medium mt-1 uppercase tracking-tighter leading-none">The right choice before waste</p>
+          <p className="text-[9px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1">The right choice before waste</p>
         </div>
       </div>
 
@@ -184,7 +184,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
           <img 
             src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
             alt="Profile" 
-            className="w-10 h-10 rounded-full bg-slate-200" 
+            className="w-10 h-10 rounded-full bg-slate-200 shadow-sm" 
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-[#212121] dark:text-white truncate">{user?.name}</p>
@@ -317,23 +317,31 @@ export default function App() {
   });
 
   useEffect(() => {
-    const storedInventory = localStorage.getItem('savebite_inventory');
-    if (storedInventory) {
-      setInventory(JSON.parse(storedInventory));
-    } else {
-      setInventory(INITIAL_INVENTORY);
-    }
+    // Attempt to load profile-specific data if available
+    const key = `savebite_data_${auth.user?.id || 'guest'}`;
+    const storedData = localStorage.getItem(key);
     
-    const storedStats = localStorage.getItem('savebite_stats');
-    if (storedStats) setStats(JSON.parse(storedStats));
-  }, []);
+    if (storedData) {
+        try {
+            const parsed = JSON.parse(storedData);
+            setInventory(parsed.inventory || INITIAL_INVENTORY);
+            setStats(parsed.stats || INITIAL_STATS);
+        } catch (e) {
+            setInventory(INITIAL_INVENTORY);
+            setStats(INITIAL_STATS);
+        }
+    } else {
+        setInventory(INITIAL_INVENTORY);
+        setStats(INITIAL_STATS);
+    }
+  }, [auth.isAuthenticated, auth.user?.id]);
 
   useEffect(() => {
     if (auth.isAuthenticated) {
-        localStorage.setItem('savebite_inventory', JSON.stringify(inventory));
-        localStorage.setItem('savebite_stats', JSON.stringify(stats));
+        const key = `savebite_data_${auth.user?.id || 'guest'}`;
+        localStorage.setItem(key, JSON.stringify({ inventory, stats }));
     }
-  }, [inventory, stats, auth.isAuthenticated]);
+  }, [inventory, stats, auth.isAuthenticated, auth.user?.id]);
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -348,6 +356,9 @@ export default function App() {
   const handleLogin = (state: AuthState) => setAuth(state);
   const handleLogout = () => {
     AuthService.logout().then(setAuth);
+    // Hard refresh to reset app state completely on logout
+    window.location.hash = '#/';
+    window.location.reload(); 
   };
 
   const handleAddItem = (item: FoodItem) => setInventory(prev => [item, ...prev]);

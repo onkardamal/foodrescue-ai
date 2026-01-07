@@ -8,12 +8,14 @@ interface AuthProps {
   onToggle: () => void;
 }
 
+// In a real app, this would be an environment variable. 
+// For this environment, we'll use a placeholder that falls back to a clean mock experience if not configured.
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
 
 const performGoogleLogin = async (): Promise<AuthState> => {
     return new Promise((resolve, reject) => {
         if (!window.google) {
-            reject(new Error("Google Identity Services not loaded."));
+            reject(new Error("Google Identity Services script not detected."));
             return;
         }
 
@@ -22,7 +24,7 @@ const performGoogleLogin = async (): Promise<AuthState> => {
             scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
             callback: async (tokenResponse: any) => {
                 if (tokenResponse.error) {
-                    reject(new Error("Google Login Failed"));
+                    reject(new Error("Google Login Failed: " + tokenResponse.error));
                     return;
                 }
 
@@ -31,7 +33,13 @@ const performGoogleLogin = async (): Promise<AuthState> => {
                         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                             headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
                         });
+                        
+                        if (!userInfoResponse.ok) {
+                            throw new Error('Failed to fetch user profile from Google');
+                        }
+
                         const userInfo = await userInfoResponse.json();
+
                         const authState: AuthState = {
                             user: {
                                 id: userInfo.sub,
@@ -42,6 +50,8 @@ const performGoogleLogin = async (): Promise<AuthState> => {
                             token: tokenResponse.access_token,
                             isAuthenticated: true
                         };
+                        
+                        // Sync with local storage session key used by AuthService
                         localStorage.setItem('savebite_session', JSON.stringify(authState));
                         resolve(authState);
                     } catch (err) {
@@ -50,6 +60,7 @@ const performGoogleLogin = async (): Promise<AuthState> => {
                 }
             },
         });
+
         client.requestAccessToken();
     });
 };
@@ -66,7 +77,7 @@ const GoogleIcon = () => (
 const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle: string }> = ({ children, title, subtitle }) => {
   return (
     <div className="min-h-screen w-full flex bg-white dark:bg-slate-950 transition-colors duration-300">
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 lg:px-20 py-10">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 lg:px-20 py-10 bg-white dark:bg-slate-950">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-200 dark:shadow-teal-900/30">
@@ -77,24 +88,49 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
               <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tighter mt-1">The right choice before waste</p>
             </div>
           </div>
+
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-[#212121] dark:text-white mb-2">{title}</h2>
             <p className="text-[#757575] dark:text-slate-400">{subtitle}</p>
           </div>
+
           {children}
         </div>
       </div>
+
       <div className="hidden lg:flex w-1/2 relative bg-[#F0FDF4] dark:bg-slate-900 overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop")', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div 
+          className="absolute inset-0 z-0" 
+          style={{
+            backgroundImage: 'url("https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
         </div>
+
         <div className="relative z-10 p-12 text-white max-w-lg">
           <div className="mb-6 w-16 h-1 bg-[#00796B] rounded-full"></div>
           <h2 className="text-5xl font-black leading-tight mb-2">SaveBite</h2>
           <p className="text-xl font-bold text-teal-400 uppercase tracking-widest mb-6">The right choice before waste</p>
-          <p className="text-lg text-white/90 leading-relaxed">
+          <p className="text-lg text-white/90 leading-relaxed mb-8">
             Turn your excess food into meals, not waste. Track inventory, donate to NGOs, and save the planet—one bite at a time.
           </p>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex -space-x-4">
+              {[1,2,3].map(i => (
+                <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 overflow-hidden shadow-sm">
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i * 321}`} alt="User" />
+                </div>
+              ))}
+            </div>
+            <div className="text-sm font-medium">
+              <span className="block font-bold">10k+ Community</span>
+              <span className="opacity-80">Saving food daily</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -127,27 +163,27 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
     setError('');
     try {
         if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-            setTimeout(() => {
-                const mockState = {
-                    user: {
-                        id: 'demo-user-id',
-                        name: 'Eco Chef',
-                        email: 'demo@ecotable.dev',
-                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=EcoChef'
-                    },
-                    token: 'mock-token',
-                    isAuthenticated: true
-                };
-                localStorage.setItem('savebite_session', JSON.stringify(mockState));
-                onLogin(mockState);
-                setGoogleLoading(false);
-            }, 800);
+            // Mock dynamic response if client ID isn't provided (for demo)
+            await new Promise(r => setTimeout(r, 1200));
+            const mockState = {
+                user: {
+                    id: 'google-user-id',
+                    name: 'Alex Rivera',
+                    email: 'alex.rivera@gmail.com',
+                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex'
+                },
+                token: 'mock-google-token',
+                isAuthenticated: true
+            };
+            localStorage.setItem('savebite_session', JSON.stringify(mockState));
+            onLogin(mockState);
             return;
         }
+
         const authState = await performGoogleLogin();
         onLogin(authState);
     } catch (err: any) {
-        setError("Google Login failed");
+        setError(err.message || "Google Login failed");
     } finally {
         setGoogleLoading(false);
     }
@@ -156,53 +192,65 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
   return (
     <AuthLayout title="Welcome Back" subtitle="Log in to manage your inventory.">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-2 border border-red-100 dark:border-red-900/30">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></div>
             {error}
           </div>
         )}
+
         <div className="space-y-4">
             <button 
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={googleLoading || loading}
-                className="w-full bg-white dark:bg-slate-800 text-[#757575] border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
+                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
             >
-                {googleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /><span>Sign in with Google</span></>}
+                {googleLoading ? (
+                     <Loader2 className="animate-spin text-[#00796B]" />
+                ) : (
+                    <>
+                        <GoogleIcon />
+                        <span>Sign in with Google</span>
+                    </>
+                )}
             </button>
+
             <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
                 <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-medium uppercase">Or email</span>
                 <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
             </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200">Email</label>
+                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Email</label>
                 <div className="relative">
-                <Mail className="absolute left-4 top-3.5 text-[#9E9E9E]" size={20} />
+                <Mail className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
                     type="email" 
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white rounded-xl outline-none transition-all text-[#212121] dark:text-white"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
                     placeholder="name@example.com"
                     required
                 />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200">Password</label>
+                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
                 <div className="relative">
-                <Lock className="absolute left-4 top-3.5 text-[#9E9E9E]" size={20} />
+                <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
                     type="password" 
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white rounded-xl outline-none transition-all text-[#212121] dark:text-white"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     placeholder="••••••••"
                     required
                 />
                 </div>
             </div>
+            
             <button 
                 type="submit" 
                 disabled={loading || googleLoading}
@@ -212,18 +260,22 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
             </button>
             </form>
         </div>
+
         <div className="mt-8 text-center">
-          <p className="text-[#757575]">Don't have an account? <button onClick={onToggle} className="text-[#00796B] font-bold">Sign Up</button></p>
+          <p className="text-[#757575] dark:text-slate-400">Don't have an account? <button onClick={onToggle} className="text-[#00796B] font-bold hover:underline">Sign Up</button></p>
         </div>
+        
         <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800">
-           <p className="text-xs text-center text-[#9E9E9E] font-bold uppercase flex items-center justify-center gap-2 mb-3">
-             <Sparkles size={12} fill="currentColor" /> Hackathon Demo Shortcut <Sparkles size={12} fill="currentColor" />
+           <p className="text-xs text-center text-[#9E9E9E] dark:text-slate-500 mb-3 uppercase tracking-wider font-bold flex items-center justify-center gap-2">
+            <Sparkles size={12} fill="currentColor" /> Hackathon Demo Shortcut <Sparkles size={12} fill="currentColor" />
            </p>
            <button 
              onClick={() => { setEmail('demo@ecotable.dev'); setPassword('password123'); }}
-             className="w-full py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-mono border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors"
+             className="w-full py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-mono border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
            >
-             demo@ecotable.dev • password123
+             <span>demo@ecotable.dev</span>
+             <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+             <span>password123</span>
            </button>
         </div>
     </AuthLayout>
@@ -235,6 +287,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,66 +304,124 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+        if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+            await new Promise(r => setTimeout(r, 1200));
+            const mockState = {
+                user: {
+                    id: 'google-new-user-id',
+                    name: 'Jamie Taylor',
+                    email: 'jamie.t@gmail.com',
+                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jamie'
+                },
+                token: 'mock-google-token',
+                isAuthenticated: true
+            };
+            localStorage.setItem('savebite_session', JSON.stringify(mockState));
+            onLogin(mockState);
+            return;
+        }
+
+        const authState = await performGoogleLogin();
+        onLogin(authState);
+    } catch (err: any) {
+        setError(err.message || "Google Signup failed");
+    } finally {
+        setGoogleLoading(false);
+    }
+  };
+
   return (
     <AuthLayout title="Create Account" subtitle="Join the zero-waste movement today.">
          {error && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-2 border border-red-100 dark:border-red-900/30">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></div>
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div className="space-y-4">
+             <button 
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading || loading}
+                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
+            >
+                {googleLoading ? (
+                     <Loader2 className="animate-spin text-[#00796B]" />
+                ) : (
+                    <>
+                        <GoogleIcon />
+                        <span>Sign up with Google</span>
+                    </>
+                )}
+            </button>
+
+            <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-medium uppercase">Or use email</span>
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200">Full Name</label>
+                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Full Name</label>
                 <div className="relative">
-                <User className="absolute left-4 top-3.5 text-[#9E9E9E]" size={20} />
+                <User className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
                     type="text" 
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white rounded-xl outline-none transition-all text-[#212121] dark:text-white"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
                     placeholder="Jane Doe"
                     required
                 />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200">Email</label>
+                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Email</label>
                 <div className="relative">
-                <Mail className="absolute left-4 top-3.5 text-[#9E9E9E]" size={20} />
+                <Mail className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
                     type="email" 
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white rounded-xl outline-none transition-all text-[#212121] dark:text-white"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600"
                     placeholder="chef@example.com"
                     required
                 />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-sm font-bold text-[#212121] dark:text-slate-200">Password</label>
+                <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">Password</label>
                 <div className="relative">
-                <Lock className="absolute left-4 top-3.5 text-[#9E9E9E]" size={20} />
+                <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input 
                     type="password" 
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white rounded-xl outline-none transition-all text-[#212121] dark:text-white"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     placeholder="••••••••"
                     required
                 />
                 </div>
             </div>
+            
             <button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-all active:scale-95 flex items-center justify-center gap-2"
+                disabled={loading || googleLoading}
+                className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-colors flex items-center justify-center gap-2 active:scale-95"
             >
                 {loading ? <Loader2 className="animate-spin" /> : <>Create Account <CheckCircle size={20} /></>}
             </button>
-        </form>
+            </form>
+        </div>
+
         <div className="mt-8 text-center">
-          <p className="text-[#757575]">Already have an account? <button onClick={onToggle} className="text-[#00796B] font-bold">Log In</button></p>
+          <p className="text-[#757575] dark:text-slate-400">Already have an account? <button onClick={onToggle} className="text-[#00796B] font-bold hover:underline">Log In</button></p>
         </div>
     </AuthLayout>
   );
