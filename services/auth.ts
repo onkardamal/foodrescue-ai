@@ -10,20 +10,17 @@ import {
 } from "firebase/auth";
 import { auth, db } from "./firebase";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
-import { User, AuthState } from '../types';
+import { User } from '../types';
 
 // Helper to map Firebase User to our App User type
 export const mapFirebaseUser = (fbUser: FirebaseUser): User => ({
   id: fbUser.uid,
-  name: fbUser.displayName || 'Eco Chef',
+  name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
   email: fbUser.email || '',
   avatar: fbUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fbUser.uid}`
 });
 
 export const AuthService = {
-  // Auth state changes are handled via onAuthStateChanged in App.tsx
-  // This service now exposes actions.
-
   signup: async (name: string, email: string, password: string): Promise<void> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, {

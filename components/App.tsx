@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { Home, Package, ChefHat, Heart, MapPin, Leaf, Moon, Sun, User as UserIcon, Loader2 } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User } from '../types';
+import { FoodItem, UserStats, Recipe, AuthState, ThemeContextType, Theme, User } from '../types';
 import { AuthService, mapFirebaseUser } from '../services/auth';
 import { auth, db } from '../services/firebase';
 import { onAuthStateChanged } from "firebase/auth";
@@ -268,7 +268,6 @@ export default function App() {
       if (docSnap.exists() && docSnap.data().stats) {
         setStats(docSnap.data().stats as UserStats);
       } else {
-        // Doc might not exist yet if simple signup, wait or set defaults
         setStats(INITIAL_STATS);
       }
     });
@@ -305,7 +304,7 @@ export default function App() {
 
   const handleLogout = async () => {
     await AuthService.logout();
-    window.location.reload();
+    window.location.hash = '#/';
   };
 
   // --- Firestore Action Handlers ---
@@ -331,7 +330,7 @@ export default function App() {
     // 1. Update Inventory Item
     await updateDoc(doc(db, 'users', authState.user.id, 'inventory', id), { status });
     
-    // 2. Update Stats (only for donated case here, similar logic for others if needed)
+    // 2. Update Stats (only for donated case here)
     if (status === 'donated') {
         const newStats = {
             ...stats,
