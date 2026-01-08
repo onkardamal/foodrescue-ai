@@ -60,17 +60,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Load user data from Firestore
   const loadUserData = async (firebaseUser: FirebaseUser) => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        setUserData({
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          name: data.name || firebaseUser.displayName || '',
-          avatar: data.avatar || firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`
-        });
-      } else {
-        // Create user document if it doesn't exist
+      // Try to load from Firestore, but don't fail if Firestore is not available
+      try {
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setUserData({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: data.name || firebaseUser.displayName || '',
+            avatar: data.avatar || firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`
+          });
+          return;
+        }
+      } catch (firestoreError) {
+        console.warn('Firestore not available, using Firebase Auth data only:', firestoreError);
+        // Fall through to use Firebase Auth data
+      }
+
+      // Create user document if it doesn't exist (only if Firestore is available)
+      try {
         const newUser = firebaseUserToUser(firebaseUser);
         await setDoc(doc(db, 'users', firebaseUser.uid), {
           ...newUser,
@@ -78,9 +87,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           updatedAt: serverTimestamp()
         });
         setUserData(newUser);
+      } catch (firestoreError) {
+        // If Firestore fails, just use Firebase Auth data
+        console.warn('Could not create Firestore document, using Firebase Auth data:', firestoreError);
+        setUserData(firebaseUserToUser(firebaseUser));
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+      // Always fallback to Firebase Auth data
       setUserData(firebaseUserToUser(firebaseUser));
     }
   };
@@ -216,46 +230,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Listen to auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setCurrentUser(firebaseUser);
-      
-      if (firebaseUser) {
-        await loadUserData(firebaseUser);
-      } else {
-        // Check if there's a demo account session
-        const session = localStorage.getItem('savebite_session');
-        if (session) {
-          try {
-            const authState = JSON.parse(session);
-            if (authState.isAuthenticated && authState.user) {
-              setUserData(authState.user);
-              setLoading(false);
-              return;
+    let mounted = true;
+
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (!mounted) return;
+        
+        setCurrentUser(firebaseUser);
+        
+        if (firebaseUser) {
+          await loadUserData(firebaseUser);
+        } else {
+          // Check if there's a demo account session
+          const session = localStorage.getItem('savebite_session');
+          if (session) {
+            try {
+              const authState = JSON.parse(session);
+              if (authState.isAuthenticated && authState.user) {
+                setUserData(authState.user);
+                if (mounted) setLoading(false);
+                return;
+              }
+            } catch (e) {
+              // Invalid session, continue
             }
-          } catch (e) {
-            // Invalid session, continue
           }
+          setUserData(null);
         }
-        setUserData(null);
+        
+        if (mounted) setLoading(false);
+      });
+
+      // Also check for demo account on mount
+      const session = localStorage.getItem('savebite_session');
+      if (session) {
+        try {
+          const authState = JSON.parse(session);
+          if (authState.isAuthenticated && authState.user && !currentUser) {
+            setUserData(authState.user);
+          }
+        } catch (e) {
+          // Invalid session
+        }
       }
-      
+
+      return () => {
+        mounted = false;
+        unsubscribe();
+      };
+    } catch (error) {
+      console.error('Error setting up auth state listener:', error);
+      // If Firebase Auth fails, check for demo account
+      const session = localStorage.getItem('savebite_session');
+      if (session) {
+        try {
+          const authState = JSON.parse(session);
+          if (authState.isAuthenticated && authState.user) {
+            setUserData(authState.user);
+          }
+        } catch (e) {
+          // Invalid session
+        }
+      }
       setLoading(false);
-    });
-
-    // Also check for demo account on mount
-    const session = localStorage.getItem('savebite_session');
-    if (session) {
-      try {
-        const authState = JSON.parse(session);
-        if (authState.isAuthenticated && authState.user && !currentUser) {
-          setUserData(authState.user);
-        }
-      } catch (e) {
-        // Invalid session
-      }
+      return () => { mounted = false; };
     }
-
-    return unsubscribe;
   }, []);
 
   // Get auth state - check both Firebase and demo account

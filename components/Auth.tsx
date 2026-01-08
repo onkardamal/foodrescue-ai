@@ -42,7 +42,22 @@ const AuthLayout: React.FC<{ children: React.ReactNode; title: string; subtitle:
 };
 
 export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
-  const { signIn, signInWithGoogle, resetPassword, authState } = useAuth();
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.error('Auth context error:', error);
+    // Fallback: use AuthService directly
+    authContext = null;
+  }
+  
+  const { signIn, signInWithGoogle, resetPassword, authState } = authContext || {
+    signIn: async () => { throw new Error('Auth not available'); },
+    signInWithGoogle: async () => { throw new Error('Auth not available'); },
+    resetPassword: async () => { throw new Error('Auth not available'); },
+    authState: { isAuthenticated: false, user: null, token: null }
+  };
+  
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -85,9 +100,18 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
       }
 
       // Use Firebase Auth for real accounts
-      await signIn(email, password);
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      try {
+        await signIn(email, password);
+        const from = (location.state as any)?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      } catch (firebaseError: any) {
+        // If Firebase Auth fails, try AuthService as fallback
+        console.warn('Firebase Auth failed, trying AuthService:', firebaseError);
+        const state = await AuthService.login(email, password);
+        if (onLogin) onLogin(state);
+        const from = (location.state as any)?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
