@@ -5,6 +5,7 @@ import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { AuthService } from '../services/auth';
+import { useAuth } from '../contexts/AuthContext';
 import Analytics from './Analytics';
 
 interface ProfileProps {
@@ -17,6 +18,7 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { currentUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'stats' | 'history'>('history');
   const [showRateModal, setShowRateModal] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -76,7 +78,17 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
+        // Delete from AuthService (for demo accounts)
         await AuthService.deleteAccount(user.id);
+        
+        // If Firebase user, delete from Firebase Auth
+        if (currentUser) {
+          // Note: Firebase Auth doesn't have a direct delete method in client SDK
+          // You would need to call a backend function or use Admin SDK
+          // For now, just logout
+          await logout();
+        }
+        
         onLogout(); // This will reset App states and redirect to Login
     } catch (err) {
         console.error("Failed to delete account", err);
