@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GOOGLE_CLIENT_ID': JSON.stringify(env.GOOGLE_CLIENT_ID || ''),
         'process.env.FIREBASE_CONFIG': JSON.stringify(env.FIREBASE_CONFIG || ''),
+        'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(env.VITE_GOOGLE_CLIENT_ID || env.GOOGLE_CLIENT_ID || ''),
         // Expose Firebase config as Vite env vars
         'import.meta.env.VITE_FIREBASE_CONFIG': JSON.stringify(env.FIREBASE_CONFIG || ''),
         'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(env.VITE_FIREBASE_API_KEY || env.FIREBASE_API_KEY || ''),

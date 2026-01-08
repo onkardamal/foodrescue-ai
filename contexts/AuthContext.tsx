@@ -279,6 +279,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
+    // Subscribe to AuthService for demo/local auth updates
+    const unsubscribeAuthService = AuthService.subscribe((state) => {
+      if (!mounted) return;
+      if (state.user) {
+        setUserData(state.user);
+      } else {
+        setUserData(null);
+      }
+      setLoading(false);
+    });
+
     // Check for demo account first
     const session = localStorage.getItem('savebite_session');
     if (session) {
@@ -351,8 +362,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
       setLoading(false);
-      return () => { mounted = false; };
+      return () => { mounted = false; unsubscribeAuthService(); };
     }
+    return () => { mounted = false; unsubscribeAuthService(); };
   }, []);
 
   // Get auth state - check both Firebase and demo account

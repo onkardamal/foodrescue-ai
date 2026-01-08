@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { AuthService } from '../services/auth';
 import { AuthState, User as UserType } from '../types';
 import { Loader2, Mail, Lock, User, ArrowRight, CheckCircle, Leaf, Sparkles, X, ChevronRight } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 interface AuthProps {
   onLogin?: (state: AuthState) => void;
@@ -60,6 +60,14 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
   
   const navigate = useNavigate();
   const location = useLocation();
+  const goToSignup = () => {
+    if (onToggle) onToggle();
+    else navigate('/signup');
+  };
+  const goToLogin = () => {
+    if (onToggle) onToggle();
+    else navigate('/login');
+  };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -124,7 +132,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
     setError('');
     try {
       // Check if Google Client ID is configured
-      const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+      const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
       
       if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
         // Show mock account picker for demo
@@ -349,7 +357,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
               <p className="text-sm text-[#757575] dark:text-slate-400">
                 Don't have an account?{' '}
                 <button
-                  onClick={onToggle}
+                  onClick={goToSignup}
                   className="text-[#00796B] hover:text-[#00695C] dark:text-teal-400 dark:hover:text-teal-300 font-semibold transition-colors"
                 >
                   Sign Up
@@ -367,6 +375,10 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
   const { signUp, signInWithGoogle, authState } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const goToLogin = () => {
+    if (onToggle) onToggle();
+    else navigate('/login');
+  };
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -419,7 +431,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
     setGoogleLoading(true);
     setError('');
     try {
-      const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+      const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
       
       if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
         setShowMockAccountPicker(true);
@@ -575,7 +587,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle }) => {
               <p className="text-sm text-[#757575] dark:text-slate-400">
                 Already have an account?{' '}
                 <button
-                  onClick={onToggle}
+                  onClick={goToLogin}
                   className="text-[#00796B] hover:text-[#00695C] dark:text-teal-400 dark:hover:text-teal-300 font-semibold transition-colors"
                 >
                   Log In
