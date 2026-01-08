@@ -1,9 +1,30 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { FoodItem, Recipe, ScanResult, FoodCategory, NGO } from '../types';
 
-// Initialize Gemini
-// Note: process.env.API_KEY is guaranteed to be available in this environment
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization of Gemini client - only import when needed
+let ai: any = null;
+let GoogleGenAI: any = null;
+let Type: any = null;
+
+const getAI = async (): Promise<any> => {
+  if (!ai) {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    if (!apiKey) {
+      console.warn('GEMINI_API_KEY is not set. AI features will be disabled.');
+      return null;
+    }
+    try {
+      // Dynamic import to avoid loading the library if API key is not set
+      const genaiModule = await import("@google/genai");
+      GoogleGenAI = genaiModule.GoogleGenAI;
+      Type = genaiModule.Type;
+      ai = new GoogleGenAI({ apiKey });
+    } catch (error) {
+      console.error('Failed to initialize Gemini AI:', error);
+      return null;
+    }
+  }
+  return ai;
+};
 
 /**
  * Analyzes an image of food to identify what it is and estimate expiry.
@@ -11,6 +32,11 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
  */
 export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult> => {
   try {
+    const aiInstance = await getAI();
+    if (!aiInstance) {
+      throw new Error('AI service is not available. Please set GEMINI_API_KEY in your .env file.');
+    }
+    
     const today = new Date().toISOString().split('T')[0];
     const prompt = `
       Analyze this image. Today is ${today}.
@@ -20,7 +46,7 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
       4. Estimate a specific expiry date (YYYY-MM-DD) based on its condition relative to today (${today}).
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await aiInstance.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: [
@@ -36,15 +62,15 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
+          type: "object",
           properties: {
-            isFood: { type: Type.BOOLEAN, description: "True ONLY if image contains food/ingredients. False for people, pets, blurred objects, etc." },
-            name: { type: Type.STRING },
-            category: { type: Type.STRING, enum: ["Produce", "Dairy", "Meat", "Grains", "Bakery", "Canned", "Other"] },
-            condition: { type: Type.STRING, description: "Visual freshness state e.g. 'Fresh', 'Ripe', 'Wilted'" },
-            expiryEstimation: { type: Type.STRING, description: "YYYY-MM-DD" },
-            quantityEstimation: { type: Type.NUMBER },
-            unitEstimation: { type: Type.STRING }
+            isFood: { type: "boolean", description: "True ONLY if image contains food/ingredients. False for people, pets, blurred objects, etc." },
+            name: { type: "string" },
+            category: { type: "string", enum: ["Produce", "Dairy", "Meat", "Grains", "Bakery", "Canned", "Other"] },
+            condition: { type: "string", description: "Visual freshness state e.g. 'Fresh', 'Ripe', 'Wilted'" },
+            expiryEstimation: { type: "string", description: "YYYY-MM-DD" },
+            quantityEstimation: { type: "number" },
+            unitEstimation: { type: "string" }
           },
           required: ["isFood", "name", "category", "condition", "expiryEstimation", "quantityEstimation", "unitEstimation"]
         }
@@ -90,13 +116,19 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
  */
 export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recipe[]> => {
   try {
+    const aiInstance = await getAI();
+    if (!aiInstance) {
+      console.warn('AI service is not available. Returning empty recipes.');
+      return [];
+    }
+    
     const availableIngredients = inventory
       .map(item => `${item.name} (${item.condition || 'Good'}, Expires: ${item.expiryDate})`)
       .join(", ");
 
     if (!availableIngredients) return [];
 
-    const response = await ai.models.generateContent({
+    const response = await aiInstance.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
         Suggest 3 creative recipes that use these ingredients: ${availableIngredients}.
@@ -106,25 +138,25 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
+          type: "array",
           items: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
+              title: { type: "string" },
+              description: { type: "string" },
               ingredients: { 
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
+                type: "array",
+                items: { type: "string" }
               },
               instructions: { 
-                type: Type.ARRAY, 
-                items: { type: Type.STRING }
+                type: "array", 
+                items: { type: "string" }
               },
-              cookingTime: { type: Type.INTEGER },
-              difficulty: { type: Type.STRING },
+              cookingTime: { type: "integer" },
+              difficulty: { type: "string" },
               savedItems: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
+                type: "array",
+                items: { type: "string" },
                 description: "List of ingredient names from the input used in this recipe"
               }
             }
@@ -155,7 +187,13 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
  */
 export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]> => {
   try {
-    const response = await ai.models.generateContent({
+    const aiInstance = await getAI();
+    if (!aiInstance) {
+      console.warn('AI service is not available. Returning empty NGO list.');
+      return [];
+    }
+    
+    const response = await aiInstance.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Find 10 food banks, soup kitchens, or food rescue organizations near this location (Lat: ${lat}, Lng: ${lng}).
       For each place, provide:
