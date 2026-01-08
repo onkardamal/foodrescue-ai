@@ -1,18 +1,16 @@
 steps:
-  # Build the Docker image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/foodrescue-ai:$SHORT_SHA', '-t', 'gcr.io/$PROJECT_ID/foodrescue-ai:latest', '.']
+  # Build the React application
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['install']
 
-  # Push the image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/foodrescue-ai:$SHORT_SHA']
-  
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/foodrescue-ai:latest']
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['run', 'build']
 
-images:
-  - 'gcr.io/$PROJECT_ID/foodrescue-ai:$SHORT_SHA'
-  - 'gcr.io/$PROJECT_ID/foodrescue-ai:latest'
+  # Deploy to Firebase Hosting
+  - name: 'gcr.io/cloud-builders/firebase'
+    args: ['deploy', '--project=$PROJECT_ID', '--only=hosting']
 
 options:
   logging: CLOUD_LOGGING_ONLY
