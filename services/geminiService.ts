@@ -7,9 +7,9 @@ let Type: any = null;
 
 const getAI = async (): Promise<any> => {
   if (!ai) {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn('GEMINI_API_KEY is not set. AI features will be disabled.');
+      console.warn('VITE_GEMINI_API_KEY is not set. AI features will be disabled.');
       return null;
     }
     try {
@@ -36,7 +36,7 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
     if (!aiInstance) {
       throw new Error('AI service is not available. Please set GEMINI_API_KEY in your .env file.');
     }
-    
+
     const today = new Date().toISOString().split('T')[0];
     const prompt = `
       Analyze this image. Today is ${today}.
@@ -79,20 +79,20 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
 
     const text = response.text;
     if (!text) {
-        throw new Error("No response text from Gemini");
+      throw new Error("No response text from Gemini");
     }
-    
+
     const cleanText = text.replace(/```json|```/g, '').trim();
     let data;
 
     try {
-        data = JSON.parse(cleanText);
+      data = JSON.parse(cleanText);
     } catch (parseError) {
-        throw new Error("Failed to parse AI response");
+      throw new Error("Failed to parse AI response");
     }
 
     if (!data.isFood) {
-        throw new Error("NOT_FOOD");
+      throw new Error("NOT_FOOD");
     }
 
     return {
@@ -121,7 +121,7 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
       console.warn('AI service is not available. Returning empty recipes.');
       return [];
     }
-    
+
     const availableIngredients = inventory
       .map(item => `${item.name} (${item.condition || 'Good'}, Expires: ${item.expiryDate})`)
       .join(", ");
@@ -144,12 +144,12 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
             properties: {
               title: { type: "string" },
               description: { type: "string" },
-              ingredients: { 
+              ingredients: {
                 type: "array",
                 items: { type: "string" }
               },
-              instructions: { 
-                type: "array", 
+              instructions: {
+                type: "array",
                 items: { type: "string" }
               },
               cookingTime: { type: "integer" },
@@ -170,7 +170,7 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
 
     const cleanText = text.replace(/```json|```/g, '').trim();
     const recipes = JSON.parse(cleanText);
-    
+
     return recipes.map((r: any, index: number) => ({
       ...r,
       id: `generated-${Date.now()}-${index}`
@@ -192,7 +192,7 @@ export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]>
       console.warn('AI service is not available. Returning empty NGO list.');
       return [];
     }
-    
+
     const response = await aiInstance.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Find 10 food banks, soup kitchens, or food rescue organizations near this location (Lat: ${lat}, Lng: ${lng}).
@@ -225,27 +225,27 @@ export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]>
 
     // Clean potential markdown
     const cleanText = text.replace(/```json|```/g, '').trim();
-    
+
     // Attempt parse
     try {
-        const data = JSON.parse(cleanText);
-        if (Array.isArray(data)) {
-            return data.map((item: any, i: number) => ({
-                id: `real-${Date.now()}-${i}`,
-                name: item.name,
-                distance: "Nearby", // Simplified for now
-                rating: item.rating || 4.5,
-                description: item.description || "Food assistance organization.",
-                lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
-                lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
-                address: item.address,
-                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED] // Default needs
-            }));
-        }
+      const data = JSON.parse(cleanText);
+      if (Array.isArray(data)) {
+        return data.map((item: any, i: number) => ({
+          id: `real-${Date.now()}-${i}`,
+          name: item.name,
+          distance: "Nearby", // Simplified for now
+          rating: item.rating || 4.5,
+          description: item.description || "Food assistance organization.",
+          lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
+          lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
+          address: item.address,
+          needs: [FoodCategory.PRODUCE, FoodCategory.CANNED] // Default needs
+        }));
+      }
     } catch (e) {
-        console.warn("Failed to parse NGO JSON", e);
+      console.warn("Failed to parse NGO JSON", e);
     }
-    
+
     return [];
 
   } catch (error) {
