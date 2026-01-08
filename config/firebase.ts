@@ -8,13 +8,13 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 // we use this single source of truth config. If you rotate keys, update here.
 const getFirebaseConfig = () => {
   return {
-    apiKey: "AIzaSyBHgDsjCsVGwmdR_yp4Gg7cJXe7K2FeiFo",
-    authDomain: "gen-lang-client-0558617691.firebaseapp.com",
-    projectId: "gen-lang-client-0558617691",
-    storageBucket: "gen-lang-client-0558617691.firebasestorage.app",
-    messagingSenderId: "938374868946",
-    appId: "1:938374868946:web:7258416d5ed0eb6852620b",
-    measurementId: "G-5R9NE49RG0"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
   };
 };
 
