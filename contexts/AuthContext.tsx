@@ -15,6 +15,17 @@ import { auth, db } from '../config/firebase';
 import { User, AuthState } from '../types';
 import { AuthService } from '../services/auth';
 
+// Check if Firebase is available
+let firebaseAvailable = false;
+try {
+  if (auth && db) {
+    firebaseAvailable = true;
+  }
+} catch (error) {
+  console.warn('Firebase not available:', error);
+  firebaseAvailable = false;
+}
+
 interface AuthContextType {
   currentUser: FirebaseUser | null;
   userData: User | null;
@@ -101,6 +112,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Sign up with email/password
   const signUp = async (email: string, password: string, name: string) => {
+    if (!firebaseAvailable || !auth) {
+      // Fallback to AuthService
+      const state = await AuthService.signup(name, email, password);
+      setUserData(state.user);
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -116,11 +134,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
       };
 
-      await setDoc(doc(db, 'users', user.uid), {
-        ...userData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          ...userData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      } catch (firestoreError) {
+        console.warn('Firestore error during signup, continuing:', firestoreError);
+      }
 
       setUserData(userData);
     } catch (error: any) {
@@ -131,17 +153,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Sign in with email/password
   const signIn = async (email: string, password: string) => {
-    try {
-      // Check for demo account first - use AuthService for demo
-      if (email === 'demo@ecotable.dev' && password === 'password123') {
-        const demoAuthState = await AuthService.login(email, password);
-        // Set userData from demo account
-        if (demoAuthState.user) {
-          setUserData(demoAuthState.user);
-        }
-        return;
+    // Check for demo account first - use AuthService for demo
+    if (email === 'demo@ecotable.dev' && password === 'password123') {
+      const demoAuthState = await AuthService.login(email, password);
+      // Set userData from demo account
+      if (demoAuthState.user) {
+        setUserData(demoAuthState.user);
       }
+      return;
+    }
 
+    if (!firebaseAvailable || !auth) {
+      // Fallback to AuthService
+      const state = await AuthService.login(email, password);
+      setUserData(state.user);
+      return;
+    }
+
+    try {
       // Use Firebase Auth for real accounts
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
@@ -152,6 +181,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
+    if (!firebaseAvailable || !auth) {
+      throw new Error('Firebase Auth is not available. Please use demo accounts or configure Firebase.');
+    }
+
     try {
       const provider = new GoogleAuthProvider();
       provider.addScope('profile');
@@ -168,10 +201,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`
       };
 
-      await setDoc(doc(db, 'users', user.uid), {
-        ...userData,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          ...userData,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (firestoreError) {
+        console.warn('Firestore error during Google signin, continuing:', firestoreError);
+      }
 
       setUserData(userData);
     } catch (error: any) {
@@ -183,18 +220,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      await signOut(auth);
+      if (firebaseAvailable && auth) {
+        await signOut(auth);
+      }
       setUserData(null);
+      setCurrentUser(null);
       // Also clear local AuthService session
       await AuthService.logout();
     } catch (error: any) {
       console.error('Logout error:', error);
-      throw new Error(error.message || 'Failed to logout');
+      // Even if Firebase logout fails, clear local state
+      setUserData(null);
+      setCurrentUser(null);
+      await AuthService.logout();
     }
   };
 
   // Reset password
   const resetPassword = async (email: string) => {
+    if (!firebaseAvailable || !auth) {
+      throw new Error('Password reset is only available with Firebase Auth. Please configure Firebase.');
+    }
+
     try {
       await sendPasswordResetEmail(auth, email);
     } catch (error: any) {
@@ -232,6 +279,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
+    // Check for demo account first
+    const session = localStorage.getItem('savebite_session');
+    if (session) {
+      try {
+        const authState = JSON.parse(session);
+        if (authState.isAuthenticated && authState.user) {
+          setUserData(authState.user);
+          setLoading(false);
+          // Don't set up Firebase listener if demo account is active
+          if (!firebaseAvailable) {
+            return () => { mounted = false; };
+          }
+        }
+      } catch (e) {
+        // Invalid session, continue
+      }
+    }
+
+    // Only set up Firebase listener if Firebase is available
+    if (!firebaseAvailable) {
+      setLoading(false);
+      return () => { mounted = false; };
+    }
+
     try {
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (!mounted) return;
@@ -260,19 +331,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (mounted) setLoading(false);
       });
-
-      // Also check for demo account on mount
-      const session = localStorage.getItem('savebite_session');
-      if (session) {
-        try {
-          const authState = JSON.parse(session);
-          if (authState.isAuthenticated && authState.user && !currentUser) {
-            setUserData(authState.user);
-          }
-        } catch (e) {
-          // Invalid session
-        }
-      }
 
       return () => {
         mounted = false;

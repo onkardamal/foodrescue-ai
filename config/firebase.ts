@@ -53,10 +53,10 @@ const getFirebaseConfig = () => {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
 try {
   if (getApps().length === 0) {
@@ -71,8 +71,8 @@ try {
     // Connect to emulators in development if configured
     if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
       try {
-        connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-        connectFirestoreEmulator(db, 'localhost', 8080);
+        if (auth) connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+        if (db) connectFirestoreEmulator(db, 'localhost', 8080);
         console.log('Connected to Firebase Emulators');
       } catch (error) {
         console.warn('Firebase Emulator connection failed:', error);
@@ -86,7 +86,8 @@ try {
   }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
-  throw error;
+  console.warn('⚠️ Firebase will not be available. App will use fallback authentication.');
+  // Don't throw - allow app to continue with fallback
 }
 
 export { app, auth, db, storage };
