@@ -1,16 +1,23 @@
 steps:
-  # Build the React application
+  # Install dependencies
   - name: 'node:18'
     entrypoint: npm
     args: ['install']
 
+  # Build the React application
   - name: 'node:18'
     entrypoint: npm
     args: ['run', 'build']
 
-  # Deploy to Firebase Hosting
-  - name: 'gcr.io/cloud-builders/firebase'
-    args: ['deploy', '--project=$PROJECT_ID', '--only=hosting']
+  # Deploy to Firebase Hosting using gcloud
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud firebase hosting:channel:deploy --project=$PROJECT_ID --create-channel --channel-id=$COMMIT_SHA --quiet --source=./dist
+        gcloud firebase hosting:channels:list --project=$PROJECT_ID --site=gen-lang-client-0558617691
+        gcloud firebase hosting:channels:promote --project=$PROJECT_ID --site=gen-lang-client-0558617691 --channel=$COMMIT_SHA
 
 options:
   logging: CLOUD_LOGGING_ONLY
