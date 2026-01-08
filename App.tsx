@@ -290,11 +290,21 @@ export default function App() {
   const handleUpdateStats = (newStats: UserStats) => setStats(newStats);
 
   if (!auth.isAuthenticated) {
-    return isLoginView ? (
-      <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
-    ) : (
-      <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
-    );
+    try {
+      return isLoginView ? (
+        <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
+      ) : (
+        <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
+      );
+    } catch (error) {
+      console.error('Error rendering auth component:', error);
+      return (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1>Loading SaveBite...</h1>
+          <p>If this message persists, please refresh the page.</p>
+        </div>
+      );
+    }
   }
 
   return (
