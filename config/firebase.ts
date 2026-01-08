@@ -4,43 +4,9 @@ import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/fire
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 // Firebase configuration - using real credentials
+// NOTE: To avoid Cloud Build / env mismatches causing invalid API key errors,
+// we use this single source of truth config. If you rotate keys, update here.
 const getFirebaseConfig = () => {
-  // Try to parse from environment variable first (from vite.config.ts)
-  const firebaseConfigEnv = import.meta.env.VITE_FIREBASE_CONFIG || (typeof process !== 'undefined' && process.env?.FIREBASE_CONFIG);
-  
-  if (firebaseConfigEnv) {
-    try {
-      const config = typeof firebaseConfigEnv === 'string' ? JSON.parse(firebaseConfigEnv) : firebaseConfigEnv;
-      console.log('Firebase config loaded from environment');
-      return config;
-    } catch (e) {
-      console.warn('Failed to parse FIREBASE_CONFIG from env:', e);
-    }
-  }
-
-  // Try individual environment variables (Vite format)
-  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-  const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
-  const appId = import.meta.env.VITE_FIREBASE_APP_ID;
-  const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-  const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
-  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-
-  if (apiKey && apiKey !== 'AIzaSyDemoKeyReplaceWithReal') {
-    console.log('Firebase config loaded from individual env variables');
-    return {
-      apiKey: apiKey,
-      authDomain: authDomain || "gen-lang-client-0558617691.firebaseapp.com",
-      projectId: projectId || "gen-lang-client-0558617691",
-      storageBucket: storageBucket || "gen-lang-client-0558617691.firebasestorage.app",
-      messagingSenderId: messagingSenderId || '',
-      appId: appId || '',
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
-    };
-  }
-
-  // Default configuration with real Firebase credentials
-  // Note: These are hardcoded as fallback. For production, use environment variables.
   return {
     apiKey: "AIzaSyBHgDsjCsVGwmdR_yp4Gg7cJXe7K2FeiF0",
     authDomain: "gen-lang-client-0558617691.firebaseapp.com",
