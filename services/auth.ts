@@ -88,7 +88,14 @@ export const AuthService = {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
     // Register this account in the mock picker for next time
-    AuthService.syncToMockPicker(newUser);
+    // Use the method directly to avoid self-reference during initialization
+    const stored = localStorage.getItem(GOOGLE_MOCKS_KEY);
+    let accounts = stored ? JSON.parse(stored) : [...DEFAULT_GOOGLE_MOCKS];
+    const exists = accounts.find((acc: any) => acc.id === newUser.id || acc.email === newUser.email);
+    if (!exists) {
+      accounts.push(newUser);
+      localStorage.setItem(GOOGLE_MOCKS_KEY, JSON.stringify(accounts));
+    }
 
     const authState = { user: newUser, token: 'jwt-' + Date.now(), isAuthenticated: true };
     localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
@@ -114,7 +121,14 @@ export const AuthService = {
             avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=EcoChef'
         };
         
-        AuthService.syncToMockPicker(demoUser);
+        // Register demo user in mock picker
+        const stored = localStorage.getItem(GOOGLE_MOCKS_KEY);
+        let accounts = stored ? JSON.parse(stored) : [...DEFAULT_GOOGLE_MOCKS];
+        const exists = accounts.find((acc: any) => acc.id === demoUser.id || acc.email === demoUser.email);
+        if (!exists) {
+          accounts.push(demoUser);
+          localStorage.setItem(GOOGLE_MOCKS_KEY, JSON.stringify(accounts));
+        }
         
         const authState = { user: demoUser, token: 'demo-token', isAuthenticated: true };
         localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
@@ -132,7 +146,13 @@ export const AuthService = {
     const { password: _, ...safeUser } = user;
     
     // Ensure this account shows up in the mock picker too
-    AuthService.syncToMockPicker(safeUser);
+    const stored = localStorage.getItem(GOOGLE_MOCKS_KEY);
+    let accounts = stored ? JSON.parse(stored) : [...DEFAULT_GOOGLE_MOCKS];
+    const exists = accounts.find((acc: any) => acc.id === safeUser.id || acc.email === safeUser.email);
+    if (!exists) {
+      accounts.push(safeUser);
+      localStorage.setItem(GOOGLE_MOCKS_KEY, JSON.stringify(accounts));
+    }
 
     const authState = { user: safeUser, token: 'jwt-' + Date.now(), isAuthenticated: true };
     localStorage.setItem(SESSION_KEY, JSON.stringify(authState));
@@ -167,6 +187,9 @@ export const AuthService = {
 
     localStorage.removeItem(`savebite_data_${userId}`);
 
-    await AuthService.logout();
+    // Call logout directly to avoid self-reference
+    localStorage.removeItem(SESSION_KEY);
+    const authState = { user: null, token: null, isAuthenticated: false };
+    notifySubscribers(authState);
   }
 };
