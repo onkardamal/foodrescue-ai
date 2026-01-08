@@ -168,15 +168,29 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 };
 
 export default function App() {
-  const [auth, setAuth] = useState<AuthState>(AuthService.init());
+  // Add error handling for initialization
+  let initialAuth: AuthState;
+  try {
+    initialAuth = AuthService.init();
+  } catch (error) {
+    console.error('Error initializing auth:', error);
+    initialAuth = { user: null, token: null, isAuthenticated: false };
+  }
+
+  const [auth, setAuth] = useState<AuthState>(initialAuth);
   const [isLoginView, setIsLoginView] = useState(true);
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const [isDataInitialized, setIsDataInitialized] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('theme');
-    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+    try {
+      const saved = localStorage.getItem('theme');
+      return (saved === 'dark' || saved === 'light') ? saved : 'light';
+    } catch (error) {
+      console.error('Error reading theme from localStorage:', error);
+      return 'light';
+    }
   });
 
   // Handle initialization of profile specific data
