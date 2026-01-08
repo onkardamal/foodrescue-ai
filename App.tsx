@@ -4,6 +4,11 @@ import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
 import { AuthService } from './services/auth';
+
+// Verify AuthService is available
+if (!AuthService || typeof AuthService.init !== 'function') {
+  console.error('Critical: AuthService is not properly imported');
+}
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
@@ -171,7 +176,13 @@ export default function App() {
   // Add error handling for initialization
   let initialAuth: AuthState;
   try {
-    initialAuth = AuthService.init();
+    // Ensure AuthService exists and has init method
+    if (!AuthService || typeof AuthService.init !== 'function') {
+      console.error('AuthService.init is not available');
+      initialAuth = { user: null, token: null, isAuthenticated: false };
+    } else {
+      initialAuth = AuthService.init();
+    }
   } catch (error) {
     console.error('Error initializing auth:', error);
     initialAuth = { user: null, token: null, isAuthenticated: false };
