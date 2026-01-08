@@ -68,7 +68,23 @@
     </style>
 </head>
   <body class="bg-[#F5F5F5] dark:bg-slate-950 text-[#212121] dark:text-slate-100 font-sans antialiased transition-colors duration-300">
-    <div id="root"></div>
+    <div id="root">
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <p>Loading SaveBite...</p>
+        <p style="font-size: 12px; color: #666;">If you see this message for more than a few seconds, check the browser console for errors.</p>
+      </div>
+    </div>
     <script type="module" src="/index.tsx"></script>
+    <script>
+      // Diagnostic: Check if root element exists
+      console.log('HTML loaded, root element:', document.getElementById('root'));
+      // Check if script loaded after 3 seconds
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root && root.children.length === 1 && root.children[0].tagName === 'DIV' && root.children[0].textContent.includes('Loading')) {
+          console.error('React app did not mount. Check for JavaScript errors above.');
+        }
+      }, 3000);
+    </script>
   </body>
 </html>
