@@ -1,4 +1,5 @@
 steps:
+<<<<<<< HEAD
   # Install dependencies
   - name: 'node:18'
     entrypoint: npm
@@ -18,6 +19,22 @@ steps:
         gcloud firebase hosting:channel:deploy --project=$PROJECT_ID --create-channel --channel-id=$COMMIT_SHA --quiet --source=./dist
         gcloud firebase hosting:channels:list --project=$PROJECT_ID --site=gen-lang-client-0558617691
         gcloud firebase hosting:channels:promote --project=$PROJECT_ID --site=gen-lang-client-0558617691 --channel=$COMMIT_SHA
+=======
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/foodrescue-ai:$SHORT_SHA', '-t', 'gcr.io/$PROJECT_ID/foodrescue-ai:latest', '.']
+
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/foodrescue-ai:$SHORT_SHA']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/foodrescue-ai:latest']
+
+images:
+  - 'gcr.io/$PROJECT_ID/foodrescue-ai:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/foodrescue-ai:latest'
+>>>>>>> parent of 57db6a0 (Update Cloud Build: Deploy to Firebase Hosting instead of Container Registry)
 
 options:
   logging: CLOUD_LOGGING_ONLY
