@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00796B;
+}
+
+@layer base {
+  body {
+    @apply antialiased font-['Plus_Jakarta_Sans'] text-gray-900 bg-white dark:bg-slate-950 dark:text-slate-100;
+  }
+}
