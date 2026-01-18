@@ -1,16 +1,12 @@
 
-import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
-import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
+import React, { useState, useEffect, useRef } from 'react';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { FoodItem, UserStats, Recipe, FoodCategory, Theme, User } from './types';
 import { AuthService } from './services/auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthGuard } from './components/AuthGuard';
 
-// Verify AuthService is available
-if (!AuthService || typeof AuthService.init !== 'function') {
-  console.error('Critical: AuthService is not properly imported');
-}
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
@@ -21,14 +17,13 @@ import Badges from './components/Badges';
 import Leaderboard from './components/Leaderboard';
 import Profile from './components/Profile';
 import { Login, Signup } from './components/Auth';
+import Sidebar from './components/layout/Sidebar';
+import BottomNav from './components/layout/BottomNav';
 
-// --- Theme Context ---
-export const ThemeContext = createContext<ThemeContextType>({
-  theme: 'light',
-  toggleTheme: () => {},
-});
-
-export const useTheme = () => useContext(ThemeContext);
+// Verify AuthService is available
+if (!AuthService || typeof AuthService.init !== 'function') {
+  console.error('Critical: AuthService is not properly imported');
+}
 
 // --- MOCK DATA: For Demo User Only ---
 const MOCK_INVENTORY: FoodItem[] = [
@@ -57,104 +52,30 @@ const MOCK_STATS: UserStats = {
 
 // --- INITIAL STATES: For Genuie New Users ---
 const EMPTY_STATS: UserStats = {
-    mealsSaved: 0,
-    co2Saved: 0,
-    moneySaved: 0,
-    donationsCompleted: 0,
-    streakDays: 0,
-    level: 1,
-    xp: 0,
-    earnedBadges: [],
-    history: []
-};
-
-// Sidebar Component
-const Sidebar = ({ user }: { user: User | null }) => {
-  const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
-  const navItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
-    { path: '/inventory', icon: Package, label: 'Inventory' },
-    { path: '/recipes', icon: ChefHat, label: 'Recipes' },
-    { path: '/donate', icon: Heart, label: 'Donate' },
-    { path: '/ngos', icon: MapPin, label: 'NGOs' },
-  ];
-
-  return (
-    <aside className="hidden md:flex flex-col w-[240px] h-screen bg-white dark:bg-slate-900 border-r border-[#EEEEEE] dark:border-slate-800 fixed left-0 top-0 z-50 transition-colors duration-300">
-      <div className="p-6 flex items-center gap-3 mb-6 group cursor-pointer" onClick={() => window.location.hash = '#/'}>
-        <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"><Leaf size={20} fill="white" /></div>
-        <div>
-          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-none group-hover:text-[#00796B] transition-colors">SaveBite</h1>
-          <p className="text-[9px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1 group-hover:translate-x-0.5 transition-transform">The right choice before waste</p>
-        </div>
-      </div>
-      <nav className="flex-1 px-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <NavLink key={item.path} to={item.path} className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95 ${isActive ? 'bg-[#00796B]/10 text-[#00796B] font-semibold shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md'}`}>
-              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={`transition-all duration-300 ${isActive ? 'text-[#00796B] scale-110' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200 group-hover:scale-110'}`} />
-              <span className={`transition-colors duration-300 ${isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}`} >{item.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-      <div className="p-4 border-t border-[#EEEEEE] dark:border-slate-800 space-y-2">
-        <button onClick={toggleTheme} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:scale-[1.02] active:scale-95 transition-all w-full mb-2 group">
-          {theme === 'light' ? <Moon size={22} className="group-hover:rotate-[360deg] transition-transform duration-700" /> : <Sun size={22} className="group-hover:rotate-[360deg] transition-transform duration-700" />}
-          <span className="group-hover:text-[#212121] dark:group-hover:text-white transition-colors">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-        </button>
-        <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.02] border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-95 group">
-          <img src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} alt="Profile" className="w-10 h-10 rounded-full bg-slate-200 shadow-sm group-hover:ring-2 group-hover:ring-[#00796B] transition-all" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-[#212121] dark:text-white truncate group-hover:text-[#00796B] transition-colors">{user?.name}</p>
-            <p className="text-xs text-[#757575] dark:text-slate-400 truncate">View Profile</p>
-          </div>
-          <UserIcon size={16} className="text-slate-400 group-hover:text-[#00796B] transition-colors" />
-        </NavLink>
-      </div>
-    </aside>
-  );
-};
-
-const BottomNav = () => {
-  const location = useLocation();
-  const navItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
-    { path: '/inventory', icon: Package, label: 'Inventory' },
-    { path: '/recipes', icon: ChefHat, label: 'Recipes' },
-    { path: '/donate', icon: Heart, label: 'Donate' },
-    { path: '/ngos', icon: MapPin, label: 'NGOs' },
-  ];
-
-  return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[80px] bg-white dark:bg-slate-900 border-t border-[rgba(33,33,33,0.04)] dark:border-slate-800 z-[100] flex justify-around items-start pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)] transition-colors duration-300">
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.path;
-        return (
-          <NavLink key={item.path} to={item.path} className="flex flex-col items-center justify-center w-[60px] relative group active:scale-90 transition-all">
-            {isActive && <div className="absolute -top-3 w-[32px] h-[3px] bg-[#00796B] rounded-b-[2px] shadow-[0_2px_8px_#00796B80] animate-in slide-in-from-top-1"></div>}
-            <div className={`transition-all duration-300 ${isActive ? 'scale-125' : 'group-hover:scale-110'}`}><item.icon size={24} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#00796B' : undefined} className={!isActive ? 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white' : ''} /></div>
-            <span className={`text-[10px] font-medium mt-[4px] leading-none transition-all duration-300 ${isActive ? 'text-[#00796B] font-bold' : 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white'}`}>{item.label}</span>
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
+  mealsSaved: 0,
+  co2Saved: 0,
+  moneySaved: 0,
+  donationsCompleted: 0,
+  streakDays: 0,
+  level: 1,
+  xp: 0,
+  earnedBadges: [],
+  history: []
 };
 
 const AppContent = ({ stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete, handleUpdateStats }: any) => {
   const { authState } = useAuth();
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
+
   useEffect(() => { if (mainRef.current) mainRef.current.scrollTo(0, 0); }, [location.pathname]);
+
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
+    <div className="min-h-screen bg-background dark:bg-background-dark font-sans text-slate-800 dark:text-slate-100 flex transition-colors duration-300">
       <Sidebar user={authState.user} />
-      <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
-        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
-          <div className="w-full max-w-[1200px] mx-auto md:p-8">
+      <div className="flex-1 flex flex-col min-w-0 md:pl-[260px] h-screen overflow-hidden">
+        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth relative">
+          <div className="w-full max-w-[1280px] mx-auto md:p-8">
             <Routes>
               <Route path="/" element={<Dashboard user={authState.user} stats={stats} inventory={inventory} />} />
               <Route path="/inventory" element={<Inventory items={inventory} onAddItem={handleAddItem} onUpdateStatus={handleUpdateStatus} onDeleteItem={handleDeleteItem} onEditItem={handleEditItem} />} />
@@ -181,68 +102,51 @@ const AppInner = () => {
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const [isDataInitialized, setIsDataInitialized] = useState(false);
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      const saved = localStorage.getItem('theme');
-      return (saved === 'dark' || saved === 'light') ? saved : 'light';
-    } catch (error) {
-      console.error('Error reading theme from localStorage:', error);
-      return 'light';
-    }
-  });
 
   // Handle initialization of profile specific data
   useEffect(() => {
     if (authState.isAuthenticated && authState.user?.id) {
-        const key = `savebite_data_${authState.user.id}`;
-        const storedData = localStorage.getItem(key);
-        
-        if (storedData) {
-             try {
-                 const parsed = JSON.parse(storedData);
-                 setInventory(parsed.inventory || []);
-                 setStats(parsed.stats || EMPTY_STATS);
-             } catch (e) {
-                 setInventory([]);
-                 setStats(EMPTY_STATS);
-             }
-        } else {
-             // NO DATA FOUND: First time login for this user
-             if (authState.user.email === 'demo@ecotable.dev') {
-                // MOCK DATA for Demo User
-                setInventory(MOCK_INVENTORY);
-                setStats(MOCK_STATS);
-             } else {
-                // GENUINE DATA (EMPTY) for real new users
-                setInventory([]);
-                setStats(EMPTY_STATS);
-             }
+      const key = `savebite_data_${authState.user.id}`;
+      const storedData = localStorage.getItem(key);
+
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          setInventory(parsed.inventory || []);
+          setStats(parsed.stats || EMPTY_STATS);
+        } catch (e) {
+          setInventory([]);
+          setStats(EMPTY_STATS);
         }
-        setIsDataInitialized(true);
+      } else {
+        // NO DATA FOUND: First time login for this user
+        if (authState.user.email === 'demo@ecotable.dev') {
+          // MOCK DATA for Demo User
+          setInventory(MOCK_INVENTORY);
+          setStats(MOCK_STATS);
+        } else {
+          // GENUINE DATA (EMPTY) for real new users
+          setInventory([]);
+          setStats(EMPTY_STATS);
+        }
+      }
+      setIsDataInitialized(true);
     } else {
-        // If not authenticated, ensure states are reset
-        setInventory([]);
-        setStats(EMPTY_STATS);
-        setIsDataInitialized(false);
+      // If not authenticated, ensure states are reset
+      setInventory([]);
+      setStats(EMPTY_STATS);
+      setIsDataInitialized(false);
     }
   }, [authState.isAuthenticated, authState.user?.id, authState.user?.email]);
 
   // Persist data on changes
   useEffect(() => {
     if (isDataInitialized && authState.isAuthenticated && authState.user?.id) {
-        const key = `savebite_data_${authState.user.id}`;
-        localStorage.setItem(key, JSON.stringify({ inventory, stats }));
+      const key = `savebite_data_${authState.user.id}`;
+      localStorage.setItem(key, JSON.stringify({ inventory, stats }));
     }
   }, [inventory, stats, authState.isAuthenticated, authState.user?.id, isDataInitialized]);
 
-  useEffect(() => {
-    localStorage.setItem('theme', theme);
-    if (theme === 'dark') document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  
   const handleLogout = async () => {
     try {
       await logout();
@@ -261,7 +165,7 @@ const AppInner = () => {
   const handleAddItem = (item: FoodItem) => setInventory(prev => [item, ...prev]);
   const handleDeleteItem = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
   const handleEditItem = (updatedItem: FoodItem) => setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-  
+
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     if (status === 'donated') {
@@ -279,52 +183,52 @@ const AppInner = () => {
 
   const handleDonateComplete = (itemIds: string[], amount: number) => {
     setInventory(prev => prev.map(item => itemIds.includes(item.id) ? { ...item, status: 'donated' } : item));
-    setStats(prev => ({ 
-      ...prev, 
-      mealsSaved: prev.mealsSaved + itemIds.length, 
-      donationsCompleted: (prev.donationsCompleted || 0) + 1, 
-      moneySaved: prev.moneySaved + amount, 
-      co2Saved: parseFloat((prev.co2Saved + (itemIds.length * 0.5)).toFixed(1)), 
-      xp: prev.xp + (itemIds.length * 50) 
+    setStats(prev => ({
+      ...prev,
+      mealsSaved: prev.mealsSaved + itemIds.length,
+      donationsCompleted: (prev.donationsCompleted || 0) + 1,
+      moneySaved: prev.moneySaved + amount,
+      co2Saved: parseFloat((prev.co2Saved + (itemIds.length * 0.5)).toFixed(1)),
+      xp: prev.xp + (itemIds.length * 50)
     }));
   };
 
   const handleUpdateStats = (newStats: UserStats) => setStats(newStats);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <HashRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/*" element={
-            <AuthGuard>
-              <AppContent 
-                stats={stats} 
-                inventory={inventory} 
-                recipes={generatedRecipes} 
-                handleLogout={handleLogout} 
-                handleAddItem={handleAddItem} 
-                handleDeleteItem={handleDeleteItem} 
-                handleUpdateStatus={handleUpdateStatus} 
-                handleEditItem={handleEditItem} 
-                handleCookRecipe={handleCookRecipe} 
-                handleUpdateRecipes={setGeneratedRecipes} 
-                handleDonateComplete={handleDonateComplete} 
-                handleUpdateStats={handleUpdateStats} 
-              />
-            </AuthGuard>
-          } />
-        </Routes>
-      </HashRouter>
-    </ThemeContext.Provider>
+    <HashRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/*" element={
+          <AuthGuard>
+            <AppContent
+              stats={stats}
+              inventory={inventory}
+              recipes={generatedRecipes}
+              handleLogout={handleLogout}
+              handleAddItem={handleAddItem}
+              handleDeleteItem={handleDeleteItem}
+              handleUpdateStatus={handleUpdateStatus}
+              handleEditItem={handleEditItem}
+              handleCookRecipe={handleCookRecipe}
+              handleUpdateRecipes={setGeneratedRecipes}
+              handleDonateComplete={handleDonateComplete}
+              handleUpdateStats={handleUpdateStats}
+            />
+          </AuthGuard>
+        } />
+      </Routes>
+    </HashRouter>
   );
 };
 
 export default function App() {
   return (
     <AuthProvider>
-      <AppInner />
+      <ThemeProvider>
+        <AppInner />
+      </ThemeProvider>
     </AuthProvider>
   );
 }

@@ -4,18 +4,25 @@ import App from './App';
 import './index.css';
 
 // Add error boundary wrapper
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  state = { hasError: false, error: null };
+// Add error boundary wrapper
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
 
-  constructor(props: { children: React.ReactNode }) {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    // this.state is initialized by class property
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
