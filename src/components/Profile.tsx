@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { User, UserStats, DonationHistoryItem, Review } from '../types';
 import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../App';
 import { AuthService } from '../services/auth';
 import { useAuth } from '../contexts/AuthContext';
 import Analytics from './Analytics';
