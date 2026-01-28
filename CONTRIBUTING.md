@@ -32,6 +32,9 @@ npm run dev
 - Add comments for complex logic
 
 ### Testing
+#### E2E tests
+Run: `npx playwright test`
+
 - Test your changes locally before submitting
 - Ensure no existing functionality breaks
 
