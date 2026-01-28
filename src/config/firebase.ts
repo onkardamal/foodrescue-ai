@@ -27,6 +27,9 @@ let storage: FirebaseStorage | null = null;
 try {
   if (getApps().length === 0) {
     const config = getFirebaseConfig();
+    if (!config.apiKey) {
+      console.warn('Firebase API key missing; skipping init.');
+    } else {
     app = initializeApp(config);
     auth = getAuth(app);
     db = getFirestore(app);
@@ -43,6 +46,7 @@ try {
       } catch (error) {
         console.warn('Firebase Emulator connection failed:', error);
       }
+    }
     }
   } else {
     app = getApps()[0];
