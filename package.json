@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview", "test": "npx playwright test"
+    "preview": "vite preview", "test": "npx playwright test", "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
