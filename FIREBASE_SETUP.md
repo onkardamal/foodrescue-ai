@@ -147,3 +147,5 @@ For Cloud Build deployment, ensure these substitution variables are set:
 - `_FIREBASE_CONFIG`: Your Firebase config JSON string
 - `_GOOGLE_CLIENT_ID`: Your Google OAuth client ID
 - `_FIREBASE_TOKEN`: Your Firebase CI token (for deployment)
+- `_VITE_FIREBASE_API_KEY`, `_VITE_FIREBASE_AUTH_DOMAIN`, `_VITE_FIREBASE_PROJECT_ID`, `_VITE_FIREBASE_STORAGE_BUCKET`, `_VITE_FIREBASE_MESSAGING_SENDER_ID`, `_VITE_FIREBASE_APP_ID`, `_VITE_FIREBASE_MEASUREMENT_ID` (for Vite build)
+- `_GEMINI_API_KEY` (for AI features)
