@@ -112,6 +112,11 @@ Demo accounts use the local `AuthService` and don't require Firebase.
 - Check Firestore security rules
 - For development, you can use test mode (allows read/write for 30 days)
 
+## API Key and Authorized Domains (auth/api-key-not-valid)
+
+- Google Cloud Console: APIs & credentials, select Web API key, Application restrictions (HTTP referrers): add `https://gen-lang-client-0558617691.web.app/*`, `http://localhost:*`, `http://127.0.0.1:*`.
+- Firebase: Authentication, Sign-in method, Authorized domains: add `localhost` and `gen-lang-client-0558617691.web.app`.
+
 ## Security Rules (Firestore)
 
 For production, update Firestore security rules:
