@@ -89,6 +89,12 @@ Want to try it out without signing up? Use the built-in demo credentials:
 - **Email**: `demo@ecotable.dev`
 - **Password**: `password123`
 
+## Deploy
+
+- Build: `npm run build`
+- Deploy to Firebase Hosting: `firebase deploy --only hosting`
+- See `FIREBASE_SETUP.md` for Cloud Build and env vars.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
