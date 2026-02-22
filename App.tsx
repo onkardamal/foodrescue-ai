@@ -4,13 +4,6 @@ import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
 import { AuthService } from './services/auth';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AuthGuard } from './components/AuthGuard';
-
-// Verify AuthService is available
-if (!AuthService || typeof AuthService.init !== 'function') {
-  console.error('Critical: AuthService is not properly imported');
-}
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
@@ -25,7 +18,7 @@ import { Login, Signup } from './components/Auth';
 // --- Theme Context ---
 export const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',
-  toggleTheme: () => { },
+  toggleTheme: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -57,15 +50,15 @@ const MOCK_STATS: UserStats = {
 
 // --- INITIAL STATES: For Genuie New Users ---
 const EMPTY_STATS: UserStats = {
-  mealsSaved: 0,
-  co2Saved: 0,
-  moneySaved: 0,
-  donationsCompleted: 0,
-  streakDays: 0,
-  level: 1,
-  xp: 0,
-  earnedBadges: [],
-  history: []
+    mealsSaved: 0,
+    co2Saved: 0,
+    moneySaved: 0,
+    donationsCompleted: 0,
+    streakDays: 0,
+    level: 1,
+    xp: 0,
+    earnedBadges: [],
+    history: []
 };
 
 // Sidebar Component
@@ -144,27 +137,26 @@ const BottomNav = () => {
   );
 };
 
-const AppContent = ({ stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete, handleUpdateStats }: any) => {
-  const { authState } = useAuth();
+const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddItem, handleUpdateStatus, handleDeleteItem, handleEditItem, handleCookRecipe, handleUpdateRecipes, handleDonateComplete, handleUpdateStats }: any) => {
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => { if (mainRef.current) mainRef.current.scrollTo(0, 0); }, [location.pathname]);
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
-      <Sidebar user={authState.user} />
+      <Sidebar user={auth.user} />
       <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
         <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
           <div className="w-full max-w-[1200px] mx-auto md:p-8">
             <Routes>
-              <Route path="/" element={<Dashboard user={authState.user} stats={stats} inventory={inventory} />} />
+              <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
               <Route path="/inventory" element={<Inventory items={inventory} onAddItem={handleAddItem} onUpdateStatus={handleUpdateStatus} onDeleteItem={handleDeleteItem} onEditItem={handleEditItem} />} />
               <Route path="/recipes" element={<Recipes inventory={inventory} recipes={recipes} onUpdateRecipes={handleUpdateRecipes} onCookRecipe={handleCookRecipe} />} />
               <Route path="/donate" element={<Donation inventory={inventory} onDonateComplete={handleDonateComplete} />} />
               <Route path="/ngos" element={<NGOMap />} />
               <Route path="/analytics" element={<Analytics stats={stats} />} />
               <Route path="/badges" element={<Badges stats={stats} />} />
-              <Route path="/leaderboard" element={<Leaderboard user={authState.user} stats={stats} />} />
-              <Route path="/profile" element={<Profile user={authState.user} stats={stats} onLogout={handleLogout} onUpdateStats={handleUpdateStats} />} />
+              <Route path="/leaderboard" element={<Leaderboard user={auth.user} stats={stats} />} />
+              <Route path="/profile" element={<Profile user={auth.user} stats={stats} onLogout={handleLogout} onUpdateStats={handleUpdateStats} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
@@ -175,65 +167,61 @@ const AppContent = ({ stats, inventory, recipes, handleLogout, handleAddItem, ha
   );
 };
 
-const AppInner = () => {
-  const { authState, logout } = useAuth();
+export default function App() {
+  const [auth, setAuth] = useState<AuthState>(AuthService.init());
+  const [isLoginView, setIsLoginView] = useState(true);
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const [isDataInitialized, setIsDataInitialized] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      const saved = localStorage.getItem('theme');
-      return (saved === 'dark' || saved === 'light') ? saved : 'light';
-    } catch (error) {
-      console.error('Error reading theme from localStorage:', error);
-      return 'light';
-    }
+    const saved = localStorage.getItem('theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
   // Handle initialization of profile specific data
   useEffect(() => {
-    if (authState.isAuthenticated && authState.user?.id) {
-      const key = `savebite_data_${authState.user.id}`;
-      const storedData = localStorage.getItem(key);
-
-      if (storedData) {
-        try {
-          const parsed = JSON.parse(storedData);
-          setInventory(parsed.inventory || []);
-          setStats(parsed.stats || EMPTY_STATS);
-        } catch (e) {
-          setInventory([]);
-          setStats(EMPTY_STATS);
-        }
-      } else {
-        // NO DATA FOUND: First time login for this user
-        if (authState.user.email === 'demo@ecotable.dev') {
-          // MOCK DATA for Demo User
-          setInventory(MOCK_INVENTORY);
-          setStats(MOCK_STATS);
+    if (auth.isAuthenticated && auth.user?.id) {
+        const key = `savebite_data_${auth.user.id}`;
+        const storedData = localStorage.getItem(key);
+        
+        if (storedData) {
+             try {
+                 const parsed = JSON.parse(storedData);
+                 setInventory(parsed.inventory || []);
+                 setStats(parsed.stats || EMPTY_STATS);
+             } catch (e) {
+                 setInventory([]);
+                 setStats(EMPTY_STATS);
+             }
         } else {
-          // GENUINE DATA (EMPTY) for real new users
-          setInventory([]);
-          setStats(EMPTY_STATS);
+             // NO DATA FOUND: First time login for this user
+             if (auth.user.email === 'demo@ecotable.dev') {
+                // MOCK DATA for Demo User
+                setInventory(MOCK_INVENTORY);
+                setStats(MOCK_STATS);
+             } else {
+                // GENUINE DATA (EMPTY) for real new users
+                setInventory([]);
+                setStats(EMPTY_STATS);
+             }
         }
-      }
-      setIsDataInitialized(true);
+        setIsDataInitialized(true);
     } else {
-      // If not authenticated, ensure states are reset
-      setInventory([]);
-      setStats(EMPTY_STATS);
-      setIsDataInitialized(false);
+        // If not authenticated, ensure states are reset
+        setInventory([]);
+        setStats(EMPTY_STATS);
+        setIsDataInitialized(false);
     }
-  }, [authState.isAuthenticated, authState.user?.id, authState.user?.email]);
+  }, [auth.isAuthenticated, auth.user?.id, auth.user?.email]);
 
   // Persist data on changes
   useEffect(() => {
-    if (isDataInitialized && authState.isAuthenticated && authState.user?.id) {
-      const key = `savebite_data_${authState.user.id}`;
-      localStorage.setItem(key, JSON.stringify({ inventory, stats }));
+    if (isDataInitialized && auth.isAuthenticated && auth.user?.id) {
+        const key = `savebite_data_${auth.user.id}`;
+        localStorage.setItem(key, JSON.stringify({ inventory, stats }));
     }
-  }, [inventory, stats, authState.isAuthenticated, authState.user?.id, isDataInitialized]);
+  }, [inventory, stats, auth.isAuthenticated, auth.user?.id, isDataInitialized]);
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -242,26 +230,22 @@ const AppInner = () => {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      // Force a clean state reset
-      setInventory([]);
-      setStats(EMPTY_STATS);
-      setGeneratedRecipes([]);
-      setIsDataInitialized(false);
-      // Simple redirect to home
-      window.location.hash = '#/login';
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogin = (state: AuthState) => setAuth(state);
+  const handleLogout = () => {
+    AuthService.logout().then(setAuth);
+    // Force a clean state reset
+    setInventory([]);
+    setStats(EMPTY_STATS);
+    setGeneratedRecipes([]);
+    setIsDataInitialized(false);
+    // Simple redirect to home
+    window.location.hash = '#/';
   };
 
   const handleAddItem = (item: FoodItem) => setInventory(prev => [item, ...prev]);
   const handleDeleteItem = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
   const handleEditItem = (updatedItem: FoodItem) => setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-
+  
   const handleUpdateStatus = (id: string, status: 'donated' | 'wasted' | 'consumed') => {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     if (status === 'donated') {
@@ -279,52 +263,31 @@ const AppInner = () => {
 
   const handleDonateComplete = (itemIds: string[], amount: number) => {
     setInventory(prev => prev.map(item => itemIds.includes(item.id) ? { ...item, status: 'donated' } : item));
-    setStats(prev => ({
-      ...prev,
-      mealsSaved: prev.mealsSaved + itemIds.length,
-      donationsCompleted: (prev.donationsCompleted || 0) + 1,
-      moneySaved: prev.moneySaved + amount,
-      co2Saved: parseFloat((prev.co2Saved + (itemIds.length * 0.5)).toFixed(1)),
-      xp: prev.xp + (itemIds.length * 50)
+    setStats(prev => ({ 
+      ...prev, 
+      mealsSaved: prev.mealsSaved + itemIds.length, 
+      donationsCompleted: (prev.donationsCompleted || 0) + 1, 
+      moneySaved: prev.moneySaved + amount, 
+      co2Saved: parseFloat((prev.co2Saved + (itemIds.length * 0.5)).toFixed(1)), 
+      xp: prev.xp + (itemIds.length * 50) 
     }));
   };
 
   const handleUpdateStats = (newStats: UserStats) => setStats(newStats);
 
+  if (!auth.isAuthenticated) {
+    return isLoginView ? (
+      <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
+    ) : (
+      <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
+    );
+  }
+
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       <HashRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/*" element={
-            <AuthGuard>
-              <AppContent
-                stats={stats}
-                inventory={inventory}
-                recipes={generatedRecipes}
-                handleLogout={handleLogout}
-                handleAddItem={handleAddItem}
-                handleDeleteItem={handleDeleteItem}
-                handleUpdateStatus={handleUpdateStatus}
-                handleEditItem={handleEditItem}
-                handleCookRecipe={handleCookRecipe}
-                handleUpdateRecipes={setGeneratedRecipes}
-                handleDonateComplete={handleDonateComplete}
-                handleUpdateStats={handleUpdateStats}
-              />
-            </AuthGuard>
-          } />
-        </Routes>
+        <AppContent auth={auth} stats={stats} inventory={inventory} recipes={generatedRecipes} handleLogout={handleLogout} handleAddItem={handleAddItem} handleDeleteItem={handleDeleteItem} handleUpdateStatus={handleUpdateStatus} handleEditItem={handleEditItem} handleCookRecipe={handleCookRecipe} handleUpdateRecipes={setGeneratedRecipes} handleDonateComplete={handleDonateComplete} handleUpdateStats={handleUpdateStats} />
       </HashRouter>
     </ThemeContext.Provider>
-  );
-};
-
-export default function App() {
-  return (
-    <AuthProvider>
-      <AppInner />
-    </AuthProvider>
   );
 }

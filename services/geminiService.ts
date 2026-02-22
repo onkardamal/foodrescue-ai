@@ -1,30 +1,9 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import { FoodItem, Recipe, ScanResult, FoodCategory, NGO } from '../types';
 
-// Lazy initialization of Gemini client - only import when needed
-let ai: any = null;
-let GoogleGenAI: any = null;
-let Type: any = null;
-
-const getAI = async (): Promise<any> => {
-  if (!ai) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('VITE_GEMINI_API_KEY is not set. AI features will be disabled.');
-      return null;
-    }
-    try {
-      // Dynamic import to avoid loading the library if API key is not set
-      const genaiModule = await import("@google/genai");
-      GoogleGenAI = genaiModule.GoogleGenAI;
-      Type = genaiModule.Type;
-      ai = new GoogleGenAI({ apiKey });
-    } catch (error) {
-      console.error('Failed to initialize Gemini AI:', error);
-      return null;
-    }
-  }
-  return ai;
-};
+// Initialize Gemini
+// Note: process.env.API_KEY is guaranteed to be available in this environment
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Analyzes an image of food to identify what it is and estimate expiry.
@@ -32,11 +11,6 @@ const getAI = async (): Promise<any> => {
  */
 export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult> => {
   try {
-    const aiInstance = await getAI();
-    if (!aiInstance) {
-      throw new Error('AI service is not available. Please set GEMINI_API_KEY in your .env file.');
-    }
-
     const today = new Date().toISOString().split('T')[0];
     const prompt = `
       Analyze this image. Today is ${today}.
@@ -46,7 +20,7 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
       4. Estimate a specific expiry date (YYYY-MM-DD) based on its condition relative to today (${today}).
     `;
 
-    const response = await aiInstance.models.generateContent({
+    const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: [
@@ -62,15 +36,15 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: "object",
+          type: Type.OBJECT,
           properties: {
-            isFood: { type: "boolean", description: "True ONLY if image contains food/ingredients. False for people, pets, blurred objects, etc." },
-            name: { type: "string" },
-            category: { type: "string", enum: ["Produce", "Dairy", "Meat", "Grains", "Bakery", "Canned", "Other"] },
-            condition: { type: "string", description: "Visual freshness state e.g. 'Fresh', 'Ripe', 'Wilted'" },
-            expiryEstimation: { type: "string", description: "YYYY-MM-DD" },
-            quantityEstimation: { type: "number" },
-            unitEstimation: { type: "string" }
+            isFood: { type: Type.BOOLEAN, description: "True ONLY if image contains food/ingredients. False for people, pets, blurred objects, etc." },
+            name: { type: Type.STRING },
+            category: { type: Type.STRING, enum: ["Produce", "Dairy", "Meat", "Grains", "Bakery", "Canned", "Other"] },
+            condition: { type: Type.STRING, description: "Visual freshness state e.g. 'Fresh', 'Ripe', 'Wilted'" },
+            expiryEstimation: { type: Type.STRING, description: "YYYY-MM-DD" },
+            quantityEstimation: { type: Type.NUMBER },
+            unitEstimation: { type: Type.STRING }
           },
           required: ["isFood", "name", "category", "condition", "expiryEstimation", "quantityEstimation", "unitEstimation"]
         }
@@ -79,20 +53,20 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
 
     const text = response.text;
     if (!text) {
-      throw new Error("No response text from Gemini");
+        throw new Error("No response text from Gemini");
     }
-
+    
     const cleanText = text.replace(/```json|```/g, '').trim();
     let data;
 
     try {
-      data = JSON.parse(cleanText);
+        data = JSON.parse(cleanText);
     } catch (parseError) {
-      throw new Error("Failed to parse AI response");
+        throw new Error("Failed to parse AI response");
     }
 
     if (!data.isFood) {
-      throw new Error("NOT_FOOD");
+        throw new Error("NOT_FOOD");
     }
 
     return {
@@ -116,19 +90,13 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
  */
 export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recipe[]> => {
   try {
-    const aiInstance = await getAI();
-    if (!aiInstance) {
-      console.warn('AI service is not available. Returning empty recipes.');
-      return [];
-    }
-
     const availableIngredients = inventory
       .map(item => `${item.name} (${item.condition || 'Good'}, Expires: ${item.expiryDate})`)
       .join(", ");
 
     if (!availableIngredients) return [];
 
-    const response = await aiInstance.models.generateContent({
+    const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
         Suggest 3 creative recipes that use these ingredients: ${availableIngredients}.
@@ -138,25 +106,25 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: "array",
+          type: Type.ARRAY,
           items: {
-            type: "object",
+            type: Type.OBJECT,
             properties: {
-              title: { type: "string" },
-              description: { type: "string" },
-              ingredients: {
-                type: "array",
-                items: { type: "string" }
+              title: { type: Type.STRING },
+              description: { type: Type.STRING },
+              ingredients: { 
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
               },
-              instructions: {
-                type: "array",
-                items: { type: "string" }
+              instructions: { 
+                type: Type.ARRAY, 
+                items: { type: Type.STRING }
               },
-              cookingTime: { type: "integer" },
-              difficulty: { type: "string" },
+              cookingTime: { type: Type.INTEGER },
+              difficulty: { type: Type.STRING },
               savedItems: {
-                type: "array",
-                items: { type: "string" },
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
                 description: "List of ingredient names from the input used in this recipe"
               }
             }
@@ -170,7 +138,7 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
 
     const cleanText = text.replace(/```json|```/g, '').trim();
     const recipes = JSON.parse(cleanText);
-
+    
     return recipes.map((r: any, index: number) => ({
       ...r,
       id: `generated-${Date.now()}-${index}`
@@ -187,13 +155,7 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
  */
 export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]> => {
   try {
-    const aiInstance = await getAI();
-    if (!aiInstance) {
-      console.warn('AI service is not available. Returning empty NGO list.');
-      return [];
-    }
-
-    const response = await aiInstance.models.generateContent({
+    const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Find 10 food banks, soup kitchens, or food rescue organizations near this location (Lat: ${lat}, Lng: ${lng}).
       For each place, provide:
@@ -225,27 +187,27 @@ export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]>
 
     // Clean potential markdown
     const cleanText = text.replace(/```json|```/g, '').trim();
-
+    
     // Attempt parse
     try {
-      const data = JSON.parse(cleanText);
-      if (Array.isArray(data)) {
-        return data.map((item: any, i: number) => ({
-          id: `real-${Date.now()}-${i}`,
-          name: item.name,
-          distance: "Nearby", // Simplified for now
-          rating: item.rating || 4.5,
-          description: item.description || "Food assistance organization.",
-          lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
-          lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
-          address: item.address,
-          needs: [FoodCategory.PRODUCE, FoodCategory.CANNED] // Default needs
-        }));
-      }
+        const data = JSON.parse(cleanText);
+        if (Array.isArray(data)) {
+            return data.map((item: any, i: number) => ({
+                id: `real-${Date.now()}-${i}`,
+                name: item.name,
+                distance: "Nearby", // Simplified for now
+                rating: item.rating || 4.5,
+                description: item.description || "Food assistance organization.",
+                lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
+                lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
+                address: item.address,
+                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED] // Default needs
+            }));
+        }
     } catch (e) {
-      console.warn("Failed to parse NGO JSON", e);
+        console.warn("Failed to parse NGO JSON", e);
     }
-
+    
     return [];
 
   } catch (error) {
