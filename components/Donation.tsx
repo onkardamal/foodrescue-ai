@@ -176,7 +176,10 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         if (ngos.length > 0 && ngos[0].id.startsWith('real')) map.setView([ngos[0].lat, ngos[0].lng], 13);
         ngos.forEach(ngo => {
-            const marker = L.marker([ngo.lat, ngo.lng]).addTo(map).on('click', () => setSelectedNgoId(ngo.id));
+            const marker = L.marker([ngo.lat, ngo.lng])
+              .bindPopup(ngo.name, { className: 'font-semibold' })
+              .addTo(map)
+              .on('click', () => setSelectedNgoId(ngo.id));
             if (ngo.id === selectedNgoId) marker.openPopup();
         });
         mapRef.current = map;
@@ -292,14 +295,14 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                     placeholder="Enter 10 digit number" 
                     value={logistics.contactPhone} 
                     onChange={handlePhoneChange} 
-                    className={`w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 outline-none transition-all font-medium border-2 ${logistics.contactPhone.length > 0 && logistics.contactPhone.length < 10 ? 'border-orange-300' : 'border-transparent focus:border-[#00796B]'}`} 
+                    className={`w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white outline-none transition-all font-medium border-2 ${logistics.contactPhone.length > 0 && logistics.contactPhone.length < 10 ? 'border-orange-300' : 'border-transparent focus:border-[#00796B]'}`} 
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2"><Calendar size={16} /> Date</label><input type="date" value={logistics.date} onChange={(e) => setLogistics({...logistics, date: e.target.value})} className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 outline-none transition-all font-medium" /></div>
-                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2"><Clock size={16} /> Time</label><input type="time" value={logistics.time} onChange={(e) => setLogistics({...logistics, time: e.target.value})} className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 outline-none transition-all font-medium" /></div>
+                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><Calendar size={16} /> Date</label><input type="date" value={logistics.date} onChange={(e) => setLogistics({...logistics, date: e.target.value})} className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white outline-none transition-all font-medium border-2 border-transparent focus:border-[#00796B]" /></div>
+                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><Clock size={16} /> Time</label><input type="time" value={logistics.time} onChange={(e) => setLogistics({...logistics, time: e.target.value})} className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white outline-none transition-all font-medium border-2 border-transparent focus:border-[#00796B]" /></div>
                 </div>
-                <div><label className="block text-sm font-bold mb-2 flex items-center gap-2"><MessageSquare size={16} /> Notes</label><textarea placeholder="Details for the recipient..." value={logistics.notes} onChange={(e) => setLogistics({...logistics, notes: e.target.value})} className="w-full h-[80px] p-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 outline-none transition-all font-medium resize-none" /></div>
+                <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><MessageSquare size={16} /> Notes</label><textarea placeholder="Details for the recipient..." value={logistics.notes} onChange={(e) => setLogistics({...logistics, notes: e.target.value})} className="w-full h-[80px] p-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder-slate-500 outline-none transition-all font-medium resize-none border-2 border-transparent focus:border-[#00796B]" /></div>
             </div>
             <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-start gap-3"><AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" /><p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">NGOs require accurate expiry dates to prioritize distribution. We've included these in the handover details sent to <strong>{selectedNgo?.name}</strong>.</p></div>
         </div>
@@ -311,7 +314,7 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       return (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95 duration-300">
               <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6"><Check size={48} className="text-green-600" /></div>
-              <h2 className="text-2xl font-bold mb-2 dark:text-white">Donation Detailed!</h2>
+              <h2 className="text-2xl font-bold mb-2 dark:text-white">Donation Delivered!</h2>
               <p className="text-[#757575] dark:text-slate-300 mb-8 leading-relaxed max-w-xs mx-auto"><strong>{selectedNgo?.name}</strong> has received your offer, including the full list of items and their expiry dates. They will contact you shortly.</p>
               <div className="w-full max-w-xs space-y-3"><button onClick={() => navigate('/')} className="w-full h-[52px] bg-[#00796B] rounded-xl text-white font-bold shadow-lg">Dashboard</button><button onClick={() => window.open(`tel:${selectedNgo?.phone || '5550123000'}`)} className="w-full h-[52px] border border-[#00796B] text-[#00796B] rounded-xl font-bold flex items-center justify-center gap-2"><Phone size={18} /> Call Recipient</button></div>
           </div>

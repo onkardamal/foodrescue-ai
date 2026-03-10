@@ -29,7 +29,7 @@ export interface Recipe {
   instructions: string[];
   cookingTime: number; // minutes
   difficulty: 'Easy' | 'Medium' | 'Hard';
-  savedItems: string[]; // IDs of items used
+  savedItems: string[]; // Ingredient names from inventory used in this recipe
 }
 
 export interface NGO {

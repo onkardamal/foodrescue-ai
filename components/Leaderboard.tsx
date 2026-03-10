@@ -134,15 +134,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ user, stats }) => {
           <div className="pt-8 pb-4 px-8 flex justify-center items-end gap-2 md:gap-8 mb-4">
               {/* 2nd Place */}
               <div className="w-1/3 max-w-[120px]">
-                 {renderPodiumItem(topThree[1], 2)}
+                 {topThree[1] ? renderPodiumItem(topThree[1], 2) : <div className="h-32" />}
               </div>
               {/* 1st Place */}
               <div className="w-1/3 max-w-[120px]">
-                 {renderPodiumItem(topThree[0], 1)}
+                 {topThree[0] ? renderPodiumItem(topThree[0], 1) : <div className="h-32" />}
               </div>
               {/* 3rd Place */}
               <div className="w-1/3 max-w-[120px]">
-                 {renderPodiumItem(topThree[2], 3)}
+                 {topThree[2] ? renderPodiumItem(topThree[2], 3) : <div className="h-32" />}
               </div>
           </div>
 

@@ -165,7 +165,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
              <div className="w-full max-w-[280px] h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
                 <div className="h-full bg-gradient-to-r from-[#00796B] to-amber-400 transition-all duration-1000 ease-out" style={{ width: `${(stats.xp % 1000) / 10}%` }}></div>
              </div>
-             <p className="text-xs font-bold text-slate-400 uppercase">{1000 - (stats.xp % 1000)} XP to next tier</p>
+             <p className="text-xs font-bold text-slate-400 uppercase">{stats.xp > 0 ? (1000 - (stats.xp % 1000)) : 1000} XP to next tier</p>
         </div>
 
         {/* Tabs */}

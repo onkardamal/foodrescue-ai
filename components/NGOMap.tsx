@@ -124,6 +124,12 @@ const NGOMap: React.FC = () => {
             }
         } catch (e) {
             console.error(e);
+            const msg = e instanceof Error ? e.message : '';
+            if (msg.includes('GEMINI_API_KEY') || msg.includes('API Key')) {
+                // Keep demo data; no alert so we don't annoy users without API key
+            } else {
+                alert("Could not fetch nearby NGOs. Showing demo data.");
+            }
         } finally {
             setIsSearchingReal(false);
         }

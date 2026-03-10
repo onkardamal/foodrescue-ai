@@ -180,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       <div className="flex flex-wrap justify-between items-start gap-4 mt-2">
           <div className="flex-1 min-w-[280px]">
             <h2 className="font-bold text-[32px] md:text-[40px] text-[#212121] dark:text-white leading-[1.2] mb-[8px]">
-                Welcome back,<br />{user?.name.split(' ')[0] || 'Chef'} 👋
+                Welcome back,<br />{user?.name?.split(' ')[0] || 'Chef'} 👋
             </h2>
             
             {/* Constant Motivational Green Text (Cycles every 10s) - Increased Size */}

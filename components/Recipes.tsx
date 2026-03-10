@@ -110,6 +110,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
   const location = useLocation();
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
@@ -130,11 +131,15 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
   const handleGenerate = async () => {
     if (loading) return;
     setLoading(true);
+    setError(null);
     try {
-      const generated = await generateSmartRecipes(inventory); 
+      const generated = await generateSmartRecipes(inventory);
       onUpdateRecipes(generated);
-    } catch (e) {
-      console.error(e);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to generate recipes.';
+      setError(msg.includes('GEMINI_API_KEY') || msg.includes('API Key')
+        ? 'AI recipes require an API key. Add GEMINI_API_KEY to .env to use this feature.'
+        : msg);
     } finally {
       setLoading(false);
     }
@@ -258,11 +263,17 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
         )}
       </div>
 
+      {error && (
+        <div className="mx-4 mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-xl text-sm font-medium flex items-center gap-2 border border-red-100 dark:border-red-800">
+          <span className="shrink-0">⚠</span>
+          {error}
+        </div>
+      )}
       <div className="px-[16px] mt-[16px]">
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="w-full h-[56px] bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-[16px] flex items-center justify-center gap-[10px] active:scale-95 hover:scale-[1.01] hover:-translate-y-1 transition-all disabled:opacity-60 shadow-lg shadow-black/10 dark:shadow-white/5 hover:bg-black dark:hover:bg-slate-200 group"
+          className="w-full h-[56px] bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-[16px] flex items-center justify-center gap-[10px] active:scale-95 hover:scale-[1.01] hover:-translate-y-1 transition-all disabled:opacity-60 shadow-lg shadow-black/10 dark:shadow-white/5 hover:bg-black dark:hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-[#00796B] focus-visible:ring-offset-2 group"
           aria-label={loading ? "Generating recipes" : "Generate Recipes"}
         >
           {loading ? (

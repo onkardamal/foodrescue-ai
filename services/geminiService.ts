@@ -1,9 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FoodItem, Recipe, ScanResult, FoodCategory, NGO } from '../types';
 
-// Initialize Gemini
-// Note: process.env.API_KEY is guaranteed to be available in this environment
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy-init so app loads even without an API key (AI features will no-op or throw when used)
+function getAI() {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set. Add it to .env or .env.local to use AI features.");
+  return new GoogleGenAI({ apiKey });
+}
 
 /**
  * Analyzes an image of food to identify what it is and estimate expiry.
@@ -20,7 +23,7 @@ export const analyzeFoodImage = async (base64Image: string): Promise<ScanResult>
       4. Estimate a specific expiry date (YYYY-MM-DD) based on its condition relative to today (${today}).
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: [
@@ -96,7 +99,7 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
 
     if (!availableIngredients) return [];
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
         Suggest 3 creative recipes that use these ingredients: ${availableIngredients}.
@@ -155,7 +158,7 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
  */
 export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]> => {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Find 10 food banks, soup kitchens, or food rescue organizations near this location (Lat: ${lat}, Lng: ${lng}).
       For each place, provide:

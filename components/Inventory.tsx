@@ -424,8 +424,10 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
               expiryDate: analysis.expiryEstimation
           });
           setTimeout(() => { setIsAnalyzing(false); setShowManualAdd(true); }, 500);
-      } catch (err: any) {
-          if (err.message === "NOT_FOOD") setScanError("No food detected. Please take a clearer photo of the item.");
+      } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : '';
+          if (msg === "NOT_FOOD") setScanError("No food detected. Please take a clearer photo of the item.");
+          else if (msg.includes('GEMINI_API_KEY') || msg.includes('API Key')) setScanError("Add GEMINI_API_KEY to .env to use AI scan. You can still add items manually.");
           else setScanError("Could not identify food. Try a manual entry.");
           setIsAnalyzing(false);
       } finally { if (fileInputRef.current) fileInputRef.current.value = ''; }
