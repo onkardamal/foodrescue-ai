@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserStats, FoodItem, User } from '../types';
-import { Leaf, DollarSign, Share2, Utensils, Bell, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, ChevronRight, HeartHandshake, Sparkles } from 'lucide-react';
+import { Leaf, IndianRupee, Share2, Utensils, Bell, ArrowUp, Plus, Camera, Heart, BookOpen, MapPin, BarChart3, ChevronRight, HeartHandshake, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { ALL_BADGES } from './Badges';
@@ -210,7 +210,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
         {[
           { icon: Utensils, label: 'Meals Saved', value: stats.mealsSaved, color: 'bg-[#00796B]', prefix: '', suffix: '', decimals: 0 },
           { icon: Leaf, label: 'CO₂ Prevented', value: stats.co2Saved, color: 'bg-[#43A047]', prefix: '', suffix: ' kg', decimals: 1 },
-          { icon: DollarSign, label: 'Money Saved', value: stats.moneySaved, color: 'bg-[#EF6C00]', prefix: '₹', suffix: '', decimals: 0 },
+          { icon: IndianRupee, label: 'Money Saved', value: stats.moneySaved, color: 'bg-[#EF6C00]', prefix: '₹', suffix: '', decimals: 0 },
           { icon: HeartHandshake, label: 'Donations Made', value: stats.donationsCompleted, color: 'bg-[#D81B60]', prefix: '', suffix: '', decimals: 0 }
         ].map((stat, i) => (
           <button 

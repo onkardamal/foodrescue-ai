@@ -2,7 +2,7 @@
 import React from 'react';
 import { UserStats } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowLeft, DollarSign, Leaf, Utensils } from 'lucide-react';
+import { ArrowLeft, IndianRupee, Leaf, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface AnalyticsProps {
@@ -58,7 +58,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
             </div>
             <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center gap-2 mb-2 text-[#757575] dark:text-slate-400">
-                    <DollarSign size={18} />
+                    <IndianRupee size={18} />
                     <span className="text-sm font-medium">Money Saved</span>
                 </div>
                 <div className="text-3xl font-bold text-[#212121] dark:text-white">₹{stats.moneySaved}</div>
