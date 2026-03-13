@@ -4,6 +4,8 @@ import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
 import { FirebaseAuthService } from './services/firebaseAuth';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from './i18n';
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
@@ -65,12 +67,14 @@ const EMPTY_STATS: UserStats = {
 const Sidebar = ({ user }: { user: User | null }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language === 'hi' ? 'hi' : 'en';
   const navItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
-    { path: '/inventory', icon: Package, label: 'Inventory' },
-    { path: '/recipes', icon: ChefHat, label: 'Recipes' },
-    { path: '/donate', icon: Heart, label: 'Donate' },
-    { path: '/ngos', icon: MapPin, label: 'NGOs' },
+    { path: '/', icon: Home, labelKey: 'nav.dashboard' },
+    { path: '/inventory', icon: Package, labelKey: 'nav.inventory' },
+    { path: '/recipes', icon: ChefHat, labelKey: 'nav.recipes' },
+    { path: '/donate', icon: Heart, labelKey: 'nav.donate' },
+    { path: '/ngos', icon: MapPin, labelKey: 'nav.ngos' },
   ];
 
   return (
@@ -78,8 +82,8 @@ const Sidebar = ({ user }: { user: User | null }) => {
       <div className="p-6 flex items-center gap-3 mb-6 group cursor-pointer" onClick={() => window.location.hash = '#/'}>
         <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"><Leaf size={20} fill="white" /></div>
         <div>
-          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-none group-hover:text-[#00796B] transition-colors">SaveBite</h1>
-          <p className="text-[9px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1 group-hover:translate-x-0.5 transition-transform">The right choice before waste</p>
+          <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-none group-hover:text-[#00796B] transition-colors">{t('app.name')}</h1>
+          <p className="text-[9px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1 group-hover:translate-x-0.5 transition-transform">{t('app.tagline')}</p>
         </div>
       </div>
       <nav className="flex-1 px-4 space-y-2">
@@ -88,7 +92,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
           return (
             <NavLink key={item.path} to={item.path} className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95 ${isActive ? 'bg-[#00796B]/10 text-[#00796B] font-semibold shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md'}`}>
               <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={`transition-all duration-300 ${isActive ? 'text-[#00796B] scale-110' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200 group-hover:scale-110'}`} />
-              <span className={`transition-colors duration-300 ${isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}`} >{item.label}</span>
+              <span className={`transition-colors duration-300 ${isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}`} >{t(item.labelKey as any)}</span>
             </NavLink>
           );
         })}
@@ -96,13 +100,34 @@ const Sidebar = ({ user }: { user: User | null }) => {
       <div className="p-4 border-t border-[#EEEEEE] dark:border-slate-800 space-y-2">
         <button onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:scale-[1.02] active:scale-95 transition-all w-full mb-2 group">
           {theme === 'light' ? <Moon size={22} className="group-hover:rotate-[360deg] transition-transform duration-700" /> : <Sun size={22} className="group-hover:rotate-[360deg] transition-transform duration-700" />}
-          <span className="group-hover:text-[#212121] dark:group-hover:text-white transition-colors">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          <span className="group-hover:text-[#212121] dark:group-hover:text-white transition-colors">
+            {theme === 'light' ? t('theme.dark') : t('theme.light')}
+          </span>
         </button>
+        <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-2">
+          <span className="text-xs font-semibold text-[#757575] dark:text-slate-400">Language</span>
+          <div className="flex gap-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => changeLanguage('en')}
+              className={`px-2 py-1 text-xs font-bold ${currentLang === 'en' ? 'bg-[#00796B] text-white' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              {t('language.labelShortEn')}
+            </button>
+            <button
+              type="button"
+              onClick={() => changeLanguage('hi')}
+              className={`px-2 py-1 text-xs font-bold ${currentLang === 'hi' ? 'bg-[#00796B] text-white' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              {t('language.labelShortHi')}
+            </button>
+          </div>
+        </div>
         <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.02] border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-95 group">
           <img src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} alt="Profile" className="w-10 h-10 rounded-full bg-slate-200 shadow-sm group-hover:ring-2 group-hover:ring-[#00796B] transition-all" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-[#212121] dark:text-white truncate group-hover:text-[#00796B] transition-colors">{user?.name}</p>
-            <p className="text-xs text-[#757575] dark:text-slate-400 truncate">View Profile</p>
+            <p className="text-xs text-[#757575] dark:text-slate-400 truncate">{t('nav.viewProfile')}</p>
           </div>
           <UserIcon size={16} className="text-slate-400 group-hover:text-[#00796B] transition-colors" />
         </NavLink>
@@ -113,12 +138,14 @@ const Sidebar = ({ user }: { user: User | null }) => {
 
 const BottomNav = () => {
   const location = useLocation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language === 'hi' ? 'hi' : 'en';
   const navItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
-    { path: '/inventory', icon: Package, label: 'Inventory' },
-    { path: '/recipes', icon: ChefHat, label: 'Recipes' },
-    { path: '/donate', icon: Heart, label: 'Donate' },
-    { path: '/ngos', icon: MapPin, label: 'NGOs' },
+    { path: '/', icon: Home, labelKey: 'nav.dashboard' },
+    { path: '/inventory', icon: Package, labelKey: 'nav.inventory' },
+    { path: '/recipes', icon: ChefHat, labelKey: 'nav.recipes' },
+    { path: '/donate', icon: Heart, labelKey: 'nav.donate' },
+    { path: '/ngos', icon: MapPin, labelKey: 'nav.ngos' },
   ];
 
   return (
@@ -126,10 +153,10 @@ const BottomNav = () => {
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
-          <NavLink key={item.path} to={item.path} aria-label={item.label} className="flex flex-col items-center justify-center w-[60px] relative group active:scale-90 transition-all">
+          <NavLink key={item.path} to={item.path} aria-label={t(item.labelKey as any)} className="flex flex-col items-center justify-center w-[60px] relative group active:scale-90 transition-all">
             {isActive && <div className="absolute -top-3 w-[32px] h-[3px] bg-[#00796B] rounded-b-[2px] shadow-[0_2px_8px_#00796B80] animate-in slide-in-from-top-1"></div>}
             <div className={`transition-all duration-300 ${isActive ? 'scale-125' : 'group-hover:scale-110'}`}><item.icon size={24} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#00796B' : undefined} className={!isActive ? 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white' : ''} /></div>
-            <span className={`text-[10px] font-medium mt-[4px] leading-none transition-all duration-300 ${isActive ? 'text-[#00796B] font-bold' : 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white'}`}>{item.label}</span>
+            <span className={`text-[10px] font-medium mt-[4px] leading-none transition-all duration-300 ${isActive ? 'text-[#00796B] font-bold' : 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white'}`}>{t(item.labelKey as any)}</span>
           </NavLink>
         );
       })}

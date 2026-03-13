@@ -73,3 +73,13 @@ npm run preview
 - This repo uses a CDN Tailwind setup for styling plus a small `index.css` for accessibility focus styling.
 - If `GEMINI_API_KEY` is not set, AI actions will show a friendly message instead of crashing the app.
 - If Firebase env vars are not set, the app will still render but Firebase auth flows will fail at runtime; for a quick demo, you can continue using the built-in demo login (`demo@ecotable.dev` / `password123`).
+
+## Internationalization (i18n)
+
+- The app supports **English** and **Hindi** using `i18next` / `react-i18next`.
+- Language can be switched via the `EN / HI` selector in the sidebar (desktop) or the bottom navigation (mobile).
+- Translations live in `locales/en/common.json` and `locales/hi/common.json`.
+- To add a new language:
+  - Create `locales/<lang>/common.json` mirroring the keys in the existing files.
+  - Register the language in `i18n.ts` by adding it to the `resources` object.
+  - Add the new language option to the selector in `App.tsx`.

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { ALL_BADGES } from './Badges';
 import { MOCK_LEADERBOARD_DATA } from './Leaderboard';
+import { useTranslation } from 'react-i18next';
 
 interface DashboardProps {
   user: User | null;
@@ -84,9 +85,12 @@ const ConfettiRain = () => (
   </div>
 );
 
+type StatKey = 'mealsSaved' | 'co2Prevented' | 'moneySaved' | 'donationsMade';
+
 const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [showNotifications, setShowNotifications] = useState(false);
   
   // States for interactive feedback and motivation
@@ -147,23 +151,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       navigate(path, { state });
   };
 
-  const handleStatClick = (label: string) => {
-    const messages: Record<string, string> = {
-      'Meals Saved': "Incredible! You're nourishing the community . 🥗",
-      'CO₂ Prevented': "Planet Hero! Your efforts are helping our Earth breathe easier. 🌍",
-      'Money Saved': "Smart Choice! Every Rupee saved is a victory for your wallet and the world. 💰",
-      'Donations Made': "Heart of Gold! Your generosity is changing lives every single day. ❤️"
+  const handleStatClick = (key: StatKey) => {
+    const messages: Record<StatKey, string> = {
+      mealsSaved: "Incredible! You're nourishing the community . 🥗",
+      co2Prevented: "Planet Hero! Your efforts are helping our Earth breathe easier. 🌍",
+      moneySaved: "Smart Choice! Every Rupee saved is a victory for your wallet and the world. 💰",
+      donationsMade: "Heart of Gold! Your generosity is changing lives every single day. ❤️"
     };
 
-    const styles: Record<string, any> = {
-      'Meals Saved': { text: 'text-[#00796B]', bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-100 dark:border-teal-800', headerText: 'text-[#00796B]' },
-      'CO₂ Prevented': { text: 'text-[#43A047]', bg: 'bg-green-50 dark:bg-green-900/30', border: 'border-green-100 dark:border-green-800', headerText: 'text-[#43A047]' },
-      'Money Saved': { text: 'text-[#EF6C00]', bg: 'bg-orange-50 dark:bg-orange-900/30', border: 'border-orange-100 dark:border-orange-800', headerText: 'text-[#EF6C00]' },
-      'Donations Made': { text: 'text-[#D81B60]', bg: 'bg-pink-50 dark:bg-pink-900/30', border: 'border-pink-100 dark:border-pink-800', headerText: 'text-[#D81B60]' }
+    const styles: Record<StatKey, any> = {
+      mealsSaved: { text: 'text-[#00796B]', bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-100 dark:border-teal-800', headerText: 'text-[#00796B]' },
+      co2Prevented: { text: 'text-[#43A047]', bg: 'bg-green-50 dark:bg-green-900/30', border: 'border-green-100 dark:border-green-800', headerText: 'text-[#43A047]' },
+      moneySaved: { text: 'text-[#EF6C00]', bg: 'bg-orange-50 dark:bg-orange-900/30', border: 'border-orange-100 dark:border-orange-800', headerText: 'text-[#EF6C00]' },
+      donationsMade: { text: 'text-[#D81B60]', bg: 'bg-pink-50 dark:bg-pink-900/30', border: 'border-pink-100 dark:border-pink-800', headerText: 'text-[#D81B60]' }
     };
 
-    setAppreciationMsg(messages[label]);
-    setMsgStyles(styles[label]);
+    setAppreciationMsg(messages[key]);
+    setMsgStyles(styles[key]);
     setShowConfetti(true);
 
     setTimeout(() => {
@@ -180,7 +184,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       <div className="flex flex-wrap justify-between items-start gap-4 mt-2">
           <div className="flex-1 min-w-[280px]">
             <h2 className="font-bold text-[32px] md:text-[40px] text-[#212121] dark:text-white leading-[1.2] mb-[8px]">
-                Welcome back,<br />{user?.name?.split(' ')[0] || 'Chef'} 👋
+                {t('dashboard.welcome')}<br />{user?.name?.split(' ')[0] || 'Chef'} 👋
             </h2>
             
             {/* Constant Motivational Green Text (Cycles every 10s) - Increased Size */}
@@ -201,21 +205,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             onClick={() => handleQuickAction('/inventory', { action: 'add' })}
             className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-[24px] py-[14px] rounded-[22px] shadow-lg active:scale-95 hover:scale-[1.02] hover:-translate-y-0.5 transition-all min-h-[52px] whitespace-nowrap flex items-center justify-center gap-2 border-2 border-teal-600/20 group"
           >
-            <Plus size={20} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" /> Add Food
+            <Plus size={20} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" /> {t('dashboard.addFood')}
           </button>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
         {[
-          { icon: Utensils, label: 'Meals Saved', value: stats.mealsSaved, color: 'bg-[#00796B]', prefix: '', suffix: '', decimals: 0 },
-          { icon: Leaf, label: 'CO₂ Prevented', value: stats.co2Saved, color: 'bg-[#43A047]', prefix: '', suffix: ' kg', decimals: 1 },
-          { icon: IndianRupee, label: 'Money Saved', value: stats.moneySaved, color: 'bg-[#EF6C00]', prefix: '₹', suffix: '', decimals: 0 },
-          { icon: HeartHandshake, label: 'Donations Made', value: stats.donationsCompleted, color: 'bg-[#D81B60]', prefix: '', suffix: '', decimals: 0 }
+          { icon: Utensils, key: 'mealsSaved' as StatKey, labelKey: 'dashboard.stats.mealsSaved', value: stats.mealsSaved, color: 'bg-[#00796B]', prefix: '', suffix: '', decimals: 0 },
+          { icon: Leaf, key: 'co2Prevented' as StatKey, labelKey: 'dashboard.stats.co2Prevented', value: stats.co2Saved, color: 'bg-[#43A047]', prefix: '', suffix: ' kg', decimals: 1 },
+          { icon: IndianRupee, key: 'moneySaved' as StatKey, labelKey: 'dashboard.stats.moneySaved', value: stats.moneySaved, color: 'bg-[#EF6C00]', prefix: '₹', suffix: '', decimals: 0 },
+          { icon: HeartHandshake, key: 'donationsMade' as StatKey, labelKey: 'dashboard.stats.donationsMade', value: stats.donationsCompleted, color: 'bg-[#D81B60]', prefix: '', suffix: '', decimals: 0 }
         ].map((stat, i) => (
           <button 
             key={i} 
-            onClick={() => handleStatClick(stat.label)}
+            onClick={() => handleStatClick(stat.key)}
             className="text-left bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative active:scale-[0.98]"
           >
             <div className={`w-[48px] h-[48px] rounded-full ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
@@ -225,22 +229,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <div className="font-bold text-[24px] text-[#212121] dark:text-white mt-[12px]">
                     <AnimatedCounter value={stat.value} prefix={stat.prefix} suffix={stat.suffix} decimals={stat.decimals} />
                 </div>
-                <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400 mt-1">{stat.label}</div>
+                <div className="font-normal text-[14px] text-[#757575] dark:text-slate-400 mt-1">{t(stat.labelKey)}</div>
             </div>
           </button>
         ))}
       </div>
 
       <div>
-        <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[16px]">Quick Actions</h3>
+        <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[16px]">{t('dashboard.quickActions')}</h3>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-[12px]">
             {[
-                { icon: Plus, color: '#00796B', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', title: 'Add Item', path: '/inventory', state: { action: 'add' } },
-                { icon: Camera, color: '#0288D1', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', title: 'Scan Food', path: '/inventory', state: { action: 'scan' } },
-                { icon: Heart, color: '#D32F2F', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', title: 'Donate', path: '/donate' },
-                { icon: BookOpen, color: '#E65100', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', title: 'Recipes', path: '/recipes' },
-                { icon: MapPin, color: '#7B1FA2', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', title: 'Find NGOs', path: '/ngos' },
-                { icon: BarChart3, color: '#455A64', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', title: 'Analytics', path: '/analytics' }
+                { icon: Plus, color: '#00796B', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', titleKey: 'dashboard.quick.addItem', path: '/inventory', state: { action: 'add' } },
+                { icon: Camera, color: '#0288D1', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', titleKey: 'dashboard.quick.scanFood', path: '/inventory', state: { action: 'scan' } },
+                { icon: Heart, color: '#D32F2F', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', titleKey: 'dashboard.quick.donate', path: '/donate' },
+                { icon: BookOpen, color: '#E65100', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', titleKey: 'dashboard.quick.recipes', path: '/recipes' },
+                { icon: MapPin, color: '#7B1FA2', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', titleKey: 'dashboard.quick.findNgos', path: '/ngos' },
+                { icon: BarChart3, color: '#455A64', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', titleKey: 'dashboard.quick.analytics', path: '/analytics' }
             ].map((action, i) => (
                 <button 
                     key={i}
@@ -251,7 +255,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                         <action.icon size={24} strokeWidth={2.5} style={{ color: action.color }} />
                     </div>
                     <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
-                        {action.title}
+                        {t(action.titleKey)}
                     </span>
                 </button>
             ))}
@@ -261,13 +265,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 md:pb-8">
           <div>
             <div className="flex justify-between items-baseline mb-[12px]">
-                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">Expiring Soon</h3>
-                <button onClick={() => navigate('/inventory')} className="text-[#00796B] text-[14px] font-medium hover:underline hover:scale-105 transition-transform active:scale-95">View all</button>
+                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">{t('dashboard.expiringSoon')}</h3>
+                <button onClick={() => navigate('/inventory')} className="text-[#00796B] text-[14px] font-medium hover:underline hover:scale-105 transition-transform active:scale-95">{t('dashboard.viewAll')}</button>
             </div>
             <div className="flex flex-col gap-[12px]">
                 {expiringItems.length === 0 ? (
                     <div className="bg-white dark:bg-slate-800 rounded-[12px] p-8 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">No expiring items!</p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-200">{t('dashboard.noExpiring')}</p>
                     </div>
                 ) : (
                     expiringItems.map(item => {
@@ -284,7 +288,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                                 <div className="flex-1">
                                     <div className="font-semibold text-[16px] text-[#212121] dark:text-slate-100">{item.name}</div>
                                     <span className={`${isExpired ? 'text-[#D32F2F]' : 'text-[#C2410C]'} text-[12px] font-medium`}>
-                                        {isExpired ? 'Expired!' : `Expires in ${item.daysLeft} days`}
+                                        {isExpired ? t('dashboard.expired') : t('dashboard.expiresInDays', { days: item.daysLeft })}
                                     </span>
                                 </div>
                                 <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all" />
@@ -297,17 +301,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
           <div className="flex flex-col gap-6">
               <div>
-                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-3">Community Leaderboard</h3>
+                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-3">{t('dashboard.leaderboardTitle')}</h3>
                 <div className="flex flex-col gap-[12px]">
                     {leaderboardWidgetData.map((leader, i) => (
                         <div key={i} className={`flex items-center p-3 rounded-xl transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md group ${leader.isCurrentUser ? 'bg-[#00796B]/10 border border-[#00796B]/20 shadow-sm' : ''}`}>
                             <div className="w-[24px] font-black text-[14px] text-[#757575] text-center">{leader.rank}</div>
                             <img src={leader.avatar} alt={leader.name} className="w-[36px] h-[36px] rounded-full mx-[12px] bg-slate-200 border border-slate-100 dark:border-slate-700 shadow-sm" />
-                            <div className="flex-1 font-bold text-[14px] dark:text-white group-hover:text-[#00796B] transition-colors">{leader.name} {leader.isCurrentUser && '(You)'}</div>
+                            <div className="flex-1 font-bold text-[14px] dark:text-white group-hover:text-[#00796B] transition-colors">{leader.name} {leader.isCurrentUser && t('dashboard.leaderboardYou')}</div>
                             <div className="font-black text-[14px] text-[#00796B]">{leader.xp.toLocaleString()}</div>
                         </div>
                     ))}
-                    <button onClick={() => navigate('/leaderboard')} className="text-center text-sm font-bold text-[#00796B] mt-2 flex items-center justify-center gap-1 hover:gap-3 transition-all hover:underline active:scale-95">Full Community Ranking <ChevronRight size={16} /></button>
+                    <button onClick={() => navigate('/leaderboard')} className="text-center text-sm font-bold text-[#00796B] mt-2 flex items-center justify-center gap-1 hover:gap-3 transition-all hover:underline active:scale-95">
+                      {t('dashboard.leaderboardFull')} <ChevronRight size={16} />
+                    </button>
                 </div>
               </div>
           </div>
