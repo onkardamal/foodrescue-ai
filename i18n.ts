@@ -16,7 +16,7 @@ const resources = {
 
 export const setupI18n = () => {
   if (!i18n.isInitialized) {
-    const savedLang = (typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY)) || 'en';
+    const savedLang = (typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY)) || 'hi';
 
     i18n
       .use(initReactI18next)
