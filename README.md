@@ -32,6 +32,16 @@ Create a `.env.local` (or `.env`) in the project root:
 
 ```bash
 GEMINI_API_KEY=YOUR_KEY_HERE
+
+# Firebase Auth (optional but recommended)
+
+To enable Firebase email/password and Google sign-in, add these to the same `.env.local` (or `.env`) file:
+
+```bash
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
 ```
 
 ### Start dev server
@@ -62,3 +72,4 @@ npm run preview
 
 - This repo uses a CDN Tailwind setup for styling plus a small `index.css` for accessibility focus styling.
 - If `GEMINI_API_KEY` is not set, AI actions will show a friendly message instead of crashing the app.
+- If Firebase env vars are not set, the app will still render but Firebase auth flows will fail at runtime; for a quick demo, you can continue using the built-in demo login (`demo@ecotable.dev` / `password123`).

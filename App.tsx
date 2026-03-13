@@ -3,7 +3,7 @@ import React, { useState, useEffect, createContext, useContext, useRef } from 'r
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
-import { AuthService } from './services/auth';
+import { FirebaseAuthService } from './services/firebaseAuth';
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
@@ -168,7 +168,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
 };
 
 export default function App() {
-  const [auth, setAuth] = useState<AuthState>(AuthService.init());
+  const [auth, setAuth] = useState<AuthState>(FirebaseAuthService.init());
   const [isLoginView, setIsLoginView] = useState(true);
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS);
@@ -178,6 +178,15 @@ export default function App() {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
+
+  useEffect(() => {
+    const unsubscribe = FirebaseAuthService.subscribe((state) => {
+      setAuth(state);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Handle initialization of profile specific data
   useEffect(() => {
@@ -232,7 +241,7 @@ export default function App() {
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
   const handleLogin = (state: AuthState) => setAuth(state);
   const handleLogout = () => {
-    AuthService.logout().then(setAuth);
+    FirebaseAuthService.logout().then(setAuth);
     // Force a clean state reset
     setInventory([]);
     setStats(EMPTY_STATS);
@@ -277,9 +286,21 @@ export default function App() {
 
   if (!auth.isAuthenticated) {
     return isLoginView ? (
-      <Login onLogin={handleLogin} onToggle={() => setIsLoginView(false)} />
+      <Login
+        onLogin={handleLogin}
+        onToggle={() => setIsLoginView(false)}
+        onEmailPasswordLogin={(email, password) => FirebaseAuthService.login(email, password)}
+        onEmailPasswordSignup={(name, email, password) => FirebaseAuthService.signup(name, email, password)}
+        onGoogleLogin={() => FirebaseAuthService.loginWithGoogle()}
+      />
     ) : (
-      <Signup onLogin={handleLogin} onToggle={() => setIsLoginView(true)} />
+      <Signup
+        onLogin={handleLogin}
+        onToggle={() => setIsLoginView(true)}
+        onEmailPasswordLogin={(email, password) => FirebaseAuthService.login(email, password)}
+        onEmailPasswordSignup={(name, email, password) => FirebaseAuthService.signup(name, email, password)}
+        onGoogleLogin={() => FirebaseAuthService.loginWithGoogle()}
+      />
     );
   }
 
