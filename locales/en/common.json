@@ -1,0 +1,83 @@
+{
+  "app": {
+    "name": "SaveBite",
+    "tagline": "The right choice before waste"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Log in to manage your inventory.",
+      "google": "Sign in with Google",
+      "orEmail": "Or email",
+      "emailLabel": "Email",
+      "emailPlaceholder": "name@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Log In",
+      "noAccount": "Don't have an account?",
+      "goToSignup": "Sign Up",
+      "demoBanner": "Hackathon Demo Shortcut",
+      "demoEmail": "demo@ecotable.dev",
+      "demoPassword": "password123"
+    },
+    "signup": {
+      "title": "Create Account",
+      "subtitle": "Join the zero-waste movement today.",
+      "google": "Sign up with Google",
+      "orEmail": "Or use email",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Jane Doe",
+      "emailLabel": "Email",
+      "emailPlaceholder": "chef@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "goToLogin": "Log In"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "recipes": "Recipes",
+    "donate": "Donate",
+    "ngos": "NGOs",
+    "viewProfile": "View Profile"
+  },
+  "theme": {
+    "dark": "Dark Mode",
+    "light": "Light Mode"
+  },
+  "dashboard": {
+    "welcome": "Welcome back,",
+    "addFood": "Add Food",
+    "stats": {
+      "mealsSaved": "Meals Saved",
+      "co2Prevented": "CO₂ Prevented",
+      "moneySaved": "Money Saved",
+      "donationsMade": "Donations Made"
+    },
+    "quickActions": "Quick Actions",
+    "quick": {
+      "addItem": "Add Item",
+      "scanFood": "Scan Food",
+      "donate": "Donate",
+      "recipes": "Recipes",
+      "findNgos": "Find NGOs",
+      "analytics": "Analytics"
+    },
+    "expiringSoon": "Expiring Soon",
+    "viewAll": "View all",
+    "noExpiring": "No expiring items!",
+    "expired": "Expired!",
+    "expiresInDays": "Expires in {{days}} days",
+    "leaderboardTitle": "Community Leaderboard",
+    "leaderboardYou": "(You)",
+    "leaderboardFull": "Full Community Ranking"
+  },
+  "language": {
+    "labelShortEn": "EN",
+    "labelShortHi": "HI"
+  }
+}
+

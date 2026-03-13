@@ -1,0 +1,83 @@
+{
+  "app": {
+    "name": "SaveBite",
+    "tagline": "बर्बादी से पहले सही चुनाव"
+  },
+  "auth": {
+    "login": {
+      "title": "वापस स्वागत है",
+      "subtitle": "अपनी इन्वेंटरी प्रबंधित करने के लिए लॉग इन करें।",
+      "google": "Google से साइन इन करें",
+      "orEmail": "या ईमेल",
+      "emailLabel": "ईमेल",
+      "emailPlaceholder": "name@example.com",
+      "passwordLabel": "पासवर्ड",
+      "passwordPlaceholder": "••••••••",
+      "submit": "लॉग इन",
+      "noAccount": "अकाउंट नहीं है?",
+      "goToSignup": "साइन अप करें",
+      "demoBanner": "हैकथॉन डेमो शॉर्टकट",
+      "demoEmail": "demo@ecotable.dev",
+      "demoPassword": "password123"
+    },
+    "signup": {
+      "title": "अकाउंट बनाएँ",
+      "subtitle": "आज ही ज़ीरो-वेस्ट मूवमेंट से जुड़ें।",
+      "google": "Google से साइन अप करें",
+      "orEmail": "या ईमेल उपयोग करें",
+      "nameLabel": "पूरा नाम",
+      "namePlaceholder": "जेन डो",
+      "emailLabel": "ईमेल",
+      "emailPlaceholder": "chef@example.com",
+      "passwordLabel": "पासवर्ड",
+      "passwordPlaceholder": "••••••••",
+      "submit": "अकाउंट बनाएँ",
+      "hasAccount": "पहले से अकाउंट है?",
+      "goToLogin": "लॉग इन करें"
+    }
+  },
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "inventory": "इन्वेंटरी",
+    "recipes": "रेसिपी",
+    "donate": "दान",
+    "ngos": "एनजीओ",
+    "viewProfile": "प्रोफ़ाइल देखें"
+  },
+  "theme": {
+    "dark": "डार्क मोड",
+    "light": "लाइट मोड"
+  },
+  "dashboard": {
+    "welcome": "वापस स्वागत है,",
+    "addFood": "फूड जोड़ें",
+    "stats": {
+      "mealsSaved": "बचाए गए भोजन",
+      "co2Prevented": "रोका गया CO₂",
+      "moneySaved": "बचाई गई राशि",
+      "donationsMade": "किए गए दान"
+    },
+    "quickActions": "त्वरित क्रियाएँ",
+    "quick": {
+      "addItem": "आइटम जोड़ें",
+      "scanFood": "फूड स्कैन करें",
+      "donate": "दान करें",
+      "recipes": "रेसिपी",
+      "findNgos": "एनजीओ खोजें",
+      "analytics": "एनालिटिक्स"
+    },
+    "expiringSoon": "जल्द एक्सपायर होने वाले",
+    "viewAll": "सभी देखें",
+    "noExpiring": "कोई आइटम जल्द एक्सपायर नहीं हो रहा!",
+    "expired": "एक्सपायर हो चुका!",
+    "expiresInDays": "{{days}} दिनों में एक्सपायर होगा",
+    "leaderboardTitle": "कम्युनिटी लीडरबोर्ड",
+    "leaderboardYou": "(आप)",
+    "leaderboardFull": "पूरी कम्युनिटी रैंकिंग"
+  },
+  "language": {
+    "labelShortEn": "EN",
+    "labelShortHi": "HI"
+  }
+}
+
