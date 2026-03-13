@@ -39,6 +39,13 @@ const createAuthState = (user: User | null): AuthState => ({
   isAuthenticated: !!user,
 });
 
+const requireAuthInstance = () => {
+  if (!auth) {
+    throw new Error('Firebase is not configured correctly. Please check your API key and environment variables.');
+  }
+  return auth;
+};
+
 export const FirebaseAuthService = {
   init: (): AuthState => {
     return { user: null, token: null, isAuthenticated: false };
@@ -46,6 +53,14 @@ export const FirebaseAuthService = {
 
   subscribe: (callback: AuthCallback) => {
     subscribers.add(callback);
+    if (!auth) {
+      console.error('Firebase auth instance not available. Skipping auth state subscription.');
+      callback(createAuthState(null));
+      return () => {
+        subscribers.delete(callback);
+      };
+    }
+
     const unsubscribeFirebase = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const user = mapFirebaseUserToUser(firebaseUser);
@@ -62,7 +77,8 @@ export const FirebaseAuthService = {
   },
 
   signup: async (name: string, email: string, password: string): Promise<AuthState> => {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const authInstance = requireAuthInstance();
+    const cred = await createUserWithEmailAndPassword(authInstance, email, password);
     if (cred.user && name) {
       await updateProfile(cred.user, { displayName: name });
     }
@@ -79,7 +95,8 @@ export const FirebaseAuthService = {
       return state;
     }
 
-    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const authInstance = requireAuthInstance();
+    const cred = await signInWithEmailAndPassword(authInstance, email, password);
     const user = mapFirebaseUserToUser(cred.user);
     const state = createAuthState(user);
     notifySubscribers(state);
@@ -87,8 +104,9 @@ export const FirebaseAuthService = {
   },
 
   loginWithGoogle: async (): Promise<AuthState> => {
+    const authInstance = requireAuthInstance();
     const provider = new GoogleAuthProvider();
-    const cred = await signInWithPopup(auth, provider);
+    const cred = await signInWithPopup(authInstance, provider);
     const user = mapFirebaseUserToUser(cred.user);
     const state = createAuthState(user);
     notifySubscribers(state);
@@ -96,7 +114,8 @@ export const FirebaseAuthService = {
   },
 
   logout: async (): Promise<AuthState> => {
-    await signOut(auth);
+    const authInstance = requireAuthInstance();
+    await signOut(authInstance);
     const state = createAuthState(null);
     notifySubscribers(state);
     return state;
