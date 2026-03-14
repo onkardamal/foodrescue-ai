@@ -106,6 +106,37 @@ export interface ScanResult {
   condition: string; // e.g. "Fresh", "Ripe", "Slightly Wilted"
 }
 
+export type TrustTier = 'trusted' | 'warning' | 'suspended' | 'blacklisted';
+
+export type ReportReason =
+  | 'expired_food'
+  | 'spoiled_food'
+  | 'contaminated'
+  | 'misleading_description'
+  | 'unsafe_packaging'
+  | 'other';
+
+export interface FoodSafetyReport {
+  id: string;
+  reporterUserId: string;
+  reporterName: string;
+  reportedUserId: string;
+  reason: ReportReason;
+  details: string;
+  donationId?: string;
+  date: string; // ISO
+}
+
+export interface UserTrustProfile {
+  strikes: number;
+  tier: TrustTier;
+  reports: FoodSafetyReport[];
+  /** ISO date when a suspension/blacklist was applied */
+  suspendedAt?: string;
+  /** ISO date when suspension expires (undefined = permanent for blacklisted) */
+  suspensionExpiresAt?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -113,6 +144,7 @@ export interface User {
   avatar?: string;
   /** Optional FSSAI certification ID; when set, user is shown as verified */
   fssaiId?: string;
+  trust?: UserTrustProfile;
 }
 
 export interface AuthState {

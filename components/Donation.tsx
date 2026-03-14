@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { FoodItem, NGO, User } from '../types';
-import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Mail, Calendar, Truck, MessageSquare, Clock, Info, ShieldCheck, Copy } from 'lucide-react';
+import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Mail, Calendar, Truck, MessageSquare, Clock, Info, ShieldCheck, Copy, Flag, ShieldOff } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import { searchNearbyNGOs } from '../services/geminiService';
 import { isEligibleForDonation } from '../utils/donationSafety';
 import { buildHandoverSummary, buildHandoverEmailBody, openHandoverMailto } from '../utils/donationHandover';
 import { sendHandoverEmailToNgo, isEmailConfigured } from '../services/emailService';
+import { canUserDonate, buildTrustProfile, getTrustColor, getTrustLabel } from '../utils/blacklist';
+import ReportModal from './ReportModal';
 
 // Fix Leaflet's default icon path issues
 const DefaultIcon = L.icon({
@@ -25,6 +27,12 @@ interface DonationProps {
   inventory: FoodItem[];
   onDonateComplete: (itemIds: string[], amount: number) => void;
 }
+
+const DEFAULT_NGOS: NGO[] = [
+  { id: '1', name: "Robin Hood Army", distance: "1.2 km", urgency: "High", lat: 28.5355, lng: 77.3910, description: "Volunteer-based food distribution", needs: [], rating: 4.8, phone: "+919876543210", email: "contact@robinhoodarmy.com" },
+  { id: '2', name: "No Food Waste", distance: "3.5 km", urgency: "Medium", lat: 13.0827, lng: 80.2707, description: "Surplus food rescue and distribution", needs: [], rating: 4.5, phone: "+919840316414", email: "info@nofoodwaste.org" },
+  { id: '3', name: "Feeding India", distance: "5.0 km", urgency: "Low", lat: 28.6139, lng: 77.2090, description: "Connects surplus food with those in need", needs: [], rating: 4.9, phone: "+911141234567", email: "hello@feedingindia.org" },
+];
 
 const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
   const steps = [1, 2, 3];
@@ -86,7 +94,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [ngos, setNgos] = useState<NGO[]>([]);
+  const [ngos, setNgos] = useState<NGO[]>(DEFAULT_NGOS);
   const [loadingNGOs, setLoadingNGOs] = useState(false);
   const [selectedNgoId, setSelectedNgoId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -108,6 +116,10 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   const [sendingEmail, setSendingEmail] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [showNgoApiKeyHint, setShowNgoApiKeyHint] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+
+  const userTrust = useMemo(() => user ? buildTrustProfile(user.id) : undefined, [user]);
+  const donationAccess = useMemo(() => canUserDonate(userTrust), [userTrust]);
 
   // Only items that are safe to donate: not expired, not spoiled/unsafe condition
   const donatableItems = useMemo(() => inventory.filter(isEligibleForDonation), [inventory]);
@@ -474,9 +486,45 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                     )}
                   </div>
                 )}
+
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700 mt-2">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2 text-center">Received unsafe or damaged food from a donor?</p>
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="w-full h-[44px] border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm"
+                  >
+                    <Flag size={16} /> Report Unsafe Food
+                  </button>
+                </div>
               </div>
           </div>
       );
+  }
+
+  if (!donationAccess.allowed) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-5">
+          <ShieldOff size={40} className="text-red-600 dark:text-red-400" />
+        </div>
+        <h2 className="text-xl font-bold text-[#212121] dark:text-white mb-2">Donations Restricted</h2>
+        <p className="text-sm text-[#757575] dark:text-slate-400 mb-6 max-w-sm">{donationAccess.reason}</p>
+        {userTrust && (
+          <div className="rounded-2xl border p-4 mb-6 w-full max-w-sm" style={{ borderColor: getTrustColor(userTrust.tier) + '40', backgroundColor: getTrustColor(userTrust.tier) + '10' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold" style={{ color: getTrustColor(userTrust.tier) }}>{getTrustLabel(userTrust.tier)}</span>
+              <span className="text-xs text-[#757575] dark:text-slate-400">{userTrust.strikes} strike{userTrust.strikes !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+              <div className="h-2 rounded-full transition-all" style={{ width: `${Math.min(100, (userTrust.strikes / 5) * 100)}%`, backgroundColor: getTrustColor(userTrust.tier) }} />
+            </div>
+          </div>
+        )}
+        <button onClick={() => navigate('/')} className="h-12 px-8 bg-[#212121] dark:bg-white text-white dark:text-[#212121] rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity">
+          Back to Dashboard
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -501,6 +549,16 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                 {sendingEmail ? 'Sending email…' : currentStep === 3 ? (!safetyConfirmed ? 'Confirm food is safe' : isPhoneValid ? 'Confirm Handover Info' : 'Enter 10 Digit Phone') : 'Continue'}
               </button>
           </div>
+      )}
+
+      {showReportModal && user && (
+        <ReportModal
+          reporterUserId={user.id}
+          reporterName={user.name}
+          reportedUserId="unknown-donor"
+          reportedUserName="Previous Donor"
+          onClose={() => setShowReportModal(false)}
+        />
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react
 import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon, ShieldCheck } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
 import { FirebaseAuthService } from './services/firebaseAuth';
+import { buildTrustProfile } from './utils/blacklist';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from './i18n';
 import Dashboard from './components/Dashboard';
@@ -202,15 +203,16 @@ export default function App() {
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
-  const mergeFssaiIntoUser = (state: AuthState): AuthState => {
+  const mergeUserMetadata = (state: AuthState): AuthState => {
     if (!state.user?.id) return state;
     const fssaiId = localStorage.getItem(`savebite_fssai_${state.user.id}`);
-    return { ...state, user: { ...state.user, fssaiId: fssaiId || undefined } };
+    const trust = buildTrustProfile(state.user.id);
+    return { ...state, user: { ...state.user, fssaiId: fssaiId || undefined, trust } };
   };
 
   useEffect(() => {
     const unsubscribe = FirebaseAuthService.subscribe((state) => {
-      setAuth(mergeFssaiIntoUser(state));
+      setAuth(mergeUserMetadata(state));
     });
     return () => {
       unsubscribe();
@@ -268,7 +270,7 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  const handleLogin = (state: AuthState) => setAuth(mergeFssaiIntoUser(state));
+  const handleLogin = (state: AuthState) => setAuth(mergeUserMetadata(state));
   const handleLogout = () => {
     FirebaseAuthService.logout().then(setAuth);
     // Force a clean state reset

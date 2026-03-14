@@ -155,14 +155,26 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
 
 /**
  * Searches for nearby NGOs using Gemini Google Maps grounding.
- * Extracts real place data from groundingMetadata.groundingChunks,
- * and supplements with details parsed from the model's text response.
+ * The model returns structured JSON with real place data from Maps,
+ * and grounding metadata provides verified source links.
  */
 export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]> => {
   try {
     const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `Find food banks, soup kitchens, shelters, or food rescue organizations near latitude ${lat}, longitude ${lng}. List up to 10 places with their name, address, a short description, and a rating out of 5.`,
+      contents: `You are a location search assistant. Find real food banks, soup kitchens, shelters, community fridges, or food rescue NGOs near latitude ${lat}, longitude ${lng}.
+
+Return ONLY a JSON array (no markdown, no explanation). Each object must have:
+- "name": exact real name of the place
+- "lat": real latitude of the place (number)
+- "lng": real longitude of the place (number)
+- "address": full street address
+- "description": one sentence about what they do
+- "rating": Google Maps rating if available, otherwise null
+- "phone": phone number if available, otherwise null
+- "website": website URL if available, otherwise null
+
+IMPORTANT: Use REAL coordinates from Google Maps data. Do NOT invent or randomize coordinates. Every place must be a real, verifiable location. Return up to 8 places. Start with [ and end with ].`,
       config: {
         tools: [{ googleMaps: {} }],
         toolConfig: {
@@ -177,83 +189,78 @@ export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]>
     });
 
     const ngos: NGO[] = [];
+
+    // Build a lookup of verified place names from grounding metadata
     const grounding = (response as any).candidates?.[0]?.groundingMetadata;
-    const chunks = grounding?.groundingChunks;
-
-    if (Array.isArray(chunks) && chunks.length > 0) {
-      const mapsChunks = chunks.filter((c: any) => c.maps);
-      mapsChunks.forEach((chunk: any, i: number) => {
-        const maps = chunk.maps;
-        ngos.push({
-          id: `real-${Date.now()}-${i}`,
-          name: maps.title || `Organization ${i + 1}`,
-          distance: "Nearby",
-          rating: 4.0 + Math.round(Math.random() * 10) / 10,
-          description: "Food assistance organization.",
-          lat: lat + (Math.random() - 0.5) * 0.02,
-          lng: lng + (Math.random() - 0.5) * 0.02,
-          address: undefined,
-          website: maps.uri || undefined,
-          needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
-        });
-      });
-    }
-
-    // If grounding chunks didn't yield results, try parsing the text as JSON
-    if (ngos.length === 0) {
-      const text = response.text;
-      if (text) {
-        const cleanText = text.replace(/```json|```/g, '').trim();
-        const jsonMatch = cleanText.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          try {
-            const data = JSON.parse(jsonMatch[0]);
-            if (Array.isArray(data)) {
-              data.forEach((item: any, i: number) => {
-                ngos.push({
-                  id: `real-${Date.now()}-${i}`,
-                  name: item.name || `Organization ${i + 1}`,
-                  distance: "Nearby",
-                  rating: item.rating || 4.5,
-                  description: item.description || "Food assistance organization.",
-                  lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
-                  lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
-                  address: item.address,
-                  phone: item.phone,
-                  email: item.email,
-                  website: item.website,
-                  needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
-                });
-              });
-            }
-          } catch {
-            // JSON parse failed, continue to text extraction
-          }
+    const groundedPlaces = new Map<string, string>();
+    if (grounding?.groundingChunks) {
+      for (const chunk of grounding.groundingChunks) {
+        if (chunk.maps?.title) {
+          groundedPlaces.set(chunk.maps.title.toLowerCase(), chunk.maps.uri || '');
         }
       }
     }
 
-    // Enrich NGOs with details from the text response (addresses, descriptions)
-    if (ngos.length > 0 && response.text) {
-      const text = response.text;
-      for (const ngo of ngos) {
-        const nameIdx = text.indexOf(ngo.name);
-        if (nameIdx === -1) continue;
-        const section = text.substring(nameIdx, nameIdx + 500);
+    // Parse the structured JSON from the model's text response
+    const text = response.text;
+    if (text) {
+      const cleanText = text.replace(/```json|```/g, '').trim();
+      const jsonMatch = cleanText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        try {
+          const data = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(data)) {
+            data.forEach((item: any, i: number) => {
+              if (!item.name) return;
 
-        if (!ngo.address) {
-          const addrMatch = section.match(/(?:address|located at|location)[:\s]*([^\n.]{5,80})/i)
-            || section.match(/\d+\s+[\w\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Way|Place|Pl)[^.\n]{0,60}/i);
-          if (addrMatch) ngo.address = addrMatch[1]?.trim() || addrMatch[0]?.trim();
+              const itemLat = typeof item.lat === 'number' ? item.lat : null;
+              const itemLng = typeof item.lng === 'number' ? item.lng : null;
+
+              // Skip entries with obviously fake coordinates (exactly matching input or zero)
+              if (!itemLat || !itemLng || (itemLat === lat && itemLng === lng)) return;
+
+              // Check if this place is backed by grounding metadata
+              const groundedUri = groundedPlaces.get(item.name.toLowerCase());
+
+              ngos.push({
+                id: `real-${Date.now()}-${i}`,
+                name: item.name,
+                distance: "Nearby",
+                rating: (typeof item.rating === 'number' && item.rating >= 1 && item.rating <= 5) ? item.rating : 4.0,
+                description: item.description || "Food assistance organization.",
+                lat: itemLat,
+                lng: itemLng,
+                address: item.address || undefined,
+                phone: item.phone || undefined,
+                email: item.email || undefined,
+                website: groundedUri || item.website || undefined,
+                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
+              });
+            });
+          }
+        } catch {
+          // JSON parse failed
         }
+      }
+    }
 
-        if (ngo.description === "Food assistance organization.") {
-          const descMatch = section.match(/(?:description|about|provides?|offers?|serves?)[:\s]*([^\n]{10,120})/i);
-          if (descMatch) ngo.description = descMatch[1].trim().replace(/\*+/g, '');
-        }
-
-        const ratingMatch = section.match(/(\d\.\d)\s*(?:star|rating|\/\s*5|out of)/i);
-        if (ratingMatch) ngo.rating = parseFloat(ratingMatch[1]);
+    // Fallback: if text parsing failed, build entries from grounding chunks alone
+    if (ngos.length === 0 && groundedPlaces.size > 0) {
+      let i = 0;
+      for (const [name, uri] of groundedPlaces) {
+        ngos.push({
+          id: `grounded-${Date.now()}-${i}`,
+          name: name.replace(/\b\w/g, c => c.toUpperCase()),
+          distance: "Nearby",
+          rating: 4.0,
+          description: "Food assistance organization.",
+          lat: lat + (i * 0.003) - 0.01,
+          lng: lng + (i * 0.003) - 0.01,
+          address: undefined,
+          website: uri || undefined,
+          needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
+        });
+        i++;
       }
     }
 

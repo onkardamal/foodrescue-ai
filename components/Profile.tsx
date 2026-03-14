@@ -1,12 +1,14 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { User, UserStats, DonationHistoryItem, Review } from '../types';
-import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, ShieldCheck, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2, Languages } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, ShieldCheck, ShieldOff, ShieldAlert, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2, Languages, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '../i18n';
 import Analytics from './Analytics';
+import { buildTrustProfile, getTrustColor, getTrustLabel, REPORT_REASON_LABELS } from '../utils/blacklist';
+import type { UserTrustProfile } from '../types';
 
 interface ProfileProps {
   user: User | null;
@@ -32,6 +34,8 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const [toast, setToast] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const trustProfile = useMemo(() => user ? buildTrustProfile(user.id) : null, [user]);
 
   if (!user) return null;
 
@@ -179,6 +183,100 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
              </div>
              <p className="text-xs font-bold text-slate-400 uppercase">{stats.xp > 0 ? (1000 - (stats.xp % 1000)) : 1000} XP to next tier</p>
         </div>
+
+        {/* Trust & Safety Card */}
+        {trustProfile && (
+          <div className="glass-card rounded-2xl p-5 border border-white/40 dark:border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-black text-[#212121] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Shield size={16} className="text-[#00796B]" /> Trust & Safety
+              </h3>
+              <span
+                className="text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{ color: getTrustColor(trustProfile.tier), backgroundColor: getTrustColor(trustProfile.tier) + '18' }}
+              >
+                {getTrustLabel(trustProfile.tier)}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 mb-3">
+              <div className="flex-1">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Safety Score</span>
+                  <span className="font-bold" style={{ color: getTrustColor(trustProfile.tier) }}>
+                    {trustProfile.strikes === 0 ? '100%' : `${Math.max(0, 100 - trustProfile.strikes * 20)}%`}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                  <div
+                    className="h-2.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.max(0, 100 - trustProfile.strikes * 20)}%`,
+                      backgroundColor: getTrustColor(trustProfile.tier),
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="text-center shrink-0">
+                <div className="text-2xl font-black" style={{ color: getTrustColor(trustProfile.tier) }}>
+                  {trustProfile.strikes}
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                  Strike{trustProfile.strikes !== 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
+
+            {trustProfile.tier === 'trusted' && trustProfile.strikes === 0 && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200/50 dark:border-green-800/50">
+                <ShieldCheck size={16} className="text-green-600 dark:text-green-400 shrink-0" />
+                <p className="text-xs text-green-700 dark:text-green-300 font-medium">Clean record — no food safety reports against your account.</p>
+              </div>
+            )}
+
+            {trustProfile.tier === 'warning' && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-800/50">
+                <ShieldAlert size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">Your account is under review due to {trustProfile.strikes} food safety report{trustProfile.strikes !== 1 ? 's' : ''}. Please ensure all donated food is safe.</p>
+              </div>
+            )}
+
+            {trustProfile.tier === 'suspended' && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200/50 dark:border-orange-800/50">
+                <ShieldOff size={16} className="text-orange-600 dark:text-orange-400 shrink-0" />
+                <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">
+                  Donations suspended{trustProfile.suspensionExpiresAt ? ` until ${new Date(trustProfile.suspensionExpiresAt).toLocaleDateString()}` : ''}. Repeated violations will result in a permanent ban.
+                </p>
+              </div>
+            )}
+
+            {trustProfile.tier === 'blacklisted' && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/50">
+                <ShieldOff size={16} className="text-red-600 dark:text-red-400 shrink-0" />
+                <p className="text-xs text-red-700 dark:text-red-300 font-medium">Your account has been permanently blacklisted due to {trustProfile.strikes} food safety violations. You can no longer make donations.</p>
+              </div>
+            )}
+
+            {trustProfile.reports.length > 0 && (
+              <details className="mt-3 group">
+                <summary className="text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer hover:text-[#00796B] transition-colors flex items-center gap-1">
+                  <Flag size={12} /> View {trustProfile.reports.length} report{trustProfile.reports.length !== 1 ? 's' : ''}
+                </summary>
+                <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                  {trustProfile.reports.map(report => (
+                    <div key={report.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 text-xs">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-red-600 dark:text-red-400">{REPORT_REASON_LABELS[report.reason]}</span>
+                        <span className="text-slate-400 shrink-0 ml-2">{new Date(report.date).toLocaleDateString()}</span>
+                      </div>
+                      {report.details && <p className="text-slate-500 dark:text-slate-400 leading-relaxed">{report.details}</p>}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex glass-card p-1.5 rounded-2xl border border-white/40 dark:border-white/10">

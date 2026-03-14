@@ -18,6 +18,12 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const DEMO_NGOS: NGO[] = [
+    { id: '1', name: "Robin Hood Army", distance: "1.2 km", rating: 4.8, description: "Volunteer-based movement that collects surplus food and distributes to the underserved.", lat: 28.5355, lng: 77.3910, needs: [], phone: "+919876543210", email: "contact@robinhoodarmy.com", website: "https://robinhoodarmy.com", address: "New Delhi, India" },
+    { id: '2', name: "No Food Waste", distance: "3.5 km", rating: 4.5, description: "Rescues surplus food from events and distributes to people in need.", lat: 13.0827, lng: 80.2707, needs: [], phone: "+919840316414", email: "info@nofoodwaste.org", website: "https://nofoodwaste.org", address: "Chennai, India" },
+    { id: '3', name: "Feeding India", distance: "5.0 km", rating: 4.9, description: "Fights hunger by connecting surplus food with those who need it.", lat: 28.6139, lng: 77.2090, needs: [], phone: "+911141234567", email: "hello@feedingindia.org", website: "https://feedingindia.org", address: "Delhi NCR, India" },
+];
+
 const NGOMap: React.FC = () => {
     const navigate = useNavigate();
     const mapRef = useRef<L.Map | null>(null);
@@ -26,7 +32,7 @@ const NGOMap: React.FC = () => {
     const userMarkerRef = useRef<L.CircleMarker | null>(null);
     
     // State
-    const [allNgos, setAllNgos] = useState<NGO[]>([]);
+    const [allNgos, setAllNgos] = useState<NGO[]>(DEMO_NGOS);
     const [searchText, setSearchText] = useState('');
     const [selectedNGO, setSelectedNGO] = useState<NGO | null>(null);
     const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
@@ -52,7 +58,7 @@ const NGOMap: React.FC = () => {
         const map = L.map(mapContainerRef.current, {
             zoomControl: false,
             attributionControl: false
-        }).setView([20.5937, 78.9629], 5);
+        }).setView([28.5355, 77.3910], 5);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -113,7 +119,9 @@ const NGOMap: React.FC = () => {
         setIsSearchingReal(true);
         try {
             const realData = await searchNearbyNGOs(lat, lng);
-            setAllNgos(realData);
+            if (realData.length > 0) {
+                setAllNgos(realData);
+            }
             mapRef.current?.setView([lat, lng], 13);
         } catch (e) {
             console.error(e);
@@ -121,7 +129,7 @@ const NGOMap: React.FC = () => {
             if (msg.includes('GEMINI_API_KEY') || msg.includes('API Key')) {
                 setShowApiKeyHint(true);
             } else {
-                alert("Could not fetch nearby NGOs. Please try again.");
+                alert("Could not fetch nearby NGOs. Showing default data.");
             }
         } finally {
             setIsSearchingReal(false);
