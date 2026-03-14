@@ -18,16 +18,6 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Real Indian NGO-style contacts: phone and email work with tel: / mailto: when clicked
-const generateNGOs = (): NGO[] => {
-    const baseNGOs: NGO[] = [
-        { id: '1', name: "Robin Hood Army", distance: "1.2 km", rating: 4.8, description: "Volunteer-based movement that collects surplus food and distributes to the underserved.", lat: 28.5355, lng: 77.3910, needs: [], phone: "+919876543210", email: "contact@robinhoodarmy.com", website: "https://robinhoodarmy.com", address: "New Delhi, India" },
-        { id: '2', name: "No Food Waste", distance: "3.5 km", rating: 4.5, description: "Rescues surplus food from events and distributes to people in need.", lat: 13.0827, lng: 80.2707, needs: [], phone: "+919840316414", email: "info@nofoodwaste.org", website: "https://nofoodwaste.org", address: "Chennai, India" },
-        { id: '3', name: "Feeding India", distance: "5.0 km", rating: 4.9, description: "Fights hunger by connecting surplus food with those who need it.", lat: 28.6139, lng: 77.2090, needs: [], phone: "+911141234567", email: "hello@feedingindia.org", website: "https://feedingindia.org", address: "Delhi NCR, India" },
-    ];
-    return baseNGOs;
-};
-
 const NGOMap: React.FC = () => {
     const navigate = useNavigate();
     const mapRef = useRef<L.Map | null>(null);
@@ -36,7 +26,7 @@ const NGOMap: React.FC = () => {
     const userMarkerRef = useRef<L.CircleMarker | null>(null);
     
     // State
-    const [allNgos, setAllNgos] = useState<NGO[]>(() => generateNGOs()); // Lazy init with mocks
+    const [allNgos, setAllNgos] = useState<NGO[]>([]);
     const [searchText, setSearchText] = useState('');
     const [selectedNGO, setSelectedNGO] = useState<NGO | null>(null);
     const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
@@ -59,11 +49,10 @@ const NGOMap: React.FC = () => {
     useEffect(() => {
         if (!mapContainerRef.current || mapRef.current) return;
 
-        // Default: India (matches demo NGO locations)
         const map = L.map(mapContainerRef.current, {
-            zoomControl: false, // We use custom buttons
+            zoomControl: false,
             attributionControl: false
-        }).setView([28.5355, 77.3910], 5);
+        }).setView([20.5937, 78.9629], 5);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -93,6 +82,13 @@ const NGOMap: React.FC = () => {
         };
     }, []);
 
+    // Auto-fetch NGOs on mount using geolocation
+    useEffect(() => {
+        if (navigator.geolocation) {
+            handleLocateMe();
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Update Markers when NGOs or Search changes
     useEffect(() => {
         if (!mapRef.current || !markersRef.current) return;
@@ -117,20 +113,15 @@ const NGOMap: React.FC = () => {
         setIsSearchingReal(true);
         try {
             const realData = await searchNearbyNGOs(lat, lng);
-            if (realData.length > 0) {
-                setAllNgos(realData);
-                // Also center map
-                mapRef.current?.setView([lat, lng], 13);
-            } else {
-                alert("No NGOs found nearby via AI search. Showing demo data.");
-            }
+            setAllNgos(realData);
+            mapRef.current?.setView([lat, lng], 13);
         } catch (e) {
             console.error(e);
             const msg = e instanceof Error ? e.message : '';
             if (msg.includes('GEMINI_API_KEY') || msg.includes('API Key')) {
                 setShowApiKeyHint(true);
             } else {
-                alert("Could not fetch nearby NGOs. Showing demo data.");
+                alert("Could not fetch nearby NGOs. Please try again.");
             }
         } finally {
             setIsSearchingReal(false);

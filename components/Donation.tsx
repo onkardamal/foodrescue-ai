@@ -26,14 +26,6 @@ interface DonationProps {
   onDonateComplete: (itemIds: string[], amount: number) => void;
 }
 
-// Real contacts: clicking phone opens dialer, email opens mail client
-const DEFAULT_NGOS: NGO[] = [
-  { id: '1', name: "Robin Hood Army", distance: "1.2 km", urgency: "High", lat: 28.5355, lng: 77.3910, description: "Volunteer-based food distribution", needs: [], rating: 4.8, phone: "+919876543210", email: "contact@robinhoodarmy.com" },
-  { id: '2', name: "No Food Waste", distance: "3.5 km", urgency: "Medium", lat: 13.0827, lng: 80.2707, description: "Surplus food rescue and distribution", needs: [], rating: 4.5, phone: "+919840316414", email: "info@nofoodwaste.org" },
-  { id: '3', name: "Feeding India", distance: "5.0 km", urgency: "Low", lat: 28.6139, lng: 77.2090, description: "Connects surplus food with those in need", needs: [], rating: 4.9, phone: "+911141234567", email: "hello@feedingindia.org" },
-  { id: '4', name: "St. Mary's Kitchen", distance: "2.1 km", urgency: "High", lat: 28.7041, lng: 77.1025, description: "Soup kitchen and daily meals", needs: [], rating: 4.7, phone: "+911123456789", email: "info@stmaryskitchen.org" },
-];
-
 const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
   const steps = [1, 2, 3];
   return (
@@ -94,7 +86,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [ngos, setNgos] = useState<NGO[]>(DEFAULT_NGOS);
+  const [ngos, setNgos] = useState<NGO[]>([]);
   const [loadingNGOs, setLoadingNGOs] = useState(false);
   const [selectedNgoId, setSelectedNgoId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -324,6 +316,13 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                 </div>
             )}
             <div className="px-4 space-y-3">
+                {!loadingNGOs && ngos.length === 0 && (
+                    <div className="flex flex-col items-center justify-center pt-12 px-6 text-center">
+                        <MapPin size={40} className="text-slate-300 dark:text-slate-600 mb-3" />
+                        <h3 className="text-base font-semibold text-[#212121] dark:text-white mb-1">No organizations found</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Allow location access so we can find nearby NGOs, or check your API key configuration.</p>
+                    </div>
+                )}
                 {ngos.map(ngo => (
                     <div key={ngo.id} onClick={() => setSelectedNgoId(ngo.id)} className={`p-4 rounded-2xl glass-card border transition-all cursor-pointer flex justify-between items-center ${selectedNgoId === ngo.id ? 'border-[#00796B] ring-2 ring-[#00796B]/20' : 'border-white/40 dark:border-white/10 hover:border-[#00796B]/40'}`}>
                         <div>
