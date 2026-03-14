@@ -49,7 +49,7 @@ const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
         }
         return (
           <React.Fragment key={step}>
-            <div className="w-[24px] h-[24px] rounded-full flex items-center justify-center text-[12px] font-bold z-10 transition-colors duration-300" style={{ backgroundColor: bgColor, color: textColor }}>
+            <div className="w-[24px] h-[24px] rounded-full flex items-center justify-center text-[12px] font-bold z-10 transition-all duration-300 ease-out scale-100 active:scale-95" style={{ backgroundColor: bgColor, color: textColor }}>
               {isCompleted ? <Check size={14} strokeWidth={3} /> : step}
             </div>
             {index < steps.length - 1 && (
@@ -405,8 +405,8 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
         : { type: 'success' as const, title: 'Handover details ready', body: 'The NGO will receive your contact, items with expiry, date/time and notes. They may reach out to coordinate.' };
 
       return (
-          <div className="flex-1 flex flex-col items-center p-6 text-center animate-in zoom-in-95 duration-300 overflow-y-auto pb-28">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-5 shrink-0">
+          <div className="flex-1 flex flex-col items-center p-6 text-center animate-scale-in overflow-y-auto pb-28">
+              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-5 shrink-0 animate-success-pop">
                 <Check size={40} className="text-green-600 dark:text-green-400" strokeWidth={2.5} />
               </div>
               <h2 className="text-xl font-bold text-[#212121] dark:text-white mb-1">Donation confirmed</h2>

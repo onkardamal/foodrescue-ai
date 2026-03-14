@@ -8,20 +8,24 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID as string | undefined,
 };
 
+const hasFirebaseConfig = firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId && firebaseConfig.appId;
+
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 
-try {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
+if (hasFirebaseConfig) {
+  try {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApp();
+    }
+    auth = getAuth(app);
+  } catch (error) {
+    console.error('Firebase initialization failed. Check your API key and config.', error);
+    app = null;
+    auth = null;
   }
-  auth = getAuth(app);
-} catch (error) {
-  console.error('Firebase initialization failed. Check your API key and config.', error);
-  app = null;
-  auth = null;
 }
 
 export const firebaseApp = app;

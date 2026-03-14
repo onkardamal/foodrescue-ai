@@ -4,7 +4,6 @@ import { User, UserStats, DonationHistoryItem, Review } from '../types';
 import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
-import { AuthService } from '../services/auth';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '../i18n';
 import Analytics from './Analytics';
@@ -80,13 +79,14 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-        await AuthService.deleteAccount(user.id);
-        onLogout(); // This will reset App states and redirect to Login
+        localStorage.removeItem(`savebite_data_${user.id}`);
+        onLogout();
     } catch (err) {
         console.error("Failed to delete account", err);
+        setToast("Error deleting account. Please try again.");
+    } finally {
         setIsDeleting(false);
         setShowDeleteModal(false);
-        setToast("Error deleting account. Please try again.");
     }
   };
 
@@ -123,7 +123,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24 md:pb-8 animate-in slide-in-from-right duration-300 relative">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24 md:pb-8 animate-slide-in-right relative">
       {showConfetti && <Confetti />}
       
       {/* Toast Notification */}

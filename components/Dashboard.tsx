@@ -177,7 +177,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   };
 
   return (
-    <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-in fade-in duration-500 relative">
+    <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-fade-in relative">
       {showConfetti && <ConfettiRain />}
 
       {/* Header Summary Section */}

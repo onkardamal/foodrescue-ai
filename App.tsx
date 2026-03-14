@@ -50,7 +50,7 @@ const MOCK_STATS: UserStats = {
   ]
 };
 
-// --- INITIAL STATES: For Genuie New Users ---
+// --- INITIAL STATES: For Genuine New Users ---
 const EMPTY_STATS: UserStats = {
     mealsSaved: 0,
     co2Saved: 0,

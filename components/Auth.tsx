@@ -25,7 +25,7 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
   return (
     <div className="min-h-screen w-full flex bg-white dark:bg-slate-950 transition-colors duration-300">
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 lg:px-20 py-10 bg-white dark:bg-slate-950">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md animate-fade-in-up">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-200 dark:shadow-teal-900/30">
               <Leaf size={20} fill="white" />
