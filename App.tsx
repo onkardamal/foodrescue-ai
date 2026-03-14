@@ -272,14 +272,12 @@ export default function App() {
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
   const handleLogin = (state: AuthState) => setAuth(mergeUserMetadata(state));
   const handleLogout = () => {
-    FirebaseAuthService.logout().then(setAuth);
-    // Force a clean state reset
+    setAuth({ user: null, token: null, isAuthenticated: false });
     setInventory([]);
     setStats(EMPTY_STATS);
     setGeneratedRecipes([]);
     setIsDataInitialized(false);
-    // Simple redirect to home
-    window.location.hash = '#/';
+    FirebaseAuthService.logout();
   };
 
   const handleAddItem = (item: FoodItem) => setInventory(prev => [item, ...prev]);
