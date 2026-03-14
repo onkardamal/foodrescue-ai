@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User, UserStats, DonationHistoryItem, Review } from '../types';
-import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2, Languages } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, ShieldCheck, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useTranslation } from 'react-i18next';
@@ -164,7 +164,15 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                     {stats.xp.toLocaleString()} <span className="text-[#00796B]">XP</span>
                     <Sparkles className="text-amber-500" size={24} fill="currentColor" />
                  </h2>
-                 <p className="text-lg font-bold text-amber-600 uppercase tracking-widest">{user.name} • Lvl {stats.level}</p>
+                 <p className="text-lg font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center justify-center gap-2 flex-wrap">
+                    {user.name}
+                    {user.fssaiId && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#00796B]/20 text-[#00796B] dark:bg-teal-500/20 dark:text-teal-400 text-xs font-bold">
+                        <ShieldCheck size={14} strokeWidth={2.5} /> {t('profile.verified')}
+                      </span>
+                    )}
+                    <span>• Lvl {stats.level}</span>
+                 </p>
              </div>
              <div className="w-full max-w-[280px] h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
                 <div className="h-full bg-gradient-to-r from-[#00796B] to-amber-400 transition-all duration-1000 ease-out" style={{ width: `${(stats.xp % 1000) / 10}%` }}></div>

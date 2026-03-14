@@ -111,6 +111,8 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  /** Optional FSSAI certification ID; when set, user is shown as verified */
+  fssaiId?: string;
 }
 
 export interface AuthState {

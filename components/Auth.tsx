@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthState, User as UserType } from '../types';
-import { Loader2, Mail, Lock, User, ArrowRight, CheckCircle, Leaf, Sparkles, X, ChevronRight } from 'lucide-react';
+import { Loader2, Mail, Lock, User, ArrowRight, CheckCircle, Leaf, Sparkles, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface AuthProps {
@@ -56,10 +56,13 @@ const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle:
   );
 };
 
+const FSSAI_STORAGE_KEY = (uid: string) => `savebite_fssai_${uid}`;
+
 export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordLogin, onGoogleLogin }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fssaiId, setFssaiId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -70,6 +73,9 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordL
     setError('');
     try {
       const state = await onEmailPasswordLogin(email, password);
+      if (state.user?.id && fssaiId.trim()) {
+        localStorage.setItem(FSSAI_STORAGE_KEY(state.user.id), fssaiId.trim());
+      }
       onLogin(state);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -83,6 +89,9 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordL
     setError('');
     try {
       const authState = await onGoogleLogin();
+      if (authState.user?.id && fssaiId.trim()) {
+        localStorage.setItem(FSSAI_STORAGE_KEY(authState.user.id), fssaiId.trim());
+      }
       onLogin(authState);
     } catch (err: any) {
       setError(err.message || "Google Login failed");
@@ -161,6 +170,7 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPassword
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fssaiId, setFssaiId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -171,6 +181,9 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPassword
     setError('');
     try {
       const state = await onEmailPasswordSignup(name, email, password);
+      if (state.user?.id && fssaiId.trim()) {
+        localStorage.setItem(FSSAI_STORAGE_KEY(state.user.id), fssaiId.trim());
+      }
       onLogin(state);
     } catch (err: any) {
       setError(err.message);
@@ -184,6 +197,9 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPassword
     setError('');
     try {
       const authState = await onGoogleLogin();
+      if (authState.user?.id && fssaiId.trim()) {
+        localStorage.setItem(FSSAI_STORAGE_KEY(authState.user.id), fssaiId.trim());
+      }
       onLogin(authState);
     } catch (err: any) {
       setError(err.message || "Google Signup failed");
@@ -232,6 +248,13 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPassword
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 focus:border-[#00796B] outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder={t('auth.signup.passwordPlaceholder')} required />
                 </div>
+            </div>
+            <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#757575] dark:text-slate-400 ml-1 flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-[#00796B]" />
+                  {t('auth.signup.fssaiLabel')}
+                </label>
+                <input type="text" value={fssaiId} onChange={e => setFssaiId(e.target.value)} className="w-full px-4 py-3 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400" placeholder={t('auth.signup.fssaiPlaceholder')} />
             </div>
             <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#00796B] text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-500/30 hover:bg-[#00695C] hover:shadow-teal-500/40 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                 {loading ? <Loader2 className="animate-spin" /> : <>{t('auth.signup.submit')} <CheckCircle size={20} /></>}

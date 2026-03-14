@@ -18,7 +18,9 @@
       "goToSignup": "Sign Up",
       "demoBanner": "Hackathon Demo Shortcut",
       "demoEmail": "demo@ecotable.dev",
-      "demoPassword": "password123"
+      "demoPassword": "password123",
+      "fssaiLabel": "FSSAI Certification ID (optional)",
+      "fssaiPlaceholder": "e.g. 12345678901234"
     },
     "signup": {
       "title": "Create Account",
@@ -33,7 +35,9 @@
       "passwordPlaceholder": "••••••••",
       "submit": "Create Account",
       "hasAccount": "Already have an account?",
-      "goToLogin": "Log In"
+      "goToLogin": "Log In",
+      "fssaiLabel": "FSSAI Certification ID (optional)",
+      "fssaiPlaceholder": "e.g. 12345678901234"
     }
   },
   "nav": {
@@ -186,6 +190,8 @@
     "detailMarkCooked": "Mark as Cooked"
   },
   "profile": {
+    "verified": "Verified",
+    "verifiedTooltip": "FSSAI certified",
     "headerTitle": "My Impact Profile",
     "tabAnalytics": "My Analytics",
     "tabHistory": "Rescue History",

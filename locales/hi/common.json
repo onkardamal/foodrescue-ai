@@ -18,7 +18,9 @@
       "goToSignup": "साइन अप करें",
       "demoBanner": "हैकथॉन डेमो शॉर्टकट",
       "demoEmail": "demo@ecotable.dev",
-      "demoPassword": "password123"
+      "demoPassword": "password123",
+      "fssaiLabel": "FSSAI प्रमाणन ID (वैकल्पिक)",
+      "fssaiPlaceholder": "जैसे 12345678901234"
     },
     "signup": {
       "title": "अकाउंट बनाएँ",
@@ -33,7 +35,9 @@
       "passwordPlaceholder": "••••••••",
       "submit": "अकाउंट बनाएँ",
       "hasAccount": "पहले से अकाउंट है?",
-      "goToLogin": "लॉग इन करें"
+      "goToLogin": "लॉग इन करें",
+      "fssaiLabel": "FSSAI प्रमाणन ID (वैकल्पिक)",
+      "fssaiPlaceholder": "जैसे 12345678901234"
     }
   },
   "nav": {
@@ -186,6 +190,8 @@
     "detailMarkCooked": "कुक हो गया मार्क करें"
   },
   "profile": {
+    "verified": "सत्यापित",
+    "verifiedTooltip": "FSSAI प्रमाणित",
     "headerTitle": "मेरा इम्पैक्ट प्रोफ़ाइल",
     "tabAnalytics": "मेरे एनालिटिक्स",
     "tabHistory": "रेस्क्यू हिस्ट्री",

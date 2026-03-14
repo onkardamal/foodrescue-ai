@@ -18,7 +18,9 @@
       "goToSignup": "साइन अप करा",
       "demoBanner": "हॅकाथॉन डेमो शॉर्टकट",
       "demoEmail": "demo@ecotable.dev",
-      "demoPassword": "password123"
+      "demoPassword": "password123",
+      "fssaiLabel": "FSSAI प्रमाणन ID (पर्यायी)",
+      "fssaiPlaceholder": "उदा. 12345678901234"
     },
     "signup": {
       "title": "खाते तयार करा",
@@ -33,7 +35,9 @@
       "passwordPlaceholder": "••••••••",
       "submit": "खाते तयार करा",
       "hasAccount": "आधीच खाते आहे?",
-      "goToLogin": "लॉग इन करा"
+      "goToLogin": "लॉग इन करा",
+      "fssaiLabel": "FSSAI प्रमाणन ID (पर्यायी)",
+      "fssaiPlaceholder": "उदा. 12345678901234"
     }
   },
   "nav": {
@@ -186,6 +190,8 @@
     "detailMarkCooked": "शिजवले म्हणून चिन्हांकित करा"
   },
   "profile": {
+    "verified": "सत्यापित",
+    "verifiedTooltip": "FSSAI प्रमाणित",
     "headerTitle": "माझा प्रभाव प्रोफाइल",
     "tabAnalytics": "माझे विश्लेषण",
     "tabHistory": "बचाव इतिहास",

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
-import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon } from 'lucide-react';
+import { Home, Package, ChefHat, Heart, MapPin, LogOut, Leaf, Moon, Sun, User as UserIcon, ShieldCheck } from 'lucide-react';
 import { FoodItem, UserStats, Recipe, FoodCategory, AuthState, ThemeContextType, Theme, User, DonationHistoryItem } from './types';
 import { FirebaseAuthService } from './services/firebaseAuth';
 import { useTranslation } from 'react-i18next';
@@ -113,7 +113,14 @@ const Sidebar = ({ user }: { user: User | null }) => {
         <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95 group border border-transparent hover:border-white/30 dark:hover:border-white/10">
           <img src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} alt="Profile" className="w-9 h-9 rounded-full bg-slate-200/80 dark:bg-slate-700/80 shadow-sm group-hover:ring-2 group-hover:ring-[#00796B] transition-all shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-[#212121] dark:text-white truncate group-hover:text-[#00796B] transition-colors">{user?.name}</p>
+            <p className="text-sm font-bold text-[#212121] dark:text-white truncate group-hover:text-[#00796B] transition-colors flex items-center gap-1.5">
+              {user?.name}
+              {user?.fssaiId && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#00796B]/15 text-[#00796B] dark:bg-teal-500/20 dark:text-teal-400 text-[10px] font-bold shrink-0" title={t('profile.verifiedTooltip')}>
+                  <ShieldCheck size={10} strokeWidth={2.5} /> {t('profile.verified')}
+                </span>
+              )}
+            </p>
             <p className="text-xs text-[#757575] dark:text-slate-400 truncate">{t('nav.viewProfile')}</p>
           </div>
           <UserIcon size={16} className="text-slate-400 group-hover:text-[#00796B] transition-colors shrink-0" />
@@ -195,9 +202,15 @@ export default function App() {
     return (saved === 'dark' || saved === 'light') ? saved : 'light';
   });
 
+  const mergeFssaiIntoUser = (state: AuthState): AuthState => {
+    if (!state.user?.id) return state;
+    const fssaiId = localStorage.getItem(`savebite_fssai_${state.user.id}`);
+    return { ...state, user: { ...state.user, fssaiId: fssaiId || undefined } };
+  };
+
   useEffect(() => {
     const unsubscribe = FirebaseAuthService.subscribe((state) => {
-      setAuth(state);
+      setAuth(mergeFssaiIntoUser(state));
     });
     return () => {
       unsubscribe();
@@ -255,7 +268,7 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  const handleLogin = (state: AuthState) => setAuth(state);
+  const handleLogin = (state: AuthState) => setAuth(mergeFssaiIntoUser(state));
   const handleLogout = () => {
     FirebaseAuthService.logout().then(setAuth);
     // Force a clean state reset
