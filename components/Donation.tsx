@@ -71,8 +71,8 @@ const DonationItemRow: React.FC<{
   return (
     <div 
         onClick={() => onToggle(item.id)}
-        className={`min-h-[84px] w-full px-[16px] py-3 mb-[8px] flex items-center border-b border-[#EEEEEE] dark:border-slate-800 transition-colors duration-200 cursor-pointer ${
-            selected ? 'bg-[#F0FFFB] dark:bg-[#00796B]/10' : 'bg-white dark:bg-slate-900'
+        className={`min-h-[84px] w-full px-4 py-3 mx-4 mb-3 flex items-center rounded-2xl transition-all duration-200 cursor-pointer border ${
+            selected ? 'glass-card border-[#00796B]/40 ring-2 ring-[#00796B]/20' : 'glass-card border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5'
         }`}
     >
         <div className={`w-[24px] h-[24px] rounded-[4px] border-[2px] flex items-center justify-center transition-colors shrink-0 ${selected ? 'bg-[#00796B] border-[#00796B]' : 'border-[#BDBDBD]'}`}>
@@ -229,22 +229,32 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   }, [currentStep]);
 
   useEffect(() => {
-    if (currentStep === 2 && viewMode === 'map' && mapContainerRef.current) {
-        if (mapRef.current) mapRef.current.remove();
-        const map = L.map(mapContainerRef.current, { zoomControl: false, attributionControl: false }).setView([37.7749, -122.4194], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        if (ngos.length > 0 && ngos[0].id.startsWith('real')) map.setView([ngos[0].lat, ngos[0].lng], 13);
-        ngos.forEach(ngo => {
-            const marker = L.marker([ngo.lat, ngo.lng])
-              .bindPopup(ngo.name, { className: 'font-semibold' })
-              .addTo(map)
-              .on('click', () => setSelectedNgoId(ngo.id));
-            if (ngo.id === selectedNgoId) marker.openPopup();
-        });
-        mapRef.current = map;
+    if (currentStep !== 2 || viewMode !== 'map' || !mapContainerRef.current) {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      return;
     }
-    return () => { mapRef.current?.remove(); mapRef.current = null; }
-  }, [currentStep, viewMode, ngos]);
+    const container = mapContainerRef.current;
+    if (mapRef.current) mapRef.current.remove();
+    const [lat, lng] = ngos.length > 0 ? [ngos[0].lat, ngos[0].lng] : [28.5355, 77.391];
+    const map = L.map(container, { zoomControl: false, attributionControl: false }).setView([lat, lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    if (ngos.length > 1) map.setView([lat, lng], 11);
+    ngos.forEach(ngo => {
+      const marker = L.marker([ngo.lat, ngo.lng])
+        .bindPopup(ngo.name, { className: 'font-semibold' })
+        .addTo(map)
+        .on('click', () => setSelectedNgoId(ngo.id));
+      if (ngo.id === selectedNgoId) marker.openPopup();
+    });
+    mapRef.current = map;
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, [currentStep, viewMode, ngos, selectedNgoId]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -258,7 +268,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
             <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Only safe, non-expired food can be donated. Unsafe or expired items are hidden.</p>
         </div>
         <div className="px-[16px] mb-4">
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-3 p-4 rounded-2xl glass-card border border-amber-200/50 dark:border-amber-700/50">
                 <ShieldCheck size={20} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-800 dark:text-amber-200">
                     <p className="font-semibold">Safe food only</p>
@@ -276,7 +286,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                      <ShoppingBag size={48} className="text-[#E0E0E0] mb-[16px]" />
                      <h3 className="text-[16px] font-[600] text-[#212121] dark:text-white mb-[8px]">No safe food items available</h3>
                      <p className="text-sm text-slate-500 mb-6">Expired or unsafe food cannot be donated. Only non-expired, good-condition items appear here to protect recipients.</p>
-                     <button onClick={() => navigate('/inventory')} className="bg-[#00796B] text-white h-[44px] px-[24px] rounded-[8px] font-[600]">Check Inventory</button>
+                     <button onClick={() => navigate('/inventory')} className="bg-[#00796B] text-white h-12 px-6 rounded-2xl font-semibold shadow-lg shadow-teal-500/30">Check Inventory</button>
                 </div>
             )}
         </div>
@@ -284,36 +294,40 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   );
 
   const renderStep2 = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-        <div className="px-[16px] mt-[24px] mb-[16px] flex justify-between items-end">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+        <div className="px-4 mt-6 mb-4 flex justify-between items-end shrink-0">
              <div>
                 <h2 className="text-[20px] font-[700] text-[#212121] dark:text-white">Choose Recipient</h2>
                 <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Who receives this donation?</p>
              </div>
-             <div className="flex bg-[#F5F5F5] dark:bg-slate-800 p-1 rounded-lg">
-                 <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#00796B]' : 'text-[#757575]'}`}><List size={20} /></button>
-                 <button onClick={() => setViewMode('map')} className={`p-2 rounded-md ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#00796B]' : 'text-[#757575]'}`}><MapIcon size={20} /></button>
+             <div className="flex glass-card p-1 rounded-2xl border border-white/40 dark:border-white/10">
+                 <button onClick={() => setViewMode('list')} className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-[#00796B] text-white shadow-sm' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-white/10'}`}><List size={20} /></button>
+                 <button onClick={() => setViewMode('map')} className={`p-2 rounded-xl transition-all ${viewMode === 'map' ? 'bg-[#00796B] text-white shadow-sm' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-white/10'}`}><MapIcon size={20} /></button>
              </div>
         </div>
-        <div className="flex-1 overflow-y-auto pb-[100px]">
-            {loadingNGOs && viewMode === 'list' && <div className="px-[16px] mb-4 flex items-center gap-2 text-[#00796B]"><Loader2 className="animate-spin" size={16} /><span className="text-sm">Finding nearby organizations...</span></div>}
-            {viewMode === 'list' ? (
-                <div className="px-[16px] space-y-[12px]">
-                    {ngos.map(ngo => (
-                        <div key={ngo.id} onClick={() => setSelectedNgoId(ngo.id)} className={`p-[16px] rounded-[12px] border transition-all cursor-pointer flex justify-between items-center ${selectedNgoId === ngo.id ? 'bg-[#F0FFFB] dark:bg-[#00796B]/20 border-[#00796B]' : 'bg-white dark:bg-slate-900 border-[#EEEEEE] dark:border-slate-700 hover:border-[#00796B]/50'}`}>
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-[600] text-[#212121] dark:text-white">{ngo.name}</h3>
-                                    {ngo.urgency === 'High' && <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><AlertCircle size={10} /> High Need</span>}
-                                </div>
-                                <div className="flex items-center gap-3 text-[13px] text-[#757575]"><span className="flex items-center gap-1"><MapPin size={12} /> {ngo.distance}</span><span>•</span><span>{ngo.description || ngo.name}</span></div>
+        {viewMode === 'list' ? (
+          <div className="flex-1 min-h-0 overflow-y-auto pb-[100px]">
+            {loadingNGOs && <div className="px-4 mb-4 flex items-center gap-2 text-[#00796B]"><Loader2 className="animate-spin" size={16} /><span className="text-sm">Finding nearby organizations...</span></div>}
+            <div className="px-4 space-y-3">
+                {ngos.map(ngo => (
+                    <div key={ngo.id} onClick={() => setSelectedNgoId(ngo.id)} className={`p-4 rounded-2xl glass-card border transition-all cursor-pointer flex justify-between items-center ${selectedNgoId === ngo.id ? 'border-[#00796B] ring-2 ring-[#00796B]/20' : 'border-white/40 dark:border-white/10 hover:border-[#00796B]/40'}`}>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-[600] text-[#212121] dark:text-white">{ngo.name}</h3>
+                                {ngo.urgency === 'High' && <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><AlertCircle size={10} /> High Need</span>}
                             </div>
-                            {selectedNgoId === ngo.id ? <div className="w-[24px] h-[24px] rounded-full bg-[#00796B] flex items-center justify-center"><Check size={14} color="white" strokeWidth={3} /></div> : <div className="w-[24px] h-[24px] rounded-full border-2 border-[#E0E0E0]" />}
+                            <div className="flex items-center gap-3 text-[13px] text-[#757575]"><span className="flex items-center gap-1"><MapPin size={12} /> {ngo.distance}</span><span>•</span><span>{ngo.description || ngo.name}</span></div>
                         </div>
-                    ))}
-                </div>
-            ) : <div ref={mapContainerRef} className="w-full h-full bg-[#E0E0E0] dark:bg-slate-800" />}
-        </div>
+                        {selectedNgoId === ngo.id ? <div className="w-6 h-6 rounded-full bg-[#00796B] flex items-center justify-center shrink-0"><Check size={14} color="white" strokeWidth={3} /></div> : <div className="w-6 h-6 rounded-full border-2 border-[#E0E0E0] shrink-0" />}
+                    </div>
+                ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-[320px] flex flex-col">
+            <div ref={mapContainerRef} className="flex-1 w-full min-h-[320px] rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-800" />
+          </div>
+        )}
     </div>
   );
 
@@ -326,7 +340,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                 <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Review items and logistics for {selectedNgo?.name}.</p>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-sm">
+            <div className="glass-card border border-white/40 dark:border-white/10 rounded-2xl p-5 mb-6">
                 <h3 className="text-xs font-bold text-[#00796B] uppercase tracking-wider mb-3 flex items-center gap-2">
                     <Info size={14} /> Shared Receipt Info for NGO
                 </h3>
@@ -346,8 +360,8 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-                <button onClick={() => setLogistics({...logistics, mode: 'dropoff'})} className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'dropoff' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] text-[#757575]'}`}><MapPin size={24} /><span className="font-bold text-sm">I'll Drop Off</span></button>
-                <button onClick={() => setLogistics({...logistics, mode: 'pickup'})} className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'pickup' ? 'bg-[#00796B] border-[#00796B] text-white shadow-md' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] text-[#757575]'}`}><Truck size={24} /><span className="font-bold text-sm">Request Pickup</span></button>
+                <button onClick={() => setLogistics({...logistics, mode: 'dropoff'})} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'dropoff' ? 'bg-[#00796B] border-[#00796B] text-white shadow-lg shadow-teal-500/30' : 'glass-card border-white/40 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}><MapPin size={24} /><span className="font-bold text-sm">I'll Drop Off</span></button>
+                <button onClick={() => setLogistics({...logistics, mode: 'pickup'})} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${logistics.mode === 'pickup' ? 'bg-[#00796B] border-[#00796B] text-white shadow-lg shadow-teal-500/30' : 'glass-card border-white/40 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}><Truck size={24} /><span className="font-bold text-sm">Request Pickup</span></button>
             </div>
 
             <div className="space-y-4">
@@ -363,19 +377,19 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                     placeholder="Enter 10 digit number" 
                     value={logistics.contactPhone} 
                     onChange={handlePhoneChange} 
-                    className={`w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white outline-none transition-all font-medium border-2 ${logistics.contactPhone.length > 0 && logistics.contactPhone.length < 10 ? 'border-orange-300' : 'border-transparent focus:border-[#00796B]'}`} 
+                    className={`w-full h-12 px-4 rounded-2xl glass-input text-[#212121] dark:text-white outline-none transition-all font-medium focus:ring-2 focus:ring-[#00796B]/30 ${logistics.contactPhone.length > 0 && logistics.contactPhone.length < 10 ? 'border-orange-300' : ''}`} 
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><Calendar size={16} /> Date</label><input type="date" value={logistics.date} onChange={(e) => setLogistics({...logistics, date: e.target.value})} className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white outline-none transition-all font-medium border-2 border-transparent focus:border-[#00796B]" /></div>
-                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><Clock size={16} /> Time</label><input type="time" value={logistics.time} onChange={(e) => setLogistics({...logistics, time: e.target.value})} className="w-full h-[48px] px-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white outline-none transition-all font-medium border-2 border-transparent focus:border-[#00796B]" /></div>
+                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><Calendar size={16} /> Date</label><input type="date" value={logistics.date} onChange={(e) => setLogistics({...logistics, date: e.target.value})} className="w-full h-12 px-4 rounded-2xl glass-input text-[#212121] dark:text-white outline-none transition-all font-medium focus:ring-2 focus:ring-[#00796B]/30" /></div>
+                    <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><Clock size={16} /> Time</label><input type="time" value={logistics.time} onChange={(e) => setLogistics({...logistics, time: e.target.value})} className="w-full h-12 px-4 rounded-2xl glass-input text-[#212121] dark:text-white outline-none transition-all font-medium focus:ring-2 focus:ring-[#00796B]/30" /></div>
                 </div>
-                <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><MessageSquare size={16} /> Notes</label><textarea placeholder="Details for the recipient..." value={logistics.notes} onChange={(e) => setLogistics({...logistics, notes: e.target.value})} className="w-full h-[80px] p-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder-slate-500 outline-none transition-all font-medium resize-none border-2 border-transparent focus:border-[#00796B]" /></div>
+                <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><MessageSquare size={16} /> Notes</label><textarea placeholder="Details for the recipient..." value={logistics.notes} onChange={(e) => setLogistics({...logistics, notes: e.target.value})} className="w-full h-20 p-4 rounded-2xl glass-input text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder-slate-500 outline-none transition-all font-medium resize-none focus:ring-2 focus:ring-[#00796B]/30" /></div>
             </div>
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-start gap-3"><AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" /><p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">When you confirm, we'll open your email app with <strong>full handover details</strong> for <strong>{selectedNgo?.name}</strong>: this item list with expiry dates, your contact, date/time, and notes. Send the email so the NGO receives everything they need.</p></div>
+            <div className="mt-6 p-4 glass-card rounded-2xl border border-blue-200/50 dark:border-blue-800/50 flex items-start gap-3"><AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" /><p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">When you confirm, we'll open your email app with <strong>full handover details</strong> for <strong>{selectedNgo?.name}</strong>: this item list with expiry dates, your contact, date/time, and notes. Send the email so the NGO receives everything they need.</p></div>
 
             {/* Mandatory safety confirmation */}
-            <div className="mt-6 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+            <div className="mt-6 p-4 rounded-2xl glass-card border border-white/40 dark:border-white/10">
                 <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                         type="checkbox"
@@ -452,7 +466,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   }
 
   return (
-    <div className="h-screen bg-white dark:bg-slate-950 flex flex-col relative">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 flex flex-col relative">
       {currentStep < 4 && (
         <header className="pt-[12px] px-[16px] flex flex-col items-center relative z-20 bg-white dark:bg-slate-950">
             <div className="w-full h-[44px] flex items-center justify-between"><button onClick={handleBack} className="w-[44px] h-[44px] flex items-center justify-center -ml-[12px] rounded-full active:bg-slate-100 transition-colors"><ChevronLeft size={24} className="dark:text-white" /></button><h1 className="text-[18px] font-[700] absolute left-0 right-0 text-center pointer-events-none dark:text-white">{currentStep === 1 ? 'Select Safe Food' : currentStep === 2 ? 'Choose Recipient' : 'Coordinate Handover'}</h1><div className="w-[44px]" /></div>
@@ -464,11 +478,11 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
       {currentStep === 3 && renderStep3()}
       {currentStep === 4 && renderStep4()}
       {(donatableItems.length > 0 && currentStep < 4) && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-950 pt-[16px] pb-[32px] px-[16px] shadow-[0_-4px_12px_rgba(0,0,0,0.05)] border-t dark:border-slate-800 z-30">
+          <div className="absolute bottom-4 left-4 right-4 md:left-8 md:right-8 rounded-2xl glass-panel pt-4 pb-6 px-4 z-30 border border-white/40 dark:border-white/10">
               <button 
                 onClick={() => handleContinue()} 
                 disabled={sendingEmail || (currentStep === 1 && selectedItems.length === 0) || (currentStep === 2 && !selectedNgoId) || (currentStep === 3 && (!isPhoneValid || !logistics.date || !logistics.time || !safetyConfirmed))} 
-                className="w-full h-[52px] bg-[#00796B] rounded-[10px] flex items-center justify-center text-white text-[16px] font-[600] disabled:bg-[#BDBDBD] transition-all"
+                className="w-full h-14 bg-[#00796B] rounded-2xl flex items-center justify-center text-white text-[16px] font-semibold shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:shadow-none transition-all"
               >
                 {sendingEmail ? 'Sending email…' : currentStep === 3 ? (!safetyConfirmed ? 'Confirm food is safe' : isPhoneValid ? 'Confirm Handover Info' : 'Enter 10 Digit Phone') : 'Continue'}
               </button>

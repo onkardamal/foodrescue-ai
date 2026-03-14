@@ -23,34 +23,33 @@ const GoogleIcon = () => (
 const AuthLayout: React.FC<{ children: React.ReactNode, title: string, subtitle: string }> = ({ children, title, subtitle }) => {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen w-full flex bg-white dark:bg-slate-950 transition-colors duration-300">
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 lg:px-20 py-10 bg-white dark:bg-slate-950">
-        <div className="w-full max-w-md animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-200 dark:shadow-teal-900/30">
-              <Leaf size={20} fill="white" />
+    <div className="min-h-screen w-full flex bg-[#F5F5F5] dark:bg-slate-950 transition-colors duration-300">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 lg:px-20 py-10">
+        <div className="w-full max-w-md animate-fade-in-up p-8 rounded-3xl glass-panel-strong border border-white/40 dark:border-white/10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-[#00796B] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-teal-500/25">
+              <Leaf size={24} fill="white" />
             </div>
             <div>
               <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-white leading-none">{t('app.name')}</h1>
               <p className="text-[9px] text-[#757575] dark:text-slate-500 font-bold uppercase tracking-tighter mt-1">{t('app.tagline')}</p>
             </div>
           </div>
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-[#212121] dark:text-white mb-2">{title}</h2>
-            <p className="text-[#757575] dark:text-slate-400">{subtitle}</p>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-[#212121] dark:text-white mb-1">{title}</h2>
+            <p className="text-sm text-[#757575] dark:text-slate-400">{subtitle}</p>
           </div>
           {children}
         </div>
       </div>
-      <div className="hidden lg:flex w-1/2 relative bg-[#F0FDF4] dark:bg-slate-900 overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop")', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-        </div>
-        <div className="relative z-10 p-12 text-white max-w-lg">
-          <div className="mb-6 w-16 h-1 bg-[#00796B] rounded-full"></div>
-          <h2 className="text-5xl font-black leading-tight mb-2">SaveBite</h2>
-          <p className="text-xl font-bold text-teal-400 uppercase tracking-widest mb-6">The right choice before waste</p>
-          <p className="text-lg text-white/90 leading-relaxed mb-8">Turn your excess food into meals, not waste. Track inventory, donate to NGOs, and save the planet—one bite at a time.</p>
+      <div className="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center">
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop")', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="relative z-10 p-12 max-w-lg rounded-3xl glass-panel mx-8 border border-white/20">
+          <div className="mb-6 w-14 h-1 bg-teal-400 rounded-full" />
+          <h2 className="text-4xl font-black leading-tight mb-2 text-white">SaveBite</h2>
+          <p className="text-lg font-bold text-teal-300 uppercase tracking-widest mb-4">The right choice before waste</p>
+          <p className="text-base text-white/90 leading-relaxed">Turn your excess food into meals, not waste. Track inventory, donate to NGOs, and save the planet—one bite at a time.</p>
         </div>
       </div>
     </div>
@@ -94,8 +93,8 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordL
   return (
     <AuthLayout title={t('auth.login.title')} subtitle={t('auth.login.subtitle')}>
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-2 border border-red-100 dark:border-red-900/30">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></div>
+          <div className="mb-5 p-4 rounded-2xl bg-red-50/90 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium flex items-center gap-3 border border-red-200/50 dark:border-red-800/50 backdrop-blur-sm">
+            <div className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
             {error}
           </div>
         )}
@@ -105,7 +104,7 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordL
                 type="button"
                 onClick={handleGoogleLoginClick}
                 disabled={googleLoading || loading}
-                className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95"
+                className="w-full glass-card text-[#212121] dark:text-slate-200 border border-white/50 dark:border-white/10 py-3.5 rounded-2xl font-semibold hover:bg-white/80 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
             >
                 {googleLoading ? <Loader2 className="animate-spin text-[#00796B]" /> : <><GoogleIcon /><span>{t('auth.login.google')}</span></>}
             </button>
@@ -121,17 +120,17 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordL
                 <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">{t('auth.login.emailLabel')}</label>
                 <div className="relative">
                 <Mail className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600" placeholder={t('auth.login.emailPlaceholder')} required />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 focus:border-[#00796B] outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-500" placeholder={t('auth.login.emailPlaceholder')} required />
                 </div>
             </div>
             <div className="space-y-1.5">
                 <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">{t('auth.login.passwordLabel')}</label>
                 <div className="relative">
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder={t('auth.login.passwordPlaceholder')} required />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 focus:border-[#00796B] outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder={t('auth.login.passwordPlaceholder')} required />
                 </div>
             </div>
-            <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-all active:scale-95 flex items-center justify-center gap-2">
+            <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#00796B] text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-500/30 hover:bg-[#00695C] hover:shadow-teal-500/40 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                 {loading ? <Loader2 className="animate-spin" /> : <>{t('auth.login.submit')} <ArrowRight size={20} /></>}
             </button>
             </form>
@@ -147,9 +146,9 @@ export const Login: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPasswordL
         </div>
         
         {(
-            <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-500">
+            <div className="mt-8 pt-6 border-t border-white/30 dark:border-white/10">
                <p className="text-xs text-center text-[#9E9E9E] dark:text-slate-500 mb-3 uppercase tracking-wider font-bold flex items-center justify-center gap-2"><Sparkles size={12} fill="currentColor" /> {t('auth.login.demoBanner')} <Sparkles size={12} fill="currentColor" /></p>
-               <button onClick={() => { setEmail('demo@ecotable.dev'); setPassword('password123'); }} className="w-full py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-mono border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"><span>{t('auth.login.demoEmail')}</span><span className="w-1 h-1 bg-slate-400 rounded-full"></span><span>{t('auth.login.demoPassword')}</span></button>
+               <button type="button" onClick={() => { setEmail('demo@ecotable.dev'); setPassword('password123'); }} className="w-full py-3 glass-card text-slate-600 dark:text-slate-400 rounded-2xl text-xs font-mono border border-white/40 dark:border-white/10 hover:bg-white/70 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2"><span>{t('auth.login.demoEmail')}</span><span className="w-1 h-1 bg-slate-400 rounded-full" /><span>{t('auth.login.demoPassword')}</span></button>
             </div>
         )}
 
@@ -195,14 +194,14 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPassword
   return (
     <AuthLayout title={t('auth.signup.title')} subtitle={t('auth.signup.subtitle')}>
          {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-2 border border-red-100 dark:border-red-900/30">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></div>
+          <div className="mb-5 p-4 rounded-2xl bg-red-50/90 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium flex items-center gap-3 border border-red-200/50 dark:border-red-800/50 backdrop-blur-sm">
+            <div className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
             {error}
           </div>
         )}
 
         <div className="space-y-4">
-             <button type="button" onClick={handleGoogleSignupClick} disabled={googleLoading || loading} className="w-full bg-white dark:bg-slate-800 text-[#757575] dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 relative overflow-hidden active:scale-95">
+             <button type="button" onClick={handleGoogleSignupClick} disabled={googleLoading || loading} className="w-full glass-card text-[#212121] dark:text-slate-200 border border-white/50 dark:border-white/10 py-3.5 rounded-2xl font-semibold hover:bg-white/80 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
                 {googleLoading ? <Loader2 className="animate-spin text-[#00796B]" /> : <><GoogleIcon /><span>{t('auth.signup.google')}</span></>}
             </button>
 
@@ -217,24 +216,24 @@ export const Signup: React.FC<AuthProps> = ({ onLogin, onToggle, onEmailPassword
                 <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">{t('auth.signup.nameLabel')}</label>
                 <div className="relative">
                 <User className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
-                <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600" placeholder={t('auth.signup.namePlaceholder')} required />
+                <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full pl-12 pr-4 py-3.5 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 focus:border-[#00796B] outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-500" placeholder={t('auth.signup.namePlaceholder')} required />
                 </div>
             </div>
             <div className="space-y-1.5">
                 <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">{t('auth.signup.emailLabel')}</label>
                 <div className="relative">
                 <Mail className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-600" placeholder={t('auth.signup.emailPlaceholder')} required />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 focus:border-[#00796B] outline-none transition-all text-[#212121] dark:text-white placeholder:text-[#BDBDBD] dark:placeholder:text-slate-500" placeholder={t('auth.signup.emailPlaceholder')} required />
                 </div>
             </div>
             <div className="space-y-1.5">
                 <label className="text-sm font-bold text-[#212121] dark:text-slate-200 ml-1">{t('auth.signup.passwordLabel')}</label>
                 <div className="relative">
                 <Lock className="absolute left-4 top-3.5 text-[#9E9E9E] dark:text-slate-500" size={20} />
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] dark:bg-slate-900 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-[#00796B] rounded-xl outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder={t('auth.signup.passwordPlaceholder')} required />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 glass-input rounded-2xl focus:ring-2 focus:ring-[#00796B]/30 focus:border-[#00796B] outline-none transition-all text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder={t('auth.signup.passwordPlaceholder')} required />
                 </div>
             </div>
-            <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#00796B] text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-[#00695C] transition-colors flex items-center justify-center gap-2 active:scale-95">
+            <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#00796B] text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-500/30 hover:bg-[#00695C] hover:shadow-teal-500/40 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                 {loading ? <Loader2 className="animate-spin" /> : <>{t('auth.signup.submit')} <CheckCircle size={20} /></>}
             </button>
             </form>

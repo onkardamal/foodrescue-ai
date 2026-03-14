@@ -195,7 +195,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             
             {/* Interactive Appreciation Bubble */}
             <div className={`h-10 mt-4 transition-all duration-500 transform overflow-hidden ${appreciationMsg ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}`}>
-               <div className={`inline-flex items-center gap-2 ${msgStyles.bg} ${msgStyles.text} px-4 py-2 rounded-2xl text-xs font-bold shadow-sm border ${msgStyles.border}`}>
+               <div className={`inline-flex items-center gap-2 ${msgStyles.bg} ${msgStyles.text} px-4 py-2 rounded-2xl text-xs font-bold shadow-sm border ${msgStyles.border} backdrop-blur-sm`}>
                   <Sparkles size={14} className="animate-pulse" />
                   {appreciationMsg}
                </div>
@@ -203,7 +203,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           </div>
           <button 
             onClick={() => handleQuickAction('/inventory', { action: 'add' })}
-            className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-[24px] py-[14px] rounded-[22px] shadow-lg active:scale-95 hover:scale-[1.02] hover:-translate-y-0.5 transition-all min-h-[52px] whitespace-nowrap flex items-center justify-center gap-2 border-2 border-teal-600/20 group"
+            className="bg-[#00796B] hover:bg-[#00695C] text-white font-bold text-[16px] px-6 py-3.5 rounded-2xl shadow-lg shadow-teal-500/30 hover:shadow-teal-500/40 active:scale-[0.98] hover:scale-[1.02] transition-all min-h-[52px] whitespace-nowrap flex items-center justify-center gap-2 border border-teal-600/20 group"
           >
             <Plus size={20} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" /> {t('dashboard.addFood')}
           </button>
@@ -220,7 +220,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
           <button 
             key={i} 
             onClick={() => handleStatClick(stat.key)}
-            className="text-left bg-white dark:bg-slate-800 rounded-[20px] p-[16px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between min-h-[120px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative active:scale-[0.98]"
+            className="text-left glass-card rounded-2xl p-5 flex flex-col justify-between min-h-[120px] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden relative active:scale-[0.98]"
           >
             <div className={`w-[48px] h-[48px] rounded-full ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
                 <stat.icon size={24} color="white" />
@@ -249,9 +249,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <button 
                     key={i}
                     onClick={() => handleQuickAction(action.path, action.state)}
-                    className={`${action.bg} ${action.border} relative h-[110px] rounded-[24px] flex flex-col items-center justify-center p-2 transition-all hover:shadow-xl hover:-translate-y-1 active:scale-95 group border`}
+                    className="glass-card relative h-[110px] rounded-2xl flex flex-col items-center justify-center p-2 transition-all hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] group border border-white/40 dark:border-white/10"
                 >
-                    <div className="w-[48px] h-[48px] rounded-[18px] bg-white dark:bg-slate-950 shadow-sm flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                    <div className="w-12 h-12 rounded-2xl bg-white/80 dark:bg-slate-800/80 shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-all duration-300">
                         <action.icon size={24} strokeWidth={2.5} style={{ color: action.color }} />
                     </div>
                     <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
@@ -270,8 +270,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
             </div>
             <div className="flex flex-col gap-[12px]">
                 {expiringItems.length === 0 ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-[12px] p-8 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">{t('dashboard.noExpiring')}</p>
+                    <div className="glass-card rounded-2xl p-8 flex flex-col items-center justify-center text-center border border-white/40 dark:border-white/10">
+                        <p className="font-semibold text-slate-700 dark:text-slate-200">{t('dashboard.noExpiring')}</p>
                     </div>
                 ) : (
                     expiringItems.map(item => {
@@ -279,10 +279,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                         return (
                             <button
                                 key={item.id}
-                                className="w-full text-left bg-white dark:bg-slate-800 rounded-[12px] p-[12px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center hover:bg-slate-50 dark:hover:bg-slate-700 hover:shadow-md hover:-translate-x-1 transition-all group active:scale-[0.99]" 
+                                className="w-full text-left glass-card rounded-2xl p-4 flex items-center hover:bg-white/80 dark:hover:bg-white/5 hover:shadow-md transition-all group active:scale-[0.99] border border-white/40 dark:border-white/10" 
                                 onClick={() => navigate('/inventory')}
                             >
-                                <div className={`w-[48px] h-[48px] rounded-[8px] mr-[12px] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform ${isExpired ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>
+                                <div className={`w-12 h-12 rounded-xl mr-3 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform ${isExpired ? 'bg-red-100/80 dark:bg-red-900/30' : 'bg-amber-100/80 dark:bg-amber-900/30'}`}>
                                     {isExpired ? '⚠️' : '🕒'}
                                 </div>
                                 <div className="flex-1">
@@ -304,9 +304,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
                 <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-3">{t('dashboard.leaderboardTitle')}</h3>
                 <div className="flex flex-col gap-[12px]">
                     {leaderboardWidgetData.map((leader, i) => (
-                        <div key={i} className={`flex items-center p-3 rounded-xl transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md group ${leader.isCurrentUser ? 'bg-[#00796B]/10 border border-[#00796B]/20 shadow-sm' : ''}`}>
-                            <div className="w-[24px] font-black text-[14px] text-[#757575] text-center">{leader.rank}</div>
-                            <img src={leader.avatar} alt={leader.name} className="w-[36px] h-[36px] rounded-full mx-[12px] bg-slate-200 border border-slate-100 dark:border-slate-700 shadow-sm" />
+                        <div key={i} className={`flex items-center p-3 rounded-2xl transition-all cursor-pointer glass-card hover:bg-white/80 dark:hover:bg-white/10 group border ${leader.isCurrentUser ? 'border-[#00796B]/30 bg-[#00796B]/10' : 'border-white/40 dark:border-white/10'}`}>
+                            <div className="w-6 font-black text-sm text-slate-500 dark:text-slate-400 text-center">{leader.rank}</div>
+                            <img src={leader.avatar} alt={leader.name} className="w-9 h-9 rounded-full mx-3 bg-slate-200/80 dark:bg-slate-700/80 border border-white/50 dark:border-white/10 shadow-sm" />
                             <div className="flex-1 font-bold text-[14px] dark:text-white group-hover:text-[#00796B] transition-colors">{leader.name} {leader.isCurrentUser && t('dashboard.leaderboardYou')}</div>
                             <div className="font-black text-[14px] text-[#00796B]">{leader.xp.toLocaleString()}</div>
                         </div>

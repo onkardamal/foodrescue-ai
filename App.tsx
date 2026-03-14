@@ -157,7 +157,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => { if (mainRef.current) mainRef.current.scrollTo(0, 0); }, [location.pathname]);
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
+    <div className="min-h-screen bg-[#F0F4F3] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
       <Sidebar user={auth.user} />
       <div className="flex-1 flex flex-col min-w-0 md:pl-[272px] h-screen overflow-hidden">
         <main ref={mainRef} className="flex-1 overflow-y-auto pb-[100px] md:pb-0 scroll-smooth">

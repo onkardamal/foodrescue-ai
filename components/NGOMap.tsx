@@ -250,7 +250,7 @@ const NGOMap: React.FC = () => {
                 {/* Header Row */}
                 <div className="flex justify-between items-center mb-[12px] pointer-events-auto">
                     <div>
-                        <h1 className="text-[28px] font-[700] text-[#212121] leading-tight drop-shadow-sm bg-white/80 backdrop-blur-sm px-2 py-1 rounded-lg">
+                        <h1 className="text-[28px] font-[700] text-[#212121] leading-tight px-4 py-2 rounded-2xl glass-panel">
                             Find Partner NGOs
                         </h1>
                     </div>
@@ -258,7 +258,7 @@ const NGOMap: React.FC = () => {
                     {/* Prominent Register Button */}
                     <button 
                         onClick={() => setIsRegistering(true)}
-                        className="h-[44px] bg-[#212121] dark:bg-slate-900 text-white px-[16px] rounded-[22px] text-[14px] font-[700] shadow-lg shadow-black/20 active:scale-95 transition-all hover:bg-black flex items-center gap-2 border border-white/20"
+                        className="h-12 bg-[#212121] dark:bg-slate-800 text-white px-6 rounded-2xl text-[14px] font-bold shadow-lg active:scale-95 transition-all hover:bg-black dark:hover:bg-slate-700 flex items-center gap-2 border border-white/20"
                     >
                         <Plus size={18} strokeWidth={3} />
                         Register NGO
@@ -266,7 +266,7 @@ const NGOMap: React.FC = () => {
                 </div>
 
                 {/* Search Input */}
-                <div className="pointer-events-auto h-[44px] bg-white rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center px-[12px]">
+                <div className="pointer-events-auto h-12 rounded-2xl glass-panel flex items-center px-4 border border-white/40 dark:border-white/10">
                     <Search size={20} className="text-[#757575]" />
                     <input 
                         type="text"
@@ -288,14 +288,14 @@ const NGOMap: React.FC = () => {
             <div className="absolute top-[160px] right-[12px] z-20 flex flex-col gap-[8px]">
                  <button 
                     onClick={() => handleZoom(1)}
-                    className="w-[40px] h-[40px] bg-white rounded-[8px] shadow-md flex items-center justify-center active:bg-gray-50 text-[#212121]"
+                    className="w-11 h-11 rounded-2xl glass-panel flex items-center justify-center active:scale-95 text-[#212121] border border-white/40 dark:border-white/10"
                     aria-label="Zoom In"
                  >
                     <Plus size={20} />
                  </button>
                  <button 
                     onClick={() => handleZoom(-1)}
-                    className="w-[40px] h-[40px] bg-white rounded-[8px] shadow-md flex items-center justify-center active:bg-gray-50 text-[#212121]"
+                    className="w-11 h-11 rounded-2xl glass-panel flex items-center justify-center active:scale-95 text-[#212121] border border-white/40 dark:border-white/10"
                     aria-label="Zoom Out"
                  >
                     <Minus size={20} />
@@ -322,7 +322,7 @@ const NGOMap: React.FC = () => {
 
             {/* --- Z-Layer 3: NGO Detail Bottom Sheet --- */}
             <div 
-                className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[16px] shadow-[0_-4px_20px_rgba(0,0,0,0.15)] z-30 transition-transform duration-300 ease-out flex flex-col ${
+                className={`absolute bottom-0 left-0 right-0 rounded-t-3xl glass-panel-strong z-30 transition-transform duration-300 ease-out flex flex-col border-t border-x border-white/40 dark:border-white/10 ${
                     selectedNGO ? 'translate-y-0 pb-[20px]' : 'translate-y-[120%]'
                 }`}
                 style={{ maxHeight: '70%' }}
@@ -361,7 +361,7 @@ const NGOMap: React.FC = () => {
                                 </p>
                             )}
                             {showContactInfo && (
-                                <div className="animate-in fade-in slide-in-from-top-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg mt-2 space-y-2">
+                                <div className="animate-fade-in glass-card p-3 rounded-2xl mt-2 space-y-2 border border-white/40 dark:border-white/10">
                                     {selectedNGO.phone && (
                                         <a href={`tel:${selectedNGO.phone.replace(/\s/g, '')}`} className="text-[13px] text-[#212121] dark:text-slate-100 flex items-center gap-2 font-medium hover:text-[#00796B] hover:underline">
                                             <Phone size={14} className="text-[#00796B] shrink-0" /> {selectedNGO.phone}
@@ -387,13 +387,13 @@ const NGOMap: React.FC = () => {
                         <div className="flex gap-[12px]">
                             <button 
                                 onClick={() => setShowContactInfo(!showContactInfo)}
-                                className="flex-1 h-[48px] border border-[#00796B] rounded-[12px] text-[#00796B] font-[700] text-[14px] flex items-center justify-center active:bg-teal-50 hover:bg-teal-50 transition-colors"
+                                className="flex-1 h-12 border-2 border-[#00796B] rounded-2xl text-[#00796B] font-bold text-sm flex items-center justify-center active:scale-95 hover:bg-[#00796B]/10 transition-all"
                             >
                                 <Phone size={18} className="mr-2" /> Contact
                             </button>
                             <button 
                                 onClick={handleDonateToNGO}
-                                className="flex-1 h-[48px] bg-[#00796B] rounded-[12px] text-white font-[700] text-[14px] flex items-center justify-center active:bg-[#00695C] hover:bg-[#00695C] transition-colors shadow-lg shadow-teal-500/30"
+                                className="flex-1 h-12 bg-[#00796B] rounded-2xl text-white font-bold text-sm flex items-center justify-center active:scale-95 hover:bg-[#00695C] transition-all shadow-lg shadow-teal-500/30"
                             >
                                 <HeartHandshake size={18} className="mr-2" /> Donate Here
                             </button>
@@ -407,7 +407,7 @@ const NGOMap: React.FC = () => {
             {/* --- Z-Layer 4: Registration Modal Overlay --- */}
             {isRegistering && (
                 <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="reg-title">
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[20px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="glass-panel-strong w-full max-w-md rounded-3xl overflow-hidden animate-scale-in border border-white/40 dark:border-white/10">
                         <div className="bg-[#00796B] px-6 py-4 flex justify-between items-center">
                             <h2 id="reg-title" className="text-white text-lg font-bold flex items-center gap-2">
                                 <Building2 size={20} /> New NGO Partner

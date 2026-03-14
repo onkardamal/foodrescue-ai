@@ -128,14 +128,14 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
       
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] bg-white dark:bg-slate-900 border-2 border-[#00796B] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] glass-panel-strong border-2 border-[#00796B] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in-down">
             <CheckCircle2 className="text-[#00796B]" size={24} />
             <span className="font-bold text-[#212121] dark:text-white">{toast}</span>
         </div>
       )}
 
       {/* Header */}
-      <header className="pt-4 px-4 pb-4 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm mb-4 flex items-center gap-3">
+      <header className="pt-4 px-4 pb-4 glass-panel sticky top-0 z-30 mb-4 flex items-center gap-3 rounded-b-2xl border-b border-x border-white/40 dark:border-white/10">
         <button 
             onClick={handleBack}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -149,7 +149,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
 
       <div className="max-w-3xl mx-auto px-4 space-y-6">
         {/* Profile Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-xl border-2 border-slate-100 dark:border-slate-800 flex flex-col items-center text-center relative overflow-hidden group">
+        <div className="glass-panel-strong rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group border border-white/40 dark:border-white/10">
              <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-amber-500/5 pointer-events-none"></div>
              <div className="relative mb-6">
                 <div className="w-28 h-28 rounded-full border-[6px] border-amber-400 p-1 shadow-amber-400/20 shadow-2xl">
@@ -173,9 +173,9 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setActiveTab('stats')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${activeTab === 'stats' ? 'bg-white dark:bg-slate-800 text-[#00796B] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>My Analytics</button>
-            <button onClick={() => setActiveTab('history')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-[#00796B] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Rescue History</button>
+        <div className="flex glass-card p-1.5 rounded-2xl border border-white/40 dark:border-white/10">
+            <button onClick={() => setActiveTab('stats')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${activeTab === 'stats' ? 'bg-[#00796B] text-white shadow-sm' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-white/10'}`}>My Analytics</button>
+            <button onClick={() => setActiveTab('history')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${activeTab === 'history' ? 'bg-[#00796B] text-white shadow-sm' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-white/10'}`}>Rescue History</button>
         </div>
 
         {/* Tab Content */}
@@ -193,7 +193,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                                 <div className={`absolute -left-[27px] top-4 w-6 h-6 rounded-full border-4 border-white dark:border-slate-950 flex items-center justify-center z-10 ${isCompleted ? 'bg-[#00796B]' : 'bg-slate-300 dark:bg-slate-600'}`}>
                                     {isCompleted ? <Check size={12} className="text-white" strokeWidth={4} /> : <Clock size={12} className="text-white" strokeWidth={4} />}
                                 </div>
-                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col group hover:shadow-md transition-shadow">
+                                <div className="glass-card rounded-2xl p-5 flex flex-col group hover:shadow-md transition-all border border-white/40 dark:border-white/10">
                                     <div className="flex items-center justify-between w-full mb-3">
                                         <div className="flex-1 min-w-0 pr-4">
                                             <h4 className="font-bold text-lg text-[#212121] dark:text-white truncate">{item.foodName}</h4>
@@ -228,7 +228,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
         {/* Preferences & Logout */}
         <div className="pt-8 space-y-4">
             <h3 className="font-black text-[#212121] dark:text-white uppercase tracking-wider text-sm pl-2">Preferences</h3>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="glass-card rounded-2xl overflow-hidden border border-white/40 dark:border-white/10">
                 <button onClick={toggleTheme} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">{theme === 'light' ? <Sun size={20} className="text-slate-400" /> : <Moon size={20} className="text-slate-400" />}</div>
@@ -277,10 +277,10 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
       {/* Account Deletion Modal */}
       {showDeleteModal && (
           <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="glass-panel-strong w-full max-w-sm rounded-3xl overflow-hidden animate-scale-in border border-white/40 dark:border-white/10">
                   <div className="p-8">
                       <div className="flex justify-center mb-6">
-                          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                          <div className="w-16 h-16 bg-red-100/80 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                               <AlertOctagon size={32} className="text-red-600" />
                           </div>
                       </div>
@@ -316,7 +316,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
       {/* Rating Modal */}
       {showRateModal && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" role="dialog" aria-modal="true">
+              <div className="glass-panel-strong w-full max-w-sm rounded-3xl overflow-hidden animate-scale-in border border-white/40 dark:border-white/10" role="dialog" aria-modal="true">
                   <div className="p-8">
                       <div className="flex justify-between items-center mb-6">
                           <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center shadow-inner"><Star size={24} className="text-[#00796B]" fill="currentColor" /></div>

@@ -45,7 +45,7 @@ const RecipeCard: React.FC<{
           onView();
         }
       }}
-      className="group bg-white dark:bg-slate-800 rounded-[20px] p-[20px] mb-[16px] shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 border border-slate-200 dark:border-slate-700 cursor-pointer relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#00796B]"
+      className="group glass-card rounded-2xl p-5 mb-4 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-white/40 dark:border-white/10 cursor-pointer relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#00796B]/30"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 dark:bg-orange-900/10 rounded-bl-[100px] -mr-8 -mt-8 transition-transform group-hover:scale-125 duration-500 pointer-events-none" />
 
@@ -147,7 +147,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
 
   if (selectedRecipe) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 p-[20px] animate-in slide-in-from-bottom-10 duration-500">
+      <div className="min-h-screen bg-[#F0F4F3] dark:bg-slate-950 p-5 animate-fade-in">
         <button onClick={() => setSelectedRecipe(null)} className="mb-6 flex items-center gap-2 text-[#757575] dark:text-slate-400 font-medium hover:text-[#212121] dark:hover:text-white transition-all hover:-translate-x-1 active:scale-95">
           <ChevronLeft size={24} /> Back to Recipes
         </button>
@@ -213,7 +213,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 pb-[100px]">
+    <div className="min-h-screen bg-[#F0F4F3] dark:bg-slate-950 pb-[100px]">
       <header className="pt-[12px] px-[16px] pb-[16px] flex flex-col gap-[4px]">
         <div className="flex items-center gap-[12px] h-[44px]">
           <button 
@@ -230,7 +230,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
         </p>
       </header>
 
-      <section className="mx-[16px] mt-[4px] rounded-[16px] p-[20px] shadow-lg shadow-orange-500/20 bg-gradient-to-br from-[#E65100] to-[#F57C00] hover:scale-[1.02] transition-transform duration-500">
+      <section className="mx-4 mt-2 rounded-2xl p-5 glass-card border border-orange-200/50 dark:border-orange-800/50 bg-gradient-to-br from-[#E65100]/90 to-[#F57C00]/90 backdrop-blur-md hover:scale-[1.01] transition-transform duration-300">
         <div className="flex items-center gap-2 mb-[12px] text-white/90">
              <Sparkles size={16} className="animate-pulse" />
              <h2 className="text-[14px] font-bold uppercase tracking-wide">Use These Soon</h2>
@@ -246,7 +246,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
         </div>
       </section>
 
-      <div className="mx-[16px] mt-[24px] h-[52px] bg-[#F5F5F5] dark:bg-slate-900 rounded-[16px] flex items-center px-[16px] focus-within:ring-2 focus-within:ring-[#E65100]/50 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all shadow-sm">
+      <div className="mx-4 mt-6 h-14 glass-input rounded-2xl flex items-center px-4 focus-within:ring-2 focus-within:ring-[#E65100]/30 transition-all">
         <Search size={22} className="text-[#757575] dark:text-slate-500" />
         <input 
           type="text"

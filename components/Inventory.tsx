@@ -220,8 +220,8 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
   };
 
   return (
-    <div className="relative w-full h-[88px] overflow-hidden rounded-[12px]">
-      <div className="absolute inset-y-0 right-0 w-[120px] flex rounded-r-[12px]">
+    <div className="relative w-full h-[88px] overflow-hidden rounded-xl">
+      <div className="absolute inset-y-0 right-0 w-[120px] flex rounded-r-xl overflow-hidden">
         <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); setOffset(0); }}
             className="flex-1 bg-blue-600 text-white flex flex-col items-center justify-center active:bg-blue-700 hover:bg-blue-500 transition-colors"
@@ -238,7 +238,7 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({ children, onEdit, onDelet
         </button>
       </div>
       <div 
-        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-[12px] shadow-sm border border-slate-200 dark:border-slate-700 z-10 transition-all duration-200 ease-out touch-pan-y hover:shadow-xl hover:scale-[1.01] hover:-translate-y-0.5 cursor-pointer group"
+        className="relative w-full h-full bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm z-10 transition-all duration-200 ease-out touch-pan-y hover:shadow-md cursor-pointer group"
         style={{ transform: `translateX(${offset}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -502,16 +502,16 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
         </div>
         
         {/* VIEW TAB TOGGLE */}
-        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-[14px] w-fit mt-2 ml-1">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit mt-2 ml-1">
             <button 
                 onClick={() => { setViewTab('available'); setActiveCategory('All'); }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-bold transition-all hover:scale-105 active:scale-95 ${viewTab === 'available' ? 'bg-white dark:bg-slate-800 text-[#00796B] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 ${viewTab === 'available' ? 'bg-white dark:bg-slate-700 text-[#00796B] shadow-sm border border-slate-200 dark:border-slate-600' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
             >
                 <Package size={16} /> Available Stock
             </button>
             <button 
                 onClick={() => { setViewTab('expired'); setActiveCategory('All'); }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-bold transition-all hover:scale-105 active:scale-95 ${viewTab === 'expired' ? 'bg-white dark:bg-slate-800 text-[#D32F2F] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 ${viewTab === 'expired' ? 'bg-white dark:bg-slate-700 text-[#D32F2F] shadow-sm border border-slate-200 dark:border-slate-600' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
             >
                 <History size={16} /> Expired History
             </button>
@@ -574,7 +574,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                 return (
                     <button
                         key={cat} onClick={() => setActiveCategory(cat)}
-                        className={`whitespace-nowrap px-[16px] h-[36px] rounded-[10px] text-[13px] font-[700] transition-all flex items-center justify-center border hover:scale-105 active:scale-95 ${isActive ? 'text-white shadow-md' : 'bg-white dark:bg-slate-900 text-[#757575] dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        className={`whitespace-nowrap px-4 h-9 rounded-lg text-[13px] font-bold transition-all flex items-center justify-center border active:scale-95 ${isActive ? 'text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                         style={{ backgroundColor: isActive ? highlightColor : undefined, borderColor: isActive ? highlightColor : undefined }}
                     >
                         {cat} <span className={`ml-1.5 opacity-60 text-[11px] ${isActive ? 'text-white' : ''}`}>({count})</span>
@@ -643,7 +643,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       {/* AI Analysis Overlay */}
       {isAnalyzing && (
           <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
-              <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300 mx-4">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-xl flex flex-col items-center text-center mx-4 border border-slate-200 dark:border-slate-700">
                   <div className="relative mb-6">
                       <div className="w-24 h-24 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center animate-pulse">
                           <Sparkles size={48} className="text-[#00796B]" fill="currentColor" />
@@ -677,7 +677,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       {/* Manual Add / Scan Result Modal */}
       {showManualAdd && (
           <div className="fixed inset-0 z-[1500] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700">
                   <div className="p-6">
                       <div className="flex justify-between items-center mb-6">
                           <h3 className="text-xl font-bold dark:text-white">{editingItem ? 'Edit Item' : isFromScan ? 'Confirm Scan Results' : 'Add New Item'}</h3>
@@ -754,7 +754,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       {/* Item Detail Modal */}
       {detailItem && (
           <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700">
                   <div className="p-6">
                       <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center gap-3">
