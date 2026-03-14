@@ -78,58 +78,44 @@ const Sidebar = ({ user }: { user: User | null }) => {
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-[240px] h-screen bg-white dark:bg-slate-900 border-r border-[#EEEEEE] dark:border-slate-800 fixed left-0 top-0 z-50 transition-colors duration-300">
-      <div className="p-6 flex items-center gap-3 mb-6 group cursor-pointer" onClick={() => window.location.hash = '#/'}>
-        <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-teal-100 dark:shadow-teal-900/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"><Leaf size={20} fill="white" /></div>
+    <aside className="hidden md:flex flex-col w-[240px] fixed left-4 top-4 bottom-4 z-50 rounded-2xl glass-panel overflow-hidden transition-all duration-300">
+      <div className="p-5 flex items-center gap-3 mb-4 group cursor-pointer" onClick={() => window.location.hash = '#/'}>
+        <div className="w-10 h-10 bg-[#00796B] rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-teal-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"><Leaf size={20} fill="white" /></div>
         <div>
           <h1 className="font-bold text-xl tracking-tight text-[#212121] dark:text-slate-100 leading-none group-hover:text-[#00796B] transition-colors">{t('app.name')}</h1>
           <p className="text-[9px] text-[#757575] dark:text-slate-400 font-bold uppercase tracking-tighter mt-1 group-hover:translate-x-0.5 transition-transform">{t('app.tagline')}</p>
         </div>
       </div>
-      <nav className="flex-1 px-4 space-y-2">
+      <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto min-h-0">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <NavLink key={item.path} to={item.path} className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95 ${isActive ? 'bg-[#00796B]/10 text-[#00796B] font-semibold shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md'}`}>
-              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={`transition-all duration-300 ${isActive ? 'text-[#00796B] scale-110' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200 group-hover:scale-110'}`} />
-              <span className={`transition-colors duration-300 ${isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}`} >{t(item.labelKey as any)}</span>
+            <NavLink key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive ? 'bg-[#00796B]/15 text-[#00796B] font-semibold shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-white/60 dark:hover:bg-white/5'}`}>
+              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={`shrink-0 transition-all duration-300 ${isActive ? 'text-[#00796B] scale-110' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200 group-hover:scale-110'}`} />
+              <span className={`transition-colors duration-300 truncate ${isActive ? 'text-[#00796B]' : 'text-[#757575] dark:text-slate-400 group-hover:text-[#212121] dark:group-hover:text-slate-200'}`}>{t(item.labelKey as any)}</span>
             </NavLink>
           );
         })}
       </nav>
-      <div className="p-4 border-t border-[#EEEEEE] dark:border-slate-800 space-y-2">
-        <button onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:scale-[1.02] active:scale-95 transition-all w-full mb-2 group">
-          {theme === 'light' ? <Moon size={22} className="group-hover:rotate-[360deg] transition-transform duration-700" /> : <Sun size={22} className="group-hover:rotate-[360deg] transition-transform duration-700" />}
-          <span className="group-hover:text-[#212121] dark:group-hover:text-white transition-colors">
-            {theme === 'light' ? t('theme.dark') : t('theme.light')}
-          </span>
+      <div className="p-3 space-y-1.5 border-t border-white/20 dark:border-white/5">
+        <button onClick={toggleTheme} aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#757575] dark:text-slate-400 hover:bg-white/60 dark:hover:bg-white/5 hover:scale-[1.02] active:scale-95 transition-all w-full group">
+          {theme === 'light' ? <Moon size={22} className="shrink-0 group-hover:rotate-[360deg] transition-transform duration-700" /> : <Sun size={22} className="shrink-0 group-hover:rotate-[360deg] transition-transform duration-700" />}
+          <span className="group-hover:text-[#212121] dark:group-hover:text-white transition-colors">{theme === 'light' ? t('theme.dark') : t('theme.light')}</span>
         </button>
-        <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-2">
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/40 dark:border-white/10 mb-1.5">
           <span className="text-xs font-semibold text-[#757575] dark:text-slate-400">Language</span>
-          <div className="flex gap-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => changeLanguage('en')}
-              className={`px-2 py-1 text-xs font-bold ${currentLang === 'en' ? 'bg-[#00796B] text-white' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-            >
-              {t('language.labelShortEn')}
-            </button>
-            <button
-              type="button"
-              onClick={() => changeLanguage('hi')}
-              className={`px-2 py-1 text-xs font-bold ${currentLang === 'hi' ? 'bg-[#00796B] text-white' : 'text-[#757575] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-            >
-              {t('language.labelShortHi')}
-            </button>
+          <div className="flex gap-0.5 rounded-lg overflow-hidden bg-white/50 dark:bg-white/5 p-0.5">
+            <button type="button" onClick={() => changeLanguage('en')} className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${currentLang === 'en' ? 'bg-[#00796B] text-white shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}>{t('language.labelShortEn')}</button>
+            <button type="button" onClick={() => changeLanguage('hi')} className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${currentLang === 'hi' ? 'bg-[#00796B] text-white shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}>{t('language.labelShortHi')}</button>
           </div>
         </div>
-        <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.02] border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-95 group">
-          <img src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} alt="Profile" className="w-10 h-10 rounded-full bg-slate-200 shadow-sm group-hover:ring-2 group-hover:ring-[#00796B] transition-all" />
+        <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95 group border border-transparent hover:border-white/30 dark:hover:border-white/10">
+          <img src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} alt="Profile" className="w-9 h-9 rounded-full bg-slate-200/80 dark:bg-slate-700/80 shadow-sm group-hover:ring-2 group-hover:ring-[#00796B] transition-all shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-[#212121] dark:text-white truncate group-hover:text-[#00796B] transition-colors">{user?.name}</p>
             <p className="text-xs text-[#757575] dark:text-slate-400 truncate">{t('nav.viewProfile')}</p>
           </div>
-          <UserIcon size={16} className="text-slate-400 group-hover:text-[#00796B] transition-colors" />
+          <UserIcon size={16} className="text-slate-400 group-hover:text-[#00796B] transition-colors shrink-0" />
         </NavLink>
       </div>
     </aside>
@@ -149,14 +135,16 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav aria-label="Bottom navigation" className="md:hidden fixed bottom-0 left-0 right-0 h-[80px] bg-white dark:bg-slate-900 border-t border-[rgba(33,33,33,0.04)] dark:border-slate-800 z-[100] flex justify-around items-start pt-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)] transition-colors duration-300">
+    <nav aria-label="Bottom navigation" className="md:hidden fixed left-4 right-4 bottom-4 z-[100] h-[72px] rounded-2xl glass-panel flex justify-around items-center px-2 pb-safe transition-all duration-300">
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
-          <NavLink key={item.path} to={item.path} aria-label={t(item.labelKey as any)} className="flex flex-col items-center justify-center flex-1 min-w-0 max-w-[72px] relative group active:scale-90 transition-all">
-            {isActive && <div className="absolute -top-3 w-[32px] h-[3px] bg-[#00796B] rounded-b-[2px] shadow-[0_2px_8px_#00796B80] animate-in slide-in-from-top-1"></div>}
-            <div className={`transition-all duration-300 ${isActive ? 'scale-125' : 'group-hover:scale-110'}`}><item.icon size={24} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#00796B' : undefined} className={!isActive ? 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white' : ''} /></div>
-            <span className={`text-[10px] font-medium mt-[4px] leading-none transition-all duration-300 ${isActive ? 'text-[#00796B] font-bold' : 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white'}`}>{t(item.labelKey as any)}</span>
+          <NavLink key={item.path} to={item.path} aria-label={t(item.labelKey as any)} className="flex flex-col items-center justify-center flex-1 min-w-0 max-w-[64px] relative group active:scale-90 transition-all py-2">
+            {isActive && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#00796B] rounded-b-full shadow-[0_2px_8px_#00796B60]"></div>}
+            <div className={`rounded-xl p-2 transition-all duration-300 ${isActive ? 'scale-110 bg-[#00796B]/15' : 'group-hover:scale-105'}`}>
+              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#00796B' : undefined} className={!isActive ? 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white' : 'text-[#00796B]'} />
+            </div>
+            <span className={`text-[10px] font-medium mt-1 leading-none transition-all duration-300 ${isActive ? 'text-[#00796B] font-bold' : 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white'}`}>{t(item.labelKey as any)}</span>
           </NavLink>
         );
       })}
@@ -171,8 +159,8 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 font-sans text-[#212121] dark:text-slate-100 flex transition-colors duration-300">
       <Sidebar user={auth.user} />
-      <div className="flex-1 flex flex-col min-w-0 md:pl-[240px] h-screen overflow-hidden">
-        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[90px] md:pb-0 scroll-smooth">
+      <div className="flex-1 flex flex-col min-w-0 md:pl-[272px] h-screen overflow-hidden">
+        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[100px] md:pb-0 scroll-smooth">
           <div className="w-full max-w-[1200px] mx-auto md:p-8">
             <Routes>
               <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
