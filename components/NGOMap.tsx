@@ -18,12 +18,12 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Generate realistic mock data around San Francisco (Initial Fallback)
+// Real Indian NGO-style contacts: phone and email work with tel: / mailto: when clicked
 const generateNGOs = (): NGO[] => {
     const baseNGOs: NGO[] = [
-        { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", rating: 4.8, description: "Provides hot meals to homeless individuals and families in the downtown area.", lat: 37.7749, lng: -122.4194, needs: [], phone: "5551234567" },
-        { id: '2', name: "City Food Bank", distance: "3.5 km", rating: 4.5, description: "Distributes grocery packages to low-income households weekly.", lat: 37.7849, lng: -122.4094, needs: [], phone: "5559876543" },
-        { id: '3', name: "Green Earth Rescue", distance: "5.0 km", rating: 4.9, description: "Focuses on rescuing perishable produce from wholesalers.", lat: 37.7649, lng: -122.4294, needs: [], phone: "5554567890" },
+        { id: '1', name: "Robin Hood Army", distance: "1.2 km", rating: 4.8, description: "Volunteer-based movement that collects surplus food and distributes to the underserved.", lat: 28.5355, lng: 77.3910, needs: [], phone: "+919876543210", email: "contact@robinhoodarmy.com", website: "https://robinhoodarmy.com", address: "New Delhi, India" },
+        { id: '2', name: "No Food Waste", distance: "3.5 km", rating: 4.5, description: "Rescues surplus food from events and distributes to people in need.", lat: 13.0827, lng: 80.2707, needs: [], phone: "+919840316414", email: "info@nofoodwaste.org", website: "https://nofoodwaste.org", address: "Chennai, India" },
+        { id: '3', name: "Feeding India", distance: "5.0 km", rating: 4.9, description: "Fights hunger by connecting surplus food with those who need it.", lat: 28.6139, lng: 77.2090, needs: [], phone: "+911141234567", email: "hello@feedingindia.org", website: "https://feedingindia.org", address: "Delhi NCR, India" },
     ];
     return baseNGOs;
 };
@@ -50,6 +50,7 @@ const NGOMap: React.FC = () => {
         name: '',
         address: '',
         phone: '',
+        email: '',
         type: 'Food Bank'
     });
 
@@ -57,11 +58,11 @@ const NGOMap: React.FC = () => {
     useEffect(() => {
         if (!mapContainerRef.current || mapRef.current) return;
 
-        // Default: San Francisco
+        // Default: India (matches demo NGO locations)
         const map = L.map(mapContainerRef.current, {
             zoomControl: false, // We use custom buttons
             attributionControl: false
-        }).setView([37.7749, -122.4194], 13);
+        }).setView([28.5355, 77.3910], 5);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -221,12 +222,13 @@ const NGOMap: React.FC = () => {
             lng: center.lng + lngOffset,
             address: regForm.address,
             phone: regForm.phone,
+            email: regForm.email || undefined,
             needs: []
         };
 
         setAllNgos(prev => [...prev, newNgo]);
         setIsRegistering(false);
-        setRegForm({ name: '', address: '', phone: '', type: 'Food Bank' });
+        setRegForm({ name: '', address: '', phone: '', email: '', type: 'Food Bank' });
         
         // Select the new NGO and fly to it
         setTimeout(() => {
@@ -359,16 +361,25 @@ const NGOMap: React.FC = () => {
                                 </p>
                             )}
                             {showContactInfo && (
-                                <div className="animate-in fade-in slide-in-from-top-1 bg-slate-50 p-3 rounded-lg mt-2 space-y-2">
-                                    <p className="text-[13px] text-[#212121] flex items-center gap-2 font-medium">
-                                        <Phone size={14} className="text-[#00796B]" /> {selectedNGO.phone || 'No phone available'}
-                                    </p>
-                                    <p className="text-[13px] text-[#212121] flex items-center gap-2 font-medium">
-                                        <Mail size={14} className="text-[#00796B]" /> {selectedNGO.name.replace(/\s+/g, '').toLowerCase()}@org.com
-                                    </p>
-                                    <p className="text-[13px] text-[#212121] flex items-center gap-2 font-medium">
-                                        <Globe size={14} className="text-[#00796B]" /> www.{selectedNGO.name.replace(/\s+/g, '').toLowerCase()}.org
-                                    </p>
+                                <div className="animate-in fade-in slide-in-from-top-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg mt-2 space-y-2">
+                                    {selectedNGO.phone && (
+                                        <a href={`tel:${selectedNGO.phone.replace(/\s/g, '')}`} className="text-[13px] text-[#212121] dark:text-slate-100 flex items-center gap-2 font-medium hover:text-[#00796B] hover:underline">
+                                            <Phone size={14} className="text-[#00796B] shrink-0" /> {selectedNGO.phone}
+                                        </a>
+                                    )}
+                                    {selectedNGO.email && (
+                                        <a href={`mailto:${selectedNGO.email}`} className="text-[13px] text-[#212121] dark:text-slate-100 flex items-center gap-2 font-medium hover:text-[#00796B] hover:underline break-all">
+                                            <Mail size={14} className="text-[#00796B] shrink-0" /> {selectedNGO.email}
+                                        </a>
+                                    )}
+                                    {selectedNGO.website && (
+                                        <a href={selectedNGO.website.startsWith('http') ? selectedNGO.website : `https://${selectedNGO.website}`} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#212121] dark:text-slate-100 flex items-center gap-2 font-medium hover:text-[#00796B] hover:underline break-all">
+                                            <Globe size={14} className="text-[#00796B] shrink-0" /> {selectedNGO.website.replace(/^https?:\/\//, '')}
+                                        </a>
+                                    )}
+                                    {!selectedNGO.phone && !selectedNGO.email && !selectedNGO.website && (
+                                        <p className="text-[13px] text-[#757575] dark:text-slate-400">Contact details not available.</p>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -459,8 +470,23 @@ const NGOMap: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="orgAddress" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                                <div>
+                                    <label htmlFor="orgEmail" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Email (optional)</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-3.5 text-gray-400" size={18} />
+                                        <input
+                                            id="orgEmail"
+                                            type="email"
+                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-950 focus:border-[#00796B] focus:ring-2 focus:ring-[#00796B]/20 rounded-xl outline-none transition-all"
+                                            placeholder="contact@yourorg.org"
+                                            value={regForm.email}
+                                            onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="orgAddress" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Address</label>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-3.5 text-gray-400" size={18} />
                                     <input 

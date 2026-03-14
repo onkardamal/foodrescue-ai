@@ -198,13 +198,16 @@ export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]>
             return data.map((item: any, i: number) => ({
                 id: `real-${Date.now()}-${i}`,
                 name: item.name,
-                distance: "Nearby", // Simplified for now
+                distance: "Nearby",
                 rating: item.rating || 4.5,
                 description: item.description || "Food assistance organization.",
                 lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
                 lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
                 address: item.address,
-                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED] // Default needs
+                phone: item.phone,
+                email: item.email,
+                website: item.website,
+                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
             }));
         }
     } catch (e) {

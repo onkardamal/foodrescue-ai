@@ -138,14 +138,14 @@ const Sidebar = ({ user }: { user: User | null }) => {
 
 const BottomNav = () => {
   const location = useLocation();
-  const { t, i18n } = useTranslation();
-  const currentLang = i18n.language === 'hi' ? 'hi' : 'en';
+  const { t } = useTranslation();
   const navItems = [
     { path: '/', icon: Home, labelKey: 'nav.dashboard' },
     { path: '/inventory', icon: Package, labelKey: 'nav.inventory' },
     { path: '/recipes', icon: ChefHat, labelKey: 'nav.recipes' },
     { path: '/donate', icon: Heart, labelKey: 'nav.donate' },
     { path: '/ngos', icon: MapPin, labelKey: 'nav.ngos' },
+    { path: '/profile', icon: UserIcon, labelKey: 'nav.viewProfile' },
   ];
 
   return (
@@ -153,7 +153,7 @@ const BottomNav = () => {
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
-          <NavLink key={item.path} to={item.path} aria-label={t(item.labelKey as any)} className="flex flex-col items-center justify-center w-[60px] relative group active:scale-90 transition-all">
+          <NavLink key={item.path} to={item.path} aria-label={t(item.labelKey as any)} className="flex flex-col items-center justify-center flex-1 min-w-0 max-w-[72px] relative group active:scale-90 transition-all">
             {isActive && <div className="absolute -top-3 w-[32px] h-[3px] bg-[#00796B] rounded-b-[2px] shadow-[0_2px_8px_#00796B80] animate-in slide-in-from-top-1"></div>}
             <div className={`transition-all duration-300 ${isActive ? 'scale-125' : 'group-hover:scale-110'}`}><item.icon size={24} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#00796B' : undefined} className={!isActive ? 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white' : ''} /></div>
             <span className={`text-[10px] font-medium mt-[4px] leading-none transition-all duration-300 ${isActive ? 'text-[#00796B] font-bold' : 'text-[#757575] dark:text-slate-500 group-hover:text-[#212121] dark:group-hover:text-white'}`}>{t(item.labelKey as any)}</span>
@@ -178,7 +178,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
               <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
               <Route path="/inventory" element={<Inventory items={inventory} onAddItem={handleAddItem} onUpdateStatus={handleUpdateStatus} onDeleteItem={handleDeleteItem} onEditItem={handleEditItem} />} />
               <Route path="/recipes" element={<Recipes inventory={inventory} recipes={recipes} onUpdateRecipes={handleUpdateRecipes} onCookRecipe={handleCookRecipe} />} />
-              <Route path="/donate" element={<Donation inventory={inventory} onDonateComplete={handleDonateComplete} />} />
+              <Route path="/donate" element={<Donation user={auth.user} inventory={inventory} onDonateComplete={handleDonateComplete} />} />
               <Route path="/ngos" element={<NGOMap />} />
               <Route path="/analytics" element={<Analytics stats={stats} />} />
               <Route path="/badges" element={<Badges stats={stats} />} />

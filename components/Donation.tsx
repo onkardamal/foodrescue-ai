@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { FoodItem, NGO, FoodCategory } from '../types';
-import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Calendar, Truck, MessageSquare, Clock, Info } from 'lucide-react';
+import { FoodItem, NGO, User } from '../types';
+import { ChevronLeft, Check, ShoppingBag, Map as MapIcon, List, MapPin, AlertCircle, Star, Loader2, Phone, Mail, Calendar, Truck, MessageSquare, Clock, Info, ShieldCheck, Copy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import { searchNearbyNGOs } from '../services/geminiService';
+import { isEligibleForDonation } from '../utils/donationSafety';
+import { buildHandoverSummary, buildHandoverEmailBody, openHandoverMailto } from '../utils/donationHandover';
+import { sendHandoverEmailToNgo, isEmailConfigured } from '../services/emailService';
 
 // Fix Leaflet's default icon path issues
 const DefaultIcon = L.icon({
@@ -18,15 +21,17 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface DonationProps {
+  user: User | null;
   inventory: FoodItem[];
   onDonateComplete: (itemIds: string[], amount: number) => void;
 }
 
+// Real contacts: clicking phone opens dialer, email opens mail client
 const DEFAULT_NGOS: NGO[] = [
-  { id: '1', name: "Helping Hands Shelter", distance: "1.2 km", urgency: "High", lat: 37.7749, lng: -122.4194, description: "Shelter", needs: [], rating: 4.8, phone: "5551234567" },
-  { id: '2', name: "City Food Bank", distance: "3.5 km", urgency: "Medium", lat: 37.7849, lng: -122.4094, description: "Food Bank", needs: [], rating: 4.5, phone: "5559876543" },
-  { id: '3', name: "Green Earth Rescue", distance: "5.0 km", urgency: "Low", lat: 37.7649, lng: -122.4294, description: "Community Fridge", needs: [], rating: 4.9, phone: "5554567890" },
-  { id: '4', name: "St. Mary's Kitchen", distance: "2.1 km", urgency: "High", lat: 37.7699, lng: -122.4100, description: "Soup Kitchen", needs: [], rating: 4.7, phone: "5557890123" },
+  { id: '1', name: "Robin Hood Army", distance: "1.2 km", urgency: "High", lat: 28.5355, lng: 77.3910, description: "Volunteer-based food distribution", needs: [], rating: 4.8, phone: "+919876543210", email: "contact@robinhoodarmy.com" },
+  { id: '2', name: "No Food Waste", distance: "3.5 km", urgency: "Medium", lat: 13.0827, lng: 80.2707, description: "Surplus food rescue and distribution", needs: [], rating: 4.5, phone: "+919840316414", email: "info@nofoodwaste.org" },
+  { id: '3', name: "Feeding India", distance: "5.0 km", urgency: "Low", lat: 28.6139, lng: 77.2090, description: "Connects surplus food with those in need", needs: [], rating: 4.9, phone: "+911141234567", email: "hello@feedingindia.org" },
+  { id: '4', name: "St. Mary's Kitchen", distance: "2.1 km", urgency: "High", lat: 28.7041, lng: 77.1025, description: "Soup kitchen and daily meals", needs: [], rating: 4.7, phone: "+911123456789", email: "info@stmaryskitchen.org" },
 ];
 
 const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
@@ -66,25 +71,25 @@ const DonationItemRow: React.FC<{
   return (
     <div 
         onClick={() => onToggle(item.id)}
-        className={`h-[84px] w-full px-[16px] mb-[8px] flex items-center border-b border-[#EEEEEE] dark:border-slate-800 transition-colors duration-200 cursor-pointer ${
+        className={`min-h-[84px] w-full px-[16px] py-3 mb-[8px] flex items-center border-b border-[#EEEEEE] dark:border-slate-800 transition-colors duration-200 cursor-pointer ${
             selected ? 'bg-[#F0FFFB] dark:bg-[#00796B]/10' : 'bg-white dark:bg-slate-900'
         }`}
     >
-        <div className={`w-[24px] h-[24px] rounded-[4px] border-[2px] flex items-center justify-center transition-colors ${selected ? 'bg-[#00796B] border-[#00796B]' : 'border-[#BDBDBD]'}`}>
+        <div className={`w-[24px] h-[24px] rounded-[4px] border-[2px] flex items-center justify-center transition-colors shrink-0 ${selected ? 'bg-[#00796B] border-[#00796B]' : 'border-[#BDBDBD]'}`}>
             {selected && <Check size={16} color="white" strokeWidth={3} />}
         </div>
         <div className="ml-[12px] flex-1 min-w-0">
             <h3 className="text-[16px] font-[600] text-[#212121] dark:text-white truncate">{item.name}</h3>
-            <p className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 mt-[2px]">{item.quantity} {item.unit}</p>
+            <p className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 mt-[2px]">{item.quantity} {item.unit}{item.condition ? ` · ${item.condition}` : ''}</p>
         </div>
-        <div className="bg-[#F5F5F5] dark:bg-slate-800 rounded-[4px] px-[8px] py-[4px] ml-[8px]">
+        <div className="bg-[#F5F5F5] dark:bg-slate-800 rounded-[4px] px-[8px] py-[4px] ml-[8px] shrink-0">
             <span className="text-[12px] font-[500] text-[#757575] dark:text-slate-400">Exp: {expiryDate}</span>
         </div>
     </div>
   );
 };
 
-const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
+const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
@@ -103,22 +108,25 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       date: new Date().toISOString().split('T')[0],
       time: '12:00'
   });
+  const [safetyConfirmed, setSafetyConfirmed] = useState(false);
+  const [lastHandoverSummaryText, setLastHandoverSummaryText] = useState<string | null>(null);
+  const [handoverEmailOpened, setHandoverEmailOpened] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
-  // Filter ONLY non-expired active items
-  const donatableItems = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return inventory.filter(i => {
-      if (i.status !== 'active') return false;
-      const expiry = new Date(i.expiryDate);
-      return expiry >= today; // Exclude expired
-    });
-  }, [inventory]);
+  // Only items that are safe to donate: not expired, not spoiled/unsafe condition
+  const donatableItems = useMemo(() => inventory.filter(isEligibleForDonation), [inventory]);
 
   const selectedFoodObjects = useMemo(() => 
     donatableItems.filter(i => selectedItems.includes(i.id)), 
     [donatableItems, selectedItems]
   );
+
+  useEffect(() => {
+    if (currentStep !== 3) setSafetyConfirmed(false);
+  }, [currentStep]);
 
   useEffect(() => {
       if (location.state?.preSelectedNgo) {
@@ -146,12 +154,63 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
 
   const isPhoneValid = logistics.contactPhone.length === 10 && /^\d+$/.test(logistics.contactPhone);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
       if (currentStep < 3) setCurrentStep(prev => prev + 1);
       else {
+          const selectedNgo = ngos.find(n => n.id === selectedNgoId);
+          if (!selectedNgo) return;
+          const summary = buildHandoverSummary({
+            ngoName: selectedNgo.name,
+            donorName: user?.name ?? 'Donor',
+            donorPhone: logistics.contactPhone,
+            handoverDate: logistics.date,
+            handoverTime: logistics.time,
+            mode: logistics.mode,
+            items: selectedFoodObjects,
+            notes: logistics.notes,
+          });
+          const bodyText = buildHandoverEmailBody(summary);
+          setLastHandoverSummaryText(bodyText);
+          setEmailSent(false);
+          setEmailError(null);
+          setHandoverEmailOpened(false);
           onDonateComplete(selectedItems, selectedItems.length * 10);
+
+          if (selectedNgo.email && isEmailConfigured()) {
+            setSendingEmail(true);
+            const result = await sendHandoverEmailToNgo(selectedNgo.email, summary);
+            setSendingEmail(false);
+            if (result.ok) {
+              setEmailSent(true);
+            } else {
+              setEmailError(result.error ?? 'Send failed');
+              openHandoverMailto(selectedNgo.email, summary);
+              setHandoverEmailOpened(true);
+            }
+          } else if (selectedNgo.email) {
+            openHandoverMailto(selectedNgo.email, summary);
+            setHandoverEmailOpened(true);
+          }
           setCurrentStep(4);
       }
+  };
+
+  const handleCopyHandoverSummary = async () => {
+    if (!lastHandoverSummaryText) return;
+    try {
+      await navigator.clipboard.writeText(lastHandoverSummaryText);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = lastHandoverSummaryText;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    }
   };
 
   useEffect(() => {
@@ -196,7 +255,16 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
     <>
         <div className="px-[16px] mt-[24px] mb-[8px]">
             <h2 className="text-[20px] font-[700] text-[#212121] dark:text-white">Select Items to Donate</h2>
-            <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Tap items to add. Expired items are hidden for safety.</p>
+            <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Only safe, non-expired food can be donated. Unsafe or expired items are hidden.</p>
+        </div>
+        <div className="px-[16px] mb-4">
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <ShieldCheck size={20} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800 dark:text-amber-200">
+                    <p className="font-semibold">Safe food only</p>
+                    <p className="mt-0.5">We never allow expired or spoiled food to be donated. Only items that are safe to consume are shown here.</p>
+                </div>
+            </div>
         </div>
         <div className="flex-1 overflow-y-auto pb-[100px]">
             {donatableItems.length > 0 ? (
@@ -206,8 +274,8 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
             ) : (
                 <div className="flex flex-col items-center justify-center pt-[60px] px-[32px] text-center">
                      <ShoppingBag size={48} className="text-[#E0E0E0] mb-[16px]" />
-                     <h3 className="text-[16px] font-[600] text-[#212121] dark:text-white mb-[8px]">No valid food items available</h3>
-                     <p className="text-sm text-slate-500 mb-6">Expired food items cannot be donated through our platform to ensure recipient safety.</p>
+                     <h3 className="text-[16px] font-[600] text-[#212121] dark:text-white mb-[8px]">No safe food items available</h3>
+                     <p className="text-sm text-slate-500 mb-6">Expired or unsafe food cannot be donated. Only non-expired, good-condition items appear here to protect recipients.</p>
                      <button onClick={() => navigate('/inventory')} className="bg-[#00796B] text-white h-[44px] px-[24px] rounded-[8px] font-[600]">Check Inventory</button>
                 </div>
             )}
@@ -304,19 +372,81 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
                 </div>
                 <div><label className="block text-sm font-bold mb-2 flex items-center gap-2 text-[#212121] dark:text-white"><MessageSquare size={16} /> Notes</label><textarea placeholder="Details for the recipient..." value={logistics.notes} onChange={(e) => setLogistics({...logistics, notes: e.target.value})} className="w-full h-[80px] p-4 rounded-xl bg-[#F5F5F5] dark:bg-slate-800 text-[#212121] dark:text-white placeholder:text-slate-400 dark:placeholder-slate-500 outline-none transition-all font-medium resize-none border-2 border-transparent focus:border-[#00796B]" /></div>
             </div>
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-start gap-3"><AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" /><p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">NGOs require accurate expiry dates to prioritize distribution. We've included these in the handover details sent to <strong>{selectedNgo?.name}</strong>.</p></div>
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-start gap-3"><AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" /><p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">When you confirm, we'll open your email app with <strong>full handover details</strong> for <strong>{selectedNgo?.name}</strong>: this item list with expiry dates, your contact, date/time, and notes. Send the email so the NGO receives everything they need.</p></div>
+
+            {/* Mandatory safety confirmation */}
+            <div className="mt-6 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                        type="checkbox"
+                        checked={safetyConfirmed}
+                        onChange={(e) => setSafetyConfirmed(e.target.checked)}
+                        className="mt-1 w-5 h-5 rounded border-slate-300 text-[#00796B] focus:ring-[#00796B]"
+                    />
+                    <span className="text-sm text-[#212121] dark:text-slate-200 group-hover:text-[#00796B] transition-colors">
+                        I confirm that this food is <strong>safe to consume</strong>, has been stored correctly, and is <strong>not damaged, spoiled, or contaminated</strong>. I will not deliver expired or unsafe food to the NGO.
+                    </span>
+                </label>
+            </div>
         </div>
       );
   }
 
   const renderStep4 = () => {
       const selectedNgo = ngos.find(n => n.id === selectedNgoId);
+      const statusMessage = emailSent && selectedNgo
+        ? { type: 'success' as const, title: 'Email sent to NGO', body: `${selectedNgo.name} has received the full handover details (your contact, items with expiry, date/time & notes). They may call you to coordinate.` }
+        : emailError
+        ? { type: 'warning' as const, title: 'Send the email manually', body: 'We couldn\'t send automatically. Your email app was opened with the details—please send that message to notify the NGO.' }
+        : handoverEmailOpened && selectedNgo?.email
+        ? { type: 'warning' as const, title: 'One more step', body: `We opened your email app. Send the message to ${selectedNgo.name} so they get your contact, item list and handover details.` }
+        : !selectedNgo?.email && lastHandoverSummaryText
+        ? { type: 'info' as const, title: 'Share the details', body: 'This NGO has no email on file. Copy the summary below and send it to them via WhatsApp, SMS or phone.' }
+        : { type: 'success' as const, title: 'Handover details ready', body: 'The NGO will receive your contact, items with expiry, date/time and notes. They may reach out to coordinate.' };
+
       return (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95 duration-300">
-              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6"><Check size={48} className="text-green-600" /></div>
-              <h2 className="text-2xl font-bold mb-2 dark:text-white">Donation Delivered!</h2>
-              <p className="text-[#757575] dark:text-slate-300 mb-8 leading-relaxed max-w-xs mx-auto"><strong>{selectedNgo?.name}</strong> has received your offer, including the full list of items and their expiry dates. They will contact you shortly.</p>
-              <div className="w-full max-w-xs space-y-3"><button onClick={() => navigate('/')} className="w-full h-[52px] bg-[#00796B] rounded-xl text-white font-bold shadow-lg">Dashboard</button><button onClick={() => window.open(`tel:${selectedNgo?.phone || '5550123000'}`)} className="w-full h-[52px] border border-[#00796B] text-[#00796B] rounded-xl font-bold flex items-center justify-center gap-2"><Phone size={18} /> Call Recipient</button></div>
+          <div className="flex-1 flex flex-col items-center p-6 text-center animate-in zoom-in-95 duration-300 overflow-y-auto pb-28">
+              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-5 shrink-0">
+                <Check size={40} className="text-green-600 dark:text-green-400" strokeWidth={2.5} />
+              </div>
+              <h2 className="text-xl font-bold text-[#212121] dark:text-white mb-1">Donation confirmed</h2>
+              <p className="text-sm text-[#757575] dark:text-slate-400 mb-5 max-w-sm">Your donation to {selectedNgo?.name ?? 'the NGO'} is recorded.</p>
+
+              <div className={`w-full max-w-sm rounded-2xl p-4 mb-6 text-left ${
+                statusMessage.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' :
+                statusMessage.type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' :
+                'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700'
+              }`}>
+                <p className="text-sm font-semibold text-[#212121] dark:text-white mb-1">{statusMessage.title}</p>
+                <p className="text-xs text-[#757575] dark:text-slate-400 leading-relaxed">{statusMessage.body}</p>
+              </div>
+
+              <p className="text-xs text-[#757575] dark:text-slate-500 mb-5 max-w-sm">What happens next? They have your phone number and can contact you to arrange drop-off or pickup.</p>
+
+              <div className="w-full max-w-sm space-y-3">
+                {lastHandoverSummaryText && (
+                  <button type="button" onClick={handleCopyHandoverSummary} className="w-full h-[48px] border-2 border-[#00796B] text-[#00796B] dark:border-teal-400 dark:text-teal-400 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#00796B]/10 dark:hover:bg-teal-500/10 transition-colors">
+                    <Copy size={18} /> {copyFeedback ? 'Copied!' : 'Copy handover summary'}
+                  </button>
+                )}
+                <button onClick={() => navigate('/')} className="w-full h-[52px] bg-[#00796B] rounded-xl text-white font-bold shadow-lg hover:bg-[#00695C] transition-colors">
+                  Back to Dashboard
+                </button>
+                {selectedNgo && (
+                  <div className="flex gap-3 pt-1">
+                    {selectedNgo.phone && (
+                      <a href={`tel:${selectedNgo.phone.replace(/\s/g, '')}`} className="flex-1 h-[48px] border border-[#00796B] text-[#00796B] dark:border-teal-400 dark:text-teal-400 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#00796B]/10 transition-colors text-sm">
+                        <Phone size={18} /> Call
+                      </a>
+                    )}
+                    {selectedNgo.email && (
+                      <a href={`mailto:${selectedNgo.email}`} className="flex-1 h-[48px] border border-[#00796B] text-[#00796B] dark:border-teal-400 dark:text-teal-400 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#00796B]/10 transition-colors text-sm">
+                        <Mail size={18} /> Email
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
           </div>
       );
   }
@@ -336,11 +466,11 @@ const Donation: React.FC<DonationProps> = ({ inventory, onDonateComplete }) => {
       {(donatableItems.length > 0 && currentStep < 4) && (
           <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-950 pt-[16px] pb-[32px] px-[16px] shadow-[0_-4px_12px_rgba(0,0,0,0.05)] border-t dark:border-slate-800 z-30">
               <button 
-                onClick={handleContinue} 
-                disabled={(currentStep === 1 && selectedItems.length === 0) || (currentStep === 2 && !selectedNgoId) || (currentStep === 3 && (!isPhoneValid || !logistics.date || !logistics.time))} 
+                onClick={() => handleContinue()} 
+                disabled={sendingEmail || (currentStep === 1 && selectedItems.length === 0) || (currentStep === 2 && !selectedNgoId) || (currentStep === 3 && (!isPhoneValid || !logistics.date || !logistics.time || !safetyConfirmed))} 
                 className="w-full h-[52px] bg-[#00796B] rounded-[10px] flex items-center justify-center text-white text-[16px] font-[600] disabled:bg-[#BDBDBD] transition-all"
               >
-                {currentStep === 3 ? (isPhoneValid ? 'Confirm Handover Info' : 'Enter 10 Digit Phone') : 'Continue'}
+                {sendingEmail ? 'Sending email…' : currentStep === 3 ? (!safetyConfirmed ? 'Confirm food is safe' : isPhoneValid ? 'Confirm Handover Info' : 'Enter 10 Digit Phone') : 'Continue'}
               </button>
           </div>
       )}

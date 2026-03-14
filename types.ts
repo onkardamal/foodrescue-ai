@@ -44,6 +44,20 @@ export interface NGO {
   description?: string;
   address?: string;
   phone?: string;
+  email?: string;
+  website?: string;
+}
+
+/** Full handover details sent to the NGO (e.g. via email) so they know what to expect. */
+export interface DonationHandoverSummary {
+  ngoName: string;
+  donorName: string;
+  donorPhone: string;
+  handoverDate: string;
+  handoverTime: string;
+  mode: 'dropoff' | 'pickup';
+  items: { name: string; quantity: number; unit: string; expiryDate: string; condition?: string }[];
+  notes: string;
 }
 
 export interface Badge {

@@ -1,10 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User, UserStats, DonationHistoryItem, Review } from '../types';
-import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2 } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Settings, Bell, Shield, HelpCircle, LogOut, Moon, Sun, ChevronRight, Award, Flame, X, Lock, Eye, FileText, Sparkles, Check, Clock, Star, HeartHandshake, CheckCircle2, MessageSquare, Trash2, AlertOctagon, Loader2, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { AuthService } from '../services/auth';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '../i18n';
 import Analytics from './Analytics';
 
 interface ProfileProps {
@@ -17,6 +19,8 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language === 'hi' ? 'hi' : 'en';
   const [activeTab, setActiveTab] = useState<'stats' | 'history'>('history');
   const [showRateModal, setShowRateModal] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -225,13 +229,23 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
         <div className="pt-8 space-y-4">
             <h3 className="font-black text-[#212121] dark:text-white uppercase tracking-wider text-sm pl-2">Preferences</h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
-                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">{theme === 'light' ? <Sun size={20} className="text-slate-400" /> : <Moon size={20} className="text-slate-400" />}</div>
                         <span className="font-medium text-[#212121] dark:text-white">Appearance</span>
                     </div>
                     <div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-400 uppercase">{theme} Mode</span><div className={`w-11 h-6 rounded-full p-1 transition-colors ${theme === 'dark' ? 'bg-[#00796B]' : 'bg-slate-300'}`}><div className={`bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} /></div></div>
                 </button>
+                <div className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center"><Languages size={20} className="text-slate-400" /></div>
+                        <span className="font-medium text-[#212121] dark:text-white">Language</span>
+                    </div>
+                    <div className="flex gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+                        <button type="button" onClick={() => changeLanguage('en')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${currentLang === 'en' ? 'bg-[#00796B] text-white' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{t('language.labelShortEn')}</button>
+                        <button type="button" onClick={() => changeLanguage('hi')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${currentLang === 'hi' ? 'bg-[#00796B] text-white' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{t('language.labelShortHi')}</button>
+                    </div>
+                </div>
                 <button onClick={onLogout} className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/10 flex items-center justify-center"><LogOut size={20} className="text-red-500" /></div>
