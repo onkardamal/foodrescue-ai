@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enCommon from './locales/en/common.json';
 import hiCommon from './locales/hi/common.json';
+import mrCommon from './locales/mr/common.json';
 
 const STORAGE_KEY = 'savebite_lang';
 
@@ -11,6 +12,9 @@ const resources = {
   },
   hi: {
     common: hiCommon,
+  },
+  mr: {
+    common: mrCommon,
   },
 };
 
@@ -36,7 +40,7 @@ export const setupI18n = () => {
   }
 };
 
-export const changeLanguage = (lang: 'en' | 'hi') => {
+export const changeLanguage = (lang: 'en' | 'hi' | 'mr') => {
   i18n.changeLanguage(lang);
   if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEY, lang);

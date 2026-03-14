@@ -110,7 +110,7 @@ To protect recipients, the app enforces safe food delivery:
 
 ## Internationalization (i18n)
 
-- The app supports **English** and **Hindi** using `i18next` / `react-i18next`.
+- The app supports **English**, **Hindi**, and **Marathi** using `i18next` / `react-i18next`.
 - Language can be switched via the **sidebar** (desktop) or via **Profile → Preferences → Language** (mobile/tablet; Profile is in the bottom navigation).
 - Translations live in `locales/en/common.json` and `locales/hi/common.json`.
 - To add a new language:

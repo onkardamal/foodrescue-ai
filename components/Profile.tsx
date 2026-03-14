@@ -19,7 +19,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
-  const currentLang = i18n.language === 'hi' ? 'hi' : 'en';
+  const currentLang = (i18n.language === 'hi' ? 'hi' : i18n.language === 'mr' ? 'mr' : 'en') as 'en' | 'hi' | 'mr';
   const [activeTab, setActiveTab] = useState<'stats' | 'history'>('history');
   const [showRateModal, setShowRateModal] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -244,6 +244,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
                     <div className="flex gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
                         <button type="button" onClick={() => changeLanguage('en')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${currentLang === 'en' ? 'bg-[#00796B] text-white' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{t('language.labelShortEn')}</button>
                         <button type="button" onClick={() => changeLanguage('hi')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${currentLang === 'hi' ? 'bg-[#00796B] text-white' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{t('language.labelShortHi')}</button>
+                        <button type="button" onClick={() => changeLanguage('mr')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${currentLang === 'mr' ? 'bg-[#00796B] text-white' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{t('language.labelShortMr')}</button>
                     </div>
                 </div>
                 <button onClick={onLogout} className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500">

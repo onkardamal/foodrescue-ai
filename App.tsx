@@ -68,7 +68,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
-  const currentLang = i18n.language === 'hi' ? 'hi' : 'en';
+  const currentLang = (i18n.language === 'hi' ? 'hi' : i18n.language === 'mr' ? 'mr' : 'en') as 'en' | 'hi' | 'mr';
   const navItems = [
     { path: '/', icon: Home, labelKey: 'nav.dashboard' },
     { path: '/inventory', icon: Package, labelKey: 'nav.inventory' },
@@ -107,6 +107,7 @@ const Sidebar = ({ user }: { user: User | null }) => {
           <div className="flex gap-0.5 rounded-lg overflow-hidden bg-white/50 dark:bg-white/5 p-0.5">
             <button type="button" onClick={() => changeLanguage('en')} className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${currentLang === 'en' ? 'bg-[#00796B] text-white shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}>{t('language.labelShortEn')}</button>
             <button type="button" onClick={() => changeLanguage('hi')} className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${currentLang === 'hi' ? 'bg-[#00796B] text-white shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}>{t('language.labelShortHi')}</button>
+            <button type="button" onClick={() => changeLanguage('mr')} className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${currentLang === 'mr' ? 'bg-[#00796B] text-white shadow-sm' : 'text-[#757575] dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/10'}`}>{t('language.labelShortMr')}</button>
           </div>
         </div>
         <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95 group border border-transparent hover:border-white/30 dark:hover:border-white/10">
