@@ -30,7 +30,7 @@ const Badges: React.FC<BadgesProps> = ({ stats }) => {
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24 md:pb-8 animate-in slide-in-from-right duration-300">
       {/* Header */}
-      <header className="pt-4 px-4 pb-4 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm mb-4 flex items-center gap-3">
+      <header className="pt-4 px-4 pb-4 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm mb-4 flex items-center gap-3 rounded-b-2xl">
         <button 
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -88,7 +88,7 @@ const Badges: React.FC<BadgesProps> = ({ stats }) => {
                     <div 
                         key={badge.id}
                         className={`
-                            relative rounded-xl p-4 flex flex-col items-center text-center border transition-all duration-300
+                            relative rounded-2xl p-4 flex flex-col items-center text-center border transition-all duration-300
                             ${isUnlocked 
                                 ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm' 
                                 : 'bg-slate-100 dark:bg-slate-900/50 border-transparent opacity-60 grayscale'}

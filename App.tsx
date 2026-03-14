@@ -161,7 +161,7 @@ const AppContent = ({ auth, stats, inventory, recipes, handleLogout, handleAddIt
       <Sidebar user={auth.user} />
       <div className="flex-1 flex flex-col min-w-0 md:pl-[272px] h-screen overflow-hidden md:pr-4 md:pt-4 md:pb-4">
         <main ref={mainRef} className="flex-1 overflow-y-auto pb-[100px] md:pb-0 scroll-smooth rounded-t-2xl md:rounded-2xl overflow-hidden bg-white dark:bg-slate-900/80 shadow-sm">
-          <div className="w-full max-w-[1200px] mx-auto p-4 md:p-8">
+          <div className="page-content">
             <Routes>
               <Route path="/" element={<Dashboard user={auth.user} stats={stats} inventory={inventory} />} />
               <Route path="/inventory" element={<Inventory items={inventory} onAddItem={handleAddItem} onUpdateStatus={handleUpdateStatus} onDeleteItem={handleDeleteItem} onEditItem={handleEditItem} />} />

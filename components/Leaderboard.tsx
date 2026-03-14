@@ -109,7 +109,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ user, stats }) => {
         </div>
         
         {/* User Stats Summary */}
-        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
              <div className="flex items-center gap-3">
                  <div className="w-10 h-10 bg-[#00796B] rounded-full flex items-center justify-center text-white font-bold shadow-md">
                     {userRank}
@@ -147,7 +147,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ user, stats }) => {
           </div>
 
           {/* List Section */}
-          <div className="bg-white dark:bg-slate-900 rounded-t-[32px] min-h-[500px] shadow-[0_-4px_20px_rgba(0,0,0,0.05)] p-6 space-y-2">
+          <div className="bg-white dark:bg-slate-900 rounded-t-3xl min-h-[500px] shadow-lg p-6 space-y-2">
               <h3 className="font-bold text-[#212121] dark:text-white mb-4 px-2">Community Rankings</h3>
               
               {restOfList.map((item, index) => {

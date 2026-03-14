@@ -177,7 +177,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
   };
 
   return (
-    <div className="flex flex-col pt-[20px] md:pt-0 px-[16px] md:px-0 gap-[24px] animate-fade-in relative">
+    <div className="flex flex-col pt-5 md:pt-0 px-0 gap-6 animate-fade-in relative">
       {showConfetti && <ConfettiRain />}
 
       {/* Header Summary Section */}
@@ -236,8 +236,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
       </div>
 
       <div>
-        <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-[16px]">{t('dashboard.quickActions')}</h3>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-[12px]">
+        <h3 className="font-bold text-xl text-[#212121] dark:text-white mb-4">{t('dashboard.quickActions')}</h3>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {[
                 { icon: Plus, color: '#00796B', bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', titleKey: 'dashboard.quick.addItem', path: '/inventory', state: { action: 'add' } },
                 { icon: Camera, color: '#0288D1', bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-800', titleKey: 'dashboard.quick.scanFood', path: '/inventory', state: { action: 'scan' } },
@@ -264,11 +264,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 md:pb-8">
           <div>
-            <div className="flex justify-between items-baseline mb-[12px]">
-                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white">{t('dashboard.expiringSoon')}</h3>
+            <div className="flex justify-between items-baseline mb-3">
+                <h3 className="font-bold text-xl text-[#212121] dark:text-white">{t('dashboard.expiringSoon')}</h3>
                 <button onClick={() => navigate('/inventory')} className="text-[#00796B] text-[14px] font-medium hover:underline hover:scale-105 transition-transform active:scale-95">{t('dashboard.viewAll')}</button>
             </div>
-            <div className="flex flex-col gap-[12px]">
+            <div className="flex flex-col gap-3">
                 {expiringItems.length === 0 ? (
                     <div className="glass-card rounded-2xl p-8 flex flex-col items-center justify-center text-center border border-white/40 dark:border-white/10">
                         <p className="font-semibold text-slate-700 dark:text-slate-200">{t('dashboard.noExpiring')}</p>
@@ -301,8 +301,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, stats, inventory }) => {
 
           <div className="flex flex-col gap-6">
               <div>
-                <h3 className="font-bold text-[20px] text-[#212121] dark:text-white mb-3">{t('dashboard.leaderboardTitle')}</h3>
-                <div className="flex flex-col gap-[12px]">
+                <h3 className="font-bold text-xl text-[#212121] dark:text-white mb-3">{t('dashboard.leaderboardTitle')}</h3>
+                <div className="flex flex-col gap-3">
                     {leaderboardWidgetData.map((leader, i) => (
                         <div key={i} className={`flex items-center p-3 rounded-2xl transition-all cursor-pointer glass-card hover:bg-white/80 dark:hover:bg-white/10 group border ${leader.isCurrentUser ? 'border-[#00796B]/30 bg-[#00796B]/10' : 'border-white/40 dark:border-white/10'}`}>
                             <div className="w-6 font-black text-sm text-slate-500 dark:text-slate-400 text-center">{leader.rank}</div>

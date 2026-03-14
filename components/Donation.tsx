@@ -263,11 +263,11 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
 
   const renderStep1 = () => (
     <>
-        <div className="px-[16px] mt-[24px] mb-[8px]">
-            <h2 className="text-[20px] font-[700] text-[#212121] dark:text-white">Select Items to Donate</h2>
-            <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Only safe, non-expired food can be donated. Unsafe or expired items are hidden.</p>
+        <div className="px-0 mt-6 mb-2">
+            <h2 className="text-xl font-bold text-[#212121] dark:text-white">Select Items to Donate</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Only safe, non-expired food can be donated. Unsafe or expired items are hidden.</p>
         </div>
-        <div className="px-[16px] mb-4">
+        <div className="mb-4">
             <div className="flex items-start gap-3 p-4 rounded-2xl glass-card border border-amber-200/50 dark:border-amber-700/50">
                 <ShieldCheck size={20} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-800 dark:text-amber-200">
@@ -282,9 +282,9 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
                     <DonationItemRow key={item.id} item={item} selected={selectedItems.includes(item.id)} onToggle={handleToggleItem} />
                 ))
             ) : (
-                <div className="flex flex-col items-center justify-center pt-[60px] px-[32px] text-center">
-                     <ShoppingBag size={48} className="text-[#E0E0E0] mb-[16px]" />
-                     <h3 className="text-[16px] font-[600] text-[#212121] dark:text-white mb-[8px]">No safe food items available</h3>
+                <div className="flex flex-col items-center justify-center pt-16 px-8 text-center">
+                     <ShoppingBag size={48} className="text-slate-300 dark:text-slate-600 mb-4" />
+                     <h3 className="text-base font-semibold text-[#212121] dark:text-white mb-2">No safe food items available</h3>
                      <p className="text-sm text-slate-500 mb-6">Expired or unsafe food cannot be donated. Only non-expired, good-condition items appear here to protect recipients.</p>
                      <button onClick={() => navigate('/inventory')} className="bg-[#00796B] text-white h-12 px-6 rounded-2xl font-semibold shadow-lg shadow-teal-500/30">Check Inventory</button>
                 </div>
@@ -335,9 +335,9 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
       const selectedNgo = ngos.find(n => n.id === selectedNgoId);
       return (
         <div className="flex-1 overflow-y-auto px-[16px] pb-[100px]">
-            <div className="mt-[24px] mb-[20px]">
-                <h2 className="text-[20px] font-[700] text-[#212121] dark:text-white">Coordinate Handover</h2>
-                <p className="text-[14px] text-[#757575] dark:text-slate-400 mt-[2px]">Review items and logistics for {selectedNgo?.name}.</p>
+            <div className="mt-6 mb-5">
+                <h2 className="text-xl font-bold text-[#212121] dark:text-white">Coordinate Handover</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Review items and logistics for {selectedNgo?.name}.</p>
             </div>
 
             <div className="glass-card border border-white/40 dark:border-white/10 rounded-2xl p-5 mb-6">

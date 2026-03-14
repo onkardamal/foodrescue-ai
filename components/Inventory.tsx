@@ -461,7 +461,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       />
 
       {/* Header Area */}
-      <header className="pt-[12px] px-[16px] pb-[4px] md:px-0 flex flex-col gap-[8px]">
+      <header className="pt-3 px-4 md:px-0 pb-1 flex flex-col gap-2">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-[4px]">
                 <button 
@@ -485,14 +485,14 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                 <div className="flex gap-2">
                     <button 
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-[#00796B] text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-90 hover:scale-105 hover:bg-[#00695C] transition-all shadow-sm group"
+                        className="bg-[#00796B] text-white flex items-center justify-center w-10 md:w-auto md:px-4 h-10 rounded-xl active:scale-95 hover:bg-[#00695C] transition-all shadow-sm group"
                     >
                         <Camera size={20} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
                         <span className="text-[14px] font-[600] hidden md:inline ml-2">Scan</span>
                     </button>
                     <button 
                         onClick={startAdd}
-                        className="bg-white dark:bg-slate-800 border border-[#E0E0E0] dark:border-slate-700 text-[#212121] dark:text-white flex items-center justify-center w-[40px] md:w-auto md:px-[16px] h-[40px] rounded-[12px] active:scale-90 hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm group"
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[#212121] dark:text-white flex items-center justify-center w-10 md:w-auto md:px-4 h-10 rounded-xl active:scale-95 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm group"
                     >
                         <Plus size={20} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" />
                         <span className="text-[14px] font-[600] hidden md:inline ml-2">Add</span>
@@ -519,7 +519,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       </header>
 
       {/* Search & Controls Row */}
-      <div className="px-[16px] md:px-0 mt-[16px] flex gap-[12px] relative z-20">
+      <div className="px-4 md:px-0 mt-4 flex gap-3 relative z-20">
         <div className="flex-1 relative h-[44px] group">
             <Search className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[#757575] dark:text-slate-500 group-focus-within:text-[#00796B] transition-colors" size={20} />
             <input 
@@ -534,22 +534,22 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
             <div className="flex gap-2">
                  <button 
                     onClick={() => setIsSelectionMode(!isSelectionMode)}
-                    className={`h-[36px] w-[36px] md:w-auto md:px-3 rounded-[8px] flex items-center justify-center gap-2 border shadow-sm transition-all hover:scale-105 active:scale-95 ${isSelectionMode ? 'bg-[#00796B] border-[#00796B] text-white' : 'bg-white dark:bg-slate-800 border-[#EEEEEE] dark:border-slate-700 text-[#212121] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                    className={`h-9 w-9 md:w-auto md:px-3 rounded-xl flex items-center justify-center gap-2 border shadow-sm transition-all active:scale-95 ${isSelectionMode ? 'bg-[#00796B] border-[#00796B] text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-[#212121] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                  >
                      <CheckSquare size={16} />
                      <span className="hidden md:inline text-xs font-medium">Select</span>
                  </button>
                 <button 
                     onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu); }}
-                    className="h-[36px] w-[90px] bg-white dark:bg-slate-800 border border-[#EEEEEE] dark:border-slate-700 rounded-[8px] flex items-center justify-center gap-2 text-[#212121] dark:text-slate-200 text-[12px] font-[500] shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-all hover:scale-105 active:scale-95"
+                    className="h-9 w-[90px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center gap-2 text-[#212121] dark:text-slate-200 text-xs font-medium shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
                 >
                     <Filter size={14} /> {sortMode === 'expiry' ? 'Expiry' : 'Name'}
                 </button>
             </div>
             {showSortMenu && (
-                <div className="absolute top-[40px] right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl p-1 w-[120px] animate-in fade-in zoom-in-95 duration-200 z-30">
-                    <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${sortMode === 'expiry' ? 'bg-[#00796B]/10 text-[#00796B]' : 'text-[#757575] dark:text-slate-400'}`}>Expiry Date</button>
-                    <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${sortMode === 'name' ? 'bg-[#00796B]/10 text-[#00796B]' : 'text-[#757575] dark:text-slate-400'}`}>Name (A-Z)</button>
+                <div className="absolute top-11 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-2xl p-1.5 w-[130px] z-30">
+                    <button onClick={() => setSortMode('expiry')} className={`w-full text-left px-3 py-2.5 text-sm rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${sortMode === 'expiry' ? 'bg-[#00796B]/10 text-[#00796B] font-semibold' : 'text-slate-600 dark:text-slate-400'}`}>Expiry Date</button>
+                    <button onClick={() => setSortMode('name')} className={`w-full text-left px-3 py-2.5 text-sm rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${sortMode === 'name' ? 'bg-[#00796B]/10 text-[#00796B] font-semibold' : 'text-slate-600 dark:text-slate-400'}`}>Name (A-Z)</button>
                 </div>
             )}
         </div>
@@ -563,7 +563,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
         </button>
         <div 
             ref={scrollContainerRef}
-            className="flex overflow-x-auto gap-[12px] px-[48px] md:px-[24px] scrollbar-hide w-full items-center h-full"
+            className="flex overflow-x-auto gap-3 px-12 md:px-6 scrollbar-hide w-full items-center h-full"
             style={{ scrollSnapType: 'x mandatory' }}
         >
             {CATEGORIES.map(cat => {
@@ -589,7 +589,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
       </div>
 
       {/* Food Items List */}
-      <div className="px-[16px] md:px-0 mt-[20px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
+      <div className="px-4 md:px-0 mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredItems.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-center opacity-50 text-[#757575] dark:text-slate-400 animate-pulse">
                 <Search size={48} className="mb-4" />
@@ -617,7 +617,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                                     <span className="text-[14px] font-[400] text-[#757575] dark:text-slate-400 shrink-0">{item.quantity} {item.unit}</span>
                                 </div>
                                 <div className="flex items-center gap-[8px]">
-                                    <span className="bg-[#F5F5F5] dark:bg-slate-700 text-[#757575] dark:text-slate-300 text-[10px] px-[6px] py-[2px] rounded-[4px] uppercase font-bold tracking-wide shrink-0 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">{item.category}</span>
+                                    <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] px-2 py-0.5 rounded-lg uppercase font-bold tracking-wide shrink-0">{item.category}</span>
                                     <div className="flex items-center gap-1.5">
                                         {visual.isExpiringSoon && <AlertTriangle size={12} className="text-[#D32F2F] animate-pulse" />}
                                         <span className={`text-[12px] font-[600] truncate transition-all ${visual.isExpiringSoon ? 'bg-red-50 dark:bg-red-900/20 px-1.5 rounded' : ''}`} style={{ color: visual.statusColor }}>{visual.statusText}</span>
@@ -627,7 +627,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, onAddItem, onUpdateStatus,
                             {!isSelectionMode && !visual.isExpired && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); navigate('/donate', { state: { preSelectedItemIds: [item.id] } }); }}
-                                    className="h-[40px] px-3 bg-red-50 dark:bg-red-900/20 text-[#D32F2F] hover:bg-[#D32F2F] hover:text-white rounded-[10px] flex items-center gap-2 font-semibold text-xs active:scale-90 transition-all group-hover:shadow-md border border-transparent hover:border-[#D32F2F]"
+                                    className="h-10 px-3 bg-red-50 dark:bg-red-900/20 text-[#D32F2F] hover:bg-[#D32F2F] hover:text-white rounded-xl flex items-center gap-2 font-semibold text-xs active:scale-95 transition-all border border-transparent hover:border-[#D32F2F]"
                                 >
                                     <Heart size={16} strokeWidth={2.5} className="group-hover:scale-125 transition-transform" />
                                     <span>Donate</span>

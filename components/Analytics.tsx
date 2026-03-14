@@ -32,7 +32,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24 md:pb-8 animate-in slide-in-from-right duration-300">
       {/* Header */}
-      <header className="pt-4 px-4 pb-4 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm mb-4 flex items-center gap-3">
+      <header className="pt-4 px-4 pb-4 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm mb-4 flex items-center gap-3 rounded-b-2xl">
         <button 
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -43,11 +43,11 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         <h1 className="text-xl font-bold text-[#212121] dark:text-white">Impact Analytics</h1>
       </header>
 
-      <div className="px-4 space-y-6 max-w-4xl mx-auto">
+      <div className="px-4 space-y-6 max-w-4xl mx-auto pb-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-2 mb-2 text-[#757575] dark:text-slate-400">
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
                     <Utensils size={18} />
                     <span className="text-sm font-medium">Meals Saved</span>
                 </div>
@@ -56,8 +56,8 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
                     <span>↑ 12%</span> <span className="font-normal text-slate-400">vs last month</span>
                 </div>
             </div>
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-2 mb-2 text-[#757575] dark:text-slate-400">
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
                     <IndianRupee size={18} />
                     <span className="text-sm font-medium">Money Saved</span>
                 </div>
@@ -84,7 +84,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         </div>
 
         {/* Main Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="font-bold text-lg text-[#212121] dark:text-white mb-6">Meals Saved Trend</h3>
             <div className="h-[250px] w-full" aria-label="Bar chart showing meals saved over the last 6 months">
                 <ResponsiveContainer width="100%" height="100%">
@@ -113,7 +113,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ stats }) => {
         </div>
 
         {/* Breakdown Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="font-bold text-lg text-[#212121] dark:text-white mb-4">Waste Saved by Category</h3>
             <div className="flex flex-col sm:flex-row items-center">
                 <div className="h-[220px] w-full sm:w-1/2" aria-label="Pie chart showing waste saved percentage by category">

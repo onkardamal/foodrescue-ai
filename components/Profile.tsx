@@ -135,7 +135,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
       )}
 
       {/* Header */}
-      <header className="pt-4 px-4 pb-4 glass-panel sticky top-0 z-30 mb-4 flex items-center gap-3 rounded-b-2xl border-b border-x border-white/40 dark:border-white/10">
+      <header className="pt-4 px-4 pb-4 glass-panel sticky top-0 z-30 mb-4 flex items-center gap-3 rounded-b-2xl border-b border-x border-white/40 dark:border-white/10 shadow-sm">
         <button 
             onClick={handleBack}
             className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"

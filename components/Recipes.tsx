@@ -19,7 +19,7 @@ const IngredientChip: React.FC<{
 }> = ({ label, onPress }) => (
   <button 
     onClick={() => onPress(label)}
-    className="h-[32px] px-[12px] bg-white dark:bg-slate-800 rounded-[16px] flex items-center justify-center active:scale-90 hover:scale-105 hover:shadow-md transition-all mr-[8px] border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 group"
+    className="h-8 px-4 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center active:scale-95 hover:shadow-md transition-all mr-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 group"
   >
     <span className="text-[14px] font-[500] text-[#212121] dark:text-slate-200 whitespace-nowrap group-hover:text-[#00796B] transition-colors">{label}</span>
   </button>
@@ -214,8 +214,8 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
 
   return (
     <div className="min-h-screen bg-[#F0F4F3] dark:bg-slate-950 pb-[100px]">
-      <header className="pt-[12px] px-[16px] pb-[16px] flex flex-col gap-[4px]">
-        <div className="flex items-center gap-[12px] h-[44px]">
+      <header className="pt-3 px-4 pb-4 flex flex-col gap-1">
+        <div className="flex items-center gap-3 h-11">
           <button 
             onClick={() => navigate(-1)}
             className="w-[44px] h-[44px] flex items-center justify-center -ml-[12px] rounded-full active:scale-90 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
@@ -287,7 +287,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
         </button>
       </div>
 
-      <div className="px-[16px] mt-[24px] animate-in fade-in slide-in-from-bottom-5 duration-500">
+      <div className="px-4 mt-6 animate-fade-in">
         {recipes.length > 0 ? (
           recipes.map(recipe => (
             <RecipeCard 

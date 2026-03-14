@@ -231,3 +231,17 @@ body {
 .rounded-glass-xl {
   border-radius: 1.5rem; /* 24px */
 }
+
+/* Page content: consistent inner alignment (use with max-w container) */
+.page-content {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem;
+}
+@media (min-width: 768px) {
+  .page-content {
+    padding: 2rem;
+  }
+}
