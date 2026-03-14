@@ -503,7 +503,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
 
   if (!donationAccess.allowed) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-5">
           <ShieldOff size={40} className="text-red-600 dark:text-red-400" />
         </div>
@@ -528,7 +528,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 flex flex-col relative">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col relative">
       {currentStep < 4 && (
         <header className="pt-[12px] px-[16px] flex flex-col items-center relative z-20 bg-white dark:bg-slate-950">
             <div className="w-full h-[44px] flex items-center justify-between"><button onClick={handleBack} className="w-[44px] h-[44px] flex items-center justify-center -ml-[12px] rounded-full active:bg-slate-100 transition-colors"><ChevronLeft size={24} className="dark:text-white" /></button><h1 className="text-[18px] font-[700] absolute left-0 right-0 text-center pointer-events-none dark:text-white">{currentStep === 1 ? 'Select Safe Food' : currentStep === 2 ? 'Choose Recipient' : 'Coordinate Handover'}</h1><div className="w-[44px]" /></div>

@@ -94,7 +94,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ user, stats }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24 md:pb-8 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-white dark:bg-slate-950 pb-24 md:pb-8 animate-in fade-in duration-500">
       {/* Header */}
       <header className="pt-4 px-4 pb-6 bg-white dark:bg-slate-900 sticky top-0 z-30 shadow-sm flex flex-col gap-4">
         <div className="flex items-center gap-3">

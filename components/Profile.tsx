@@ -127,7 +127,7 @@ const Profile: React.FC<ProfileProps> = ({ user, stats, onLogout, onUpdateStats 
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24 md:pb-8 animate-slide-in-right relative">
+    <div className="min-h-screen bg-white dark:bg-slate-950 pb-24 md:pb-8 animate-slide-in-right relative">
       {showConfetti && <Confetti />}
       
       {/* Toast Notification */}

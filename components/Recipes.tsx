@@ -147,7 +147,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
 
   if (selectedRecipe) {
     return (
-      <div className="min-h-screen bg-[#F0F4F3] dark:bg-slate-950 p-5 animate-fade-in">
+      <div className="min-h-screen bg-white dark:bg-slate-950 p-5 animate-fade-in">
         <button onClick={() => setSelectedRecipe(null)} className="mb-6 flex items-center gap-2 text-[#757575] dark:text-slate-400 font-medium hover:text-[#212121] dark:hover:text-white transition-all hover:-translate-x-1 active:scale-95">
           <ChevronLeft size={24} /> Back to Recipes
         </button>
@@ -213,7 +213,7 @@ const Recipes: React.FC<RecipesProps> = ({ inventory, recipes, onUpdateRecipes, 
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F4F3] dark:bg-slate-950 pb-[100px]">
+    <div className="min-h-screen bg-white dark:bg-slate-950 pb-[100px]">
       <header className="pt-3 px-4 pb-4 flex flex-col gap-1">
         <div className="flex items-center gap-3 h-11">
           <button 
