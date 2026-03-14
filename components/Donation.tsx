@@ -115,6 +115,7 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [showNgoApiKeyHint, setShowNgoApiKeyHint] = useState(false);
 
   // Only items that are safe to donate: not expired, not spoiled/unsafe condition
   const donatableItems = useMemo(() => inventory.filter(isEligibleForDonation), [inventory]);
@@ -220,9 +221,17 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
                     const results = await searchNearbyNGOs(pos.coords.latitude, pos.coords.longitude);
-                    if (results.length > 0) setNgos(results);
-                } catch (e) { console.error(e); }
-                finally { setLoadingNGOs(false); }
+                    if (results.length > 0) {
+                        setNgos(results);
+                        setShowNgoApiKeyHint(false);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    const msg = e instanceof Error ? e.message : '';
+                    if (msg.includes('GEMINI_API_KEY') || msg.includes('API Key')) setShowNgoApiKeyHint(true);
+                } finally {
+                    setLoadingNGOs(false);
+                }
             }, () => setLoadingNGOs(false));
         } else setLoadingNGOs(false);
     }
@@ -308,6 +317,12 @@ const Donation: React.FC<DonationProps> = ({ user, inventory, onDonateComplete }
         {viewMode === 'list' ? (
           <div className="flex-1 min-h-0 overflow-y-auto pb-[100px]">
             {loadingNGOs && <div className="px-4 mb-4 flex items-center gap-2 text-[#00796B]"><Loader2 className="animate-spin" size={16} /><span className="text-sm">Finding nearby organizations...</span></div>}
+            {showNgoApiKeyHint && (
+                <div className="px-4 mb-3 flex items-center justify-between gap-2 rounded-2xl bg-amber-500/15 border border-amber-500/40 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                    <span>Add <code className="font-mono text-xs bg-black/10 px-1 rounded">GEMINI_API_KEY</code> to .env.local and Vercel env to load real NGOs.</span>
+                    <button type="button" onClick={() => setShowNgoApiKeyHint(false)} className="shrink-0 text-amber-600 hover:text-amber-800" aria-label="Dismiss">×</button>
+                </div>
+            )}
             <div className="px-4 space-y-3">
                 {ngos.map(ngo => (
                     <div key={ngo.id} onClick={() => setSelectedNgoId(ngo.id)} className={`p-4 rounded-2xl glass-card border transition-all cursor-pointer flex justify-between items-center ${selectedNgoId === ngo.id ? 'border-[#00796B] ring-2 ring-[#00796B]/20' : 'border-white/40 dark:border-white/10 hover:border-[#00796B]/40'}`}>

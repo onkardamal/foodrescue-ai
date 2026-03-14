@@ -43,6 +43,7 @@ const NGOMap: React.FC = () => {
     const [isLoadingLoc, setIsLoadingLoc] = useState(false);
     const [isSearchingReal, setIsSearchingReal] = useState(false);
     const [showContactInfo, setShowContactInfo] = useState(false);
+    const [showApiKeyHint, setShowApiKeyHint] = useState(false);
 
     // Registration Modal State
     const [isRegistering, setIsRegistering] = useState(false);
@@ -127,7 +128,7 @@ const NGOMap: React.FC = () => {
             console.error(e);
             const msg = e instanceof Error ? e.message : '';
             if (msg.includes('GEMINI_API_KEY') || msg.includes('API Key')) {
-                // Keep demo data; no alert so we don't annoy users without API key
+                setShowApiKeyHint(true);
             } else {
                 alert("Could not fetch nearby NGOs. Showing demo data.");
             }
@@ -282,6 +283,16 @@ const NGOMap: React.FC = () => {
                         </button>
                     )}
                 </div>
+
+                {/* Hint when API key is missing so only demo NGOs show */}
+                {showApiKeyHint && (
+                    <div className="pointer-events-auto mt-3 flex items-center justify-between gap-3 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/40 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+                        <span>Add <code className="font-mono text-xs bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded">GEMINI_API_KEY</code> to .env.local and to Vercel Environment Variables, then redeploy to load real NGOs.</span>
+                        <button type="button" onClick={() => setShowApiKeyHint(false)} className="shrink-0 p-1 rounded-lg hover:bg-amber-500/20" aria-label="Dismiss">
+                            <X size={18} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* --- Z-Layer 2: Map Controls --- */}

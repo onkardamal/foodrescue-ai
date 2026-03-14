@@ -31,9 +31,13 @@ AI features are **optional**. The app runs without them.
 Create a `.env.local` (or `.env`) in the project root:
 
 ```bash
+# Required for NGO search (Donate + NGO Map) and AI features (scan, recipes). Get key: https://aistudio.google.com/apikey
 GEMINI_API_KEY=YOUR_KEY_HERE
+```
 
-# Firebase Auth (optional but recommended)
+For **Vercel** (or any host): add `GEMINI_API_KEY` in the project’s Environment Variables and redeploy so the build can inject it. Without it, only demo NGOs are shown.
+
+## Firebase Auth (optional but recommended)
 
 To enable Firebase email/password and Google sign-in, add these to the same `.env.local` (or `.env`) file:
 

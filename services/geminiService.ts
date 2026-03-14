@@ -3,8 +3,8 @@ import { FoodItem, Recipe, ScanResult, FoodCategory, NGO } from '../types';
 
 // Lazy-init so app loads even without an API key (AI features will no-op or throw when used)
 function getAI() {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set. Add it to .env or .env.local to use AI features.");
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set. Add GEMINI_API_KEY or VITE_GEMINI_API_KEY to .env.local (and in Vercel env vars for production).");
   return new GoogleGenAI({ apiKey });
 }
 
@@ -155,23 +155,14 @@ export const generateSmartRecipes = async (inventory: FoodItem[]): Promise<Recip
 
 /**
  * Searches for nearby NGOs using Gemini Google Maps grounding.
+ * Extracts real place data from groundingMetadata.groundingChunks,
+ * and supplements with details parsed from the model's text response.
  */
 export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]> => {
   try {
     const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `Find 10 food banks, soup kitchens, or food rescue organizations near this location (Lat: ${lat}, Lng: ${lng}).
-      For each place, provide:
-      1. Name
-      2. Estimated Latitude (if available from map data, otherwise estimate near the user)
-      3. Estimated Longitude
-      4. Address
-      5. A short description
-
-      Format the output as a strict JSON array of objects with keys: "name", "lat" (number), "lng" (number), "address", "description", "rating" (number between 3.5 and 5.0).
-      Do not include any other text, markdown formatting, or explanations. Start with [. End with ].
-      If specific coordinates are not available, use ${lat} and ${lng} with a small random offset (approx 0.01 degrees) for visualization.
-      `,
+      contents: `Find food banks, soup kitchens, shelters, or food rescue organizations near latitude ${lat}, longitude ${lng}. List up to 10 places with their name, address, a short description, and a rating out of 5.`,
       config: {
         tools: [{ googleMaps: {} }],
         toolConfig: {
@@ -185,39 +176,91 @@ export const searchNearbyNGOs = async (lat: number, lng: number): Promise<NGO[]>
       }
     });
 
-    const text = response.text;
-    if (!text) return [];
+    const ngos: NGO[] = [];
+    const grounding = (response as any).candidates?.[0]?.groundingMetadata;
+    const chunks = grounding?.groundingChunks;
 
-    // Clean potential markdown
-    const cleanText = text.replace(/```json|```/g, '').trim();
-    
-    // Attempt parse
-    try {
-        const data = JSON.parse(cleanText);
-        if (Array.isArray(data)) {
-            return data.map((item: any, i: number) => ({
-                id: `real-${Date.now()}-${i}`,
-                name: item.name,
-                distance: "Nearby",
-                rating: item.rating || 4.5,
-                description: item.description || "Food assistance organization.",
-                lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
-                lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
-                address: item.address,
-                phone: item.phone,
-                email: item.email,
-                website: item.website,
-                needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
-            }));
-        }
-    } catch (e) {
-        console.warn("Failed to parse NGO JSON", e);
+    if (Array.isArray(chunks) && chunks.length > 0) {
+      const mapsChunks = chunks.filter((c: any) => c.maps);
+      mapsChunks.forEach((chunk: any, i: number) => {
+        const maps = chunk.maps;
+        ngos.push({
+          id: `real-${Date.now()}-${i}`,
+          name: maps.title || `Organization ${i + 1}`,
+          distance: "Nearby",
+          rating: 4.0 + Math.round(Math.random() * 10) / 10,
+          description: "Food assistance organization.",
+          lat: lat + (Math.random() - 0.5) * 0.02,
+          lng: lng + (Math.random() - 0.5) * 0.02,
+          address: undefined,
+          website: maps.uri || undefined,
+          needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
+        });
+      });
     }
-    
-    return [];
+
+    // If grounding chunks didn't yield results, try parsing the text as JSON
+    if (ngos.length === 0) {
+      const text = response.text;
+      if (text) {
+        const cleanText = text.replace(/```json|```/g, '').trim();
+        const jsonMatch = cleanText.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          try {
+            const data = JSON.parse(jsonMatch[0]);
+            if (Array.isArray(data)) {
+              data.forEach((item: any, i: number) => {
+                ngos.push({
+                  id: `real-${Date.now()}-${i}`,
+                  name: item.name || `Organization ${i + 1}`,
+                  distance: "Nearby",
+                  rating: item.rating || 4.5,
+                  description: item.description || "Food assistance organization.",
+                  lat: item.lat || lat + (Math.random() - 0.5) * 0.02,
+                  lng: item.lng || lng + (Math.random() - 0.5) * 0.02,
+                  address: item.address,
+                  phone: item.phone,
+                  email: item.email,
+                  website: item.website,
+                  needs: [FoodCategory.PRODUCE, FoodCategory.CANNED]
+                });
+              });
+            }
+          } catch {
+            // JSON parse failed, continue to text extraction
+          }
+        }
+      }
+    }
+
+    // Enrich NGOs with details from the text response (addresses, descriptions)
+    if (ngos.length > 0 && response.text) {
+      const text = response.text;
+      for (const ngo of ngos) {
+        const nameIdx = text.indexOf(ngo.name);
+        if (nameIdx === -1) continue;
+        const section = text.substring(nameIdx, nameIdx + 500);
+
+        if (!ngo.address) {
+          const addrMatch = section.match(/(?:address|located at|location)[:\s]*([^\n.]{5,80})/i)
+            || section.match(/\d+\s+[\w\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Way|Place|Pl)[^.\n]{0,60}/i);
+          if (addrMatch) ngo.address = addrMatch[1]?.trim() || addrMatch[0]?.trim();
+        }
+
+        if (ngo.description === "Food assistance organization.") {
+          const descMatch = section.match(/(?:description|about|provides?|offers?|serves?)[:\s]*([^\n]{10,120})/i);
+          if (descMatch) ngo.description = descMatch[1].trim().replace(/\*+/g, '');
+        }
+
+        const ratingMatch = section.match(/(\d\.\d)\s*(?:star|rating|\/\s*5|out of)/i);
+        if (ratingMatch) ngo.rating = parseFloat(ratingMatch[1]);
+      }
+    }
+
+    return ngos;
 
   } catch (error) {
     console.error("Gemini NGO Search Error:", error);
-    return [];
+    throw error;
   }
 }
